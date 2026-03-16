@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Attendance — Smart T&amp;E</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="../assets/css/shared.css">
+<style>
+  body { background: var(--bg); padding: 20px 0; }
+  .notch { position:absolute;top:10px;left:50%;transform:translateX(-50%);width:120px;height:30px;background:var(--bg);border-radius:0 0 20px 20px;z-index:10; }
+  .m-topbar { display:flex;align-items:center;gap:10px;padding:56px 16px 12px; }
+  .m-back { width:36px;height:36px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text);font-size:18px;cursor:pointer;text-decoration:none; }
+  .m-page-title { font-size:16px;font-weight:700;flex:1; }
+
+  #att-map { height:220px;width:100%;border-radius:0; }
+
+  .location-card {
+    margin:12px 16px;
+    background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;
+  }
+  .location-detected {
+    display:flex;align-items:center;gap:10px;
+  }
+  .loc-pulse {
+    width:40px;height:40px;border-radius:50%;
+    background:rgba(0,212,170,0.15);border:2px solid var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;color:var(--accent);flex-shrink:0;
+    animation:pulse 2s infinite;
+  }
+  .loc-name { font-size:14px;font-weight:700; }
+  .loc-coords { font-size:11px;color:var(--text-muted);margin-top:2px; }
+  .accuracy-badge { display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-size:11px;color:var(--green); }
+
+  .odometer-section { margin:0 16px 12px; }
+  .odo-label { font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px; }
+  .odo-upload {
+    border:2px dashed var(--border);border-radius:14px;padding:24px;text-align:center;
+    cursor:pointer;transition:all 0.2s;background:var(--bg);
+  }
+  .odo-upload:hover { border-color:var(--accent);background:var(--accent-glow); }
+  .odo-upload.has-image { border-style:solid;border-color:var(--accent);background:var(--accent-glow); }
+  .odo-upload i { font-size:32px;color:var(--text-muted);display:block;margin-bottom:8px; }
+  .odo-upload span { font-size:13px;color:var(--text-muted); }
+
+  .vehicle-select-row { display:flex;gap:8px;margin:0 16px 12px; }
+  .v-option {
+    flex:1;padding:12px 8px;border-radius:12px;
+    border:2px solid var(--border);background:var(--bg);
+    text-align:center;cursor:pointer;transition:all 0.2s;
+  }
+  .v-option:hover { border-color:rgba(0,212,170,0.4); }
+  .v-option.selected { border-color:var(--accent);background:var(--accent-glow); }
+  .v-option i { font-size:24px;display:block;margin-bottom:6px;color:var(--text-muted); }
+  .v-option.selected i { color:var(--accent); }
+  .v-option span { font-size:11px;font-weight:600;color:var(--text-muted); }
+  .v-option.selected span { color:var(--accent); }
+
+  .clock-btn {
+    display:block;margin:0 16px 16px;padding:16px;
+    border-radius:14px;border:none;font-size:15px;font-weight:700;
+    cursor:pointer;transition:all 0.2s;text-align:center;width:calc(100%-32px);
+  }
+  .clock-btn.clock-in { background:var(--accent);color:#0a1628; }
+  .clock-btn.clock-in:hover { background:var(--accent2);box-shadow:0 0 24px var(--accent-glow); }
+  .clock-btn.clock-out { background:rgba(239,68,68,0.15);color:var(--red);border:2px solid var(--red); }
+</style>
+</head>
+<body>
+
+<div class="page-meta" style="text-align:center;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:12px;">
+  <button class="icon-btn" id="theme-toggle"><i class="ri-moon-line"></i></button>
+  <span style="font-size:13px;color:var(--text-muted);">Attendance &amp; GPS Pin</span>
+</div>
+
+<div class="mobile-preview-wrap" style="padding-top:0;">
+  <div class="mobile-frame">
+    <div class="notch"></div>
+    <div class="mobile-status-bar">
+      <span>9:41</span>
+      <div style="display:flex;align-items:center;gap:6px;"><i class="ri-signal-wifi-fill"></i><i class="ri-battery-fill" style="color:var(--accent);"></i></div>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;background:var(--bg);">
+      <!-- Top Bar -->
+      <div class="m-topbar">
+        <a class="m-back" href="home.html"><i class="ri-arrow-left-line"></i></a>
+        <div class="m-page-title">Mark Attendance</div>
+        <span class="badge badge-green pulse"><i class="ri-gps-fill"></i> GPS Active</span>
+      </div>
+
+      <!-- Map -->
+      <div style="position:relative;">
+        <div id="att-map"></div>
+        <div style="position:absolute;top:8px;left:8px;z-index:1000;background:rgba(17,24,39,0.9);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:11px;color:var(--accent);">
+          <i class="ri-map-pin-fill"></i> Your Location Detected
+        </div>
+      </div>
+
+      <!-- Location Info -->
+      <div class="location-card">
+        <div class="location-detected">
+          <div class="loc-pulse"><i class="ri-map-pin-2-fill"></i></div>
+          <div>
+            <div class="loc-name">Andheri East, Mumbai</div>
+            <div class="loc-coords">19.1136° N, 72.8697° E</div>
+            <div class="accuracy-badge"><i class="ri-checkbox-circle-fill"></i> Accuracy: ±8 meters</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vehicle Selection -->
+      <div style="padding:0 16px;margin-bottom:10px;">
+        <div class="odo-label">Select Vehicle</div>
+        <div class="vehicle-select-row" style="margin:0;">
+          <div class="v-option selected" onclick="selectVehicle(this)">
+            <i class="ri-motorbike-line"></i><span>2-Wheeler</span>
+          </div>
+          <div class="v-option locked" onclick="Toast.show('4W not allowed for G3 grade','warning')" style="opacity:0.5;cursor:not-allowed;">
+            <i class="ri-car-line"></i><span>4-Wheeler</span>
+            <div style="font-size:9px;color:var(--red);margin-top:2px;">G4+ Only</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Odometer Photo -->
+      <div class="odometer-section">
+        <div class="odo-label">📷 Start Odometer Photo</div>
+        <div class="odo-upload" id="odo-box" onclick="captureOdo()">
+          <i class="ri-camera-2-line" id="odo-icon"></i>
+          <span id="odo-text">Tap to capture odometer reading</span>
+          <input type="file" accept="image/*" capture="environment" id="odo-input" style="display:none;" onchange="handleOdo(this)">
+        </div>
+        <div id="odo-reading" style="display:none;margin-top:8px;text-align:center;">
+          <span style="font-size:12px;color:var(--text-muted);">Reading detected: </span>
+          <span style="font-size:16px;font-weight:700;color:var(--accent);">48,720 km</span>
+        </div>
+      </div>
+
+      <!-- Date & Notes -->
+      <div style="padding:0 16px;margin-bottom:16px;">
+        <div class="odo-label">Purpose of Visit (Optional)</div>
+        <textarea class="form-control" rows="2" placeholder="e.g., Client visits in Andheri and BKC area"></textarea>
+      </div>
+
+      <!-- Clock In Button -->
+      <button class="clock-btn clock-in" id="clock-btn" onclick="clockIn()" style="width:calc(100% - 32px);margin:0 16px 16px;">
+        <i class="ri-map-pin-2-fill"></i> Clock In &amp; Start Journey
+      </button>
+
+      <!-- Already clocked in? -->
+      <div style="padding:0 16px 24px;text-align:center;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Already clocked in at 9:02 AM</div>
+        <button class="clock-btn clock-out" onclick="clockOut()" style="width:100%;">
+          <i class="ri-logout-box-r-line"></i> Clock Out &amp; End Journey
+        </button>
+      </div>
+    </div>
+
+    <div class="mobile-nav-bar">
+      <a class="mobile-nav-item" href="home.html"><i class="ri-home-4-line"></i><span>Home</span></a>
+      <a class="mobile-nav-item active" href="attendance.html"><i class="ri-map-pin-2-fill"></i><span>Attendance</span></a>
+      <a class="mobile-nav-item" href="expense.html"><i class="ri-camera-line"></i><span>Expense</span></a>
+      <a class="mobile-nav-item" href="history.html"><i class="ri-history-line"></i><span>History</span></a>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../assets/js/shared.js"></script>
+<script>
+// Mini map
+const map = L.map('att-map', { zoomControl:false, dragging:false, scrollWheelZoom:false })
+  .setView([19.1136, 72.8697], 15);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OSM'}).addTo(map);
+const icon = L.divIcon({ className:'', html:`
+  <div style="position:relative;">
+    <div style="width:60px;height:60px;background:rgba(0,212,170,0.15);border:2px solid rgba(0,212,170,0.4);border-radius:50;position:absolute;top:-30px;left:-30px;border-radius:50%;"></div>
+    <div style="width:18px;height:18px;background:#00d4aa;border:3px solid #fff;border-radius:50%;box-shadow:0 0 12px rgba(0,212,170,0.8);position:absolute;top:-9px;left:-9px;"></div>
+  </div>`, iconSize:[0,0]});
+L.marker([19.1136, 72.8697], {icon}).addTo(map);
+
+function selectVehicle(el) {
+  document.querySelectorAll('.v-option').forEach(v => v.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function captureOdo() { document.getElementById('odo-input').click(); }
+function handleOdo(input) {
+  if (input.files && input.files[0]) {
+    document.getElementById('odo-box').classList.add('has-image');
+    document.getElementById('odo-icon').className = 'ri-checkbox-circle-fill';
+    document.getElementById('odo-icon').style.color = 'var(--accent)';
+    document.getElementById('odo-text').textContent = '✓ Photo captured · OCR processing...';
+    setTimeout(() => {
+      document.getElementById('odo-reading').style.display = 'block';
+      document.getElementById('odo-text').textContent = '✓ Odometer reading extracted';
+    }, 1500);
+  }
+}
+
+function clockIn() {
+  Toast.show('✓ Clocked in! GPS journey started.', 'success');
+  document.getElementById('clock-btn').innerHTML = '<i class="ri-check-line"></i> Clocked In — Journey Active';
+  document.getElementById('clock-btn').style.opacity = '0.6';
+  document.getElementById('clock-btn').disabled = true;
+}
+
+function clockOut() {
+  Toast.show('Journey ended. 48.2 km tracked. TA auto-calculated.', 'success');
+  setTimeout(() => window.location.href = 'trip.html', 1200);
+}
+</script>
+</body>
+</html>

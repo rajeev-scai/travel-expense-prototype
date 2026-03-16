@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pinned Journey Approval — Smart T&amp;E</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="../assets/css/shared.css">
+<style>
+  .approval-layout {
+    display: grid; grid-template-columns: 340px 1fr;
+    gap: 0; height: calc(100vh - var(--header-h));
+    overflow: hidden;
+  }
+  .approval-sidebar {
+    background: var(--sidebar); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .approval-sidebar-header {
+    padding: 16px; border-bottom: 1px solid var(--border);
+  }
+  .employee-selector {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer;
+    margin-bottom: 12px;
+  }
+  .employee-selector:hover { border-color: var(--accent); }
+  .emp-avatar-sm {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #3b82f6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .claim-list { flex: 1; overflow-y: auto; }
+  .claim-item {
+    padding: 14px 16px; border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background 0.15s;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .claim-item:hover { background: var(--border); }
+  .claim-item.selected { background: var(--accent-glow); border-left: 3px solid var(--accent); }
+  .claim-item-header {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .claim-type { font-size: 13px; font-weight: 600; }
+  .claim-amount { font-size: 14px; font-weight: 700; color: var(--accent); }
+  .claim-meta { font-size: 11px; color: var(--text-muted); }
+  .pin-indicator {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 500;
+  }
+  .pin-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .pin-dot.valid { background: #00d4aa; box-shadow: 0 0 6px rgba(0,212,170,0.5); }
+  .pin-dot.amber { background: #f59e0b; box-shadow: 0 0 6px rgba(245,158,11,0.5); }
+  .pin-dot.red   { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,0.5); }
+
+  .map-area { position: relative; }
+  #journey-map { width: 100%; height: 100%; }
+  .map-legend {
+    position: absolute; bottom: 16px; left: 16px; z-index: 1000;
+    background: rgba(17,24,39,0.92); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 16px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #fff; }
+  .legend-line { width: 24px; height: 3px; border-radius: 2px; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .map-controls {
+    position: absolute; top: 16px; right: 16px; z-index: 1000;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .map-ctrl-btn {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 8px 14px;
+    color: var(--text); font-size: 12px; font-weight: 600;
+    cursor: pointer; white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .map-ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .map-ctrl-btn.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+
+  .detail-panel {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: var(--card); border-top: 1px solid var(--border);
+    padding: 16px 20px;
+    display: none;
+  }
+  .detail-panel.visible { display: flex; align-items: center; gap: 16px; }
+  .detail-actions { display: flex; gap: 8px; margin-left: auto; }
+
+  /* Approval counters */
+  .approval-stats {
+    display: grid; grid-template-columns: repeat(4,1fr); gap: 8px;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+  }
+  .approval-stat { text-align: center; }
+  .approval-stat-num { font-size: 18px; font-weight: 700; }
+  .approval-stat-lbl { font-size: 10px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <!-- Sidebar (same as dashboard) -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">T&amp;E</div>
+      <div class="logo-text">Smart <span>T&amp;E</span></div>
+      <button class="sidebar-toggle" id="sidebar-toggle"><i class="ri-menu-fold-line"></i></button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Overview</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon"><i class="ri-home-4-line"></i></span><span>Dashboard</span></a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Approvals</div>
+      <a class="nav-item active" href="approval.html"><span class="nav-icon"><i class="ri-map-pin-2-line"></i></span><span>Pinned Journeys</span><span class="nav-dot"></span></a>
+      <a class="nav-item" href="analytics.html"><span class="nav-icon"><i class="ri-bar-chart-grouped-line"></i></span><span>Analytics</span></a>
+    </div>
+    <div class="sidebar-section sidebar-section-admin">
+      <div class="sidebar-section-label">Admin</div>
+      <a class="nav-item nav-admin-only" href="rules.html"><span class="nav-icon"><i class="ri-settings-3-line"></i></span><span>Rule Engine</span></a>
+      <a class="nav-item nav-admin-only" href="users.html"><span class="nav-icon"><i class="ri-team-line"></i></span><span>Users &amp; Grades</span></a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="sidebar-avatar">PM</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-user-name">Priya Mehta</div>
+          <div class="user-role" id="sidebar-user-role">Line Manager</div>
+          <div id="sidebar-role-chip"></div>
+        </div>
+      </div>
+      <button class="logout-btn"><span class="nav-icon"><i class="ri-logout-box-r-line"></i></span><span>Logout</span></button>
+    </div>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="top-header">
+      <div class="page-title"><i class="ri-map-pin-2-line" style="color:var(--accent);margin-right:8px;"></i>Pinned Journey Approval</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <select class="form-control" id="emp-select" style="width:180px;">
+          <option value="Rahul Sharma">Rahul Sharma</option>
+          <option value="Anjali Singh">Anjali Singh</option>
+          <option value="Vikram Patel">Vikram Patel</option>
+          <option value="Sneha Nair">Sneha Nair</option>
+        </select>
+        <input type="date" class="form-control" id="date-select" value="2026-03-15" style="width:150px;">
+        <button class="btn btn-primary btn-sm" onclick="loadJourney()"><i class="ri-search-line"></i> Load Journey</button>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="theme-toggle"><i class="ri-moon-line"></i></button>
+        <button class="icon-btn"><i class="ri-notification-3-line"></i><span class="badge"></span></button>
+      </div>
+    </header>
+
+    <div class="approval-layout">
+      <!-- Left Panel: Claim List -->
+      <div class="approval-sidebar">
+        <div class="approval-stats">
+          <div class="approval-stat">
+            <div class="approval-stat-num" style="color:var(--text);">7</div>
+            <div class="approval-stat-lbl">Total</div>
+          </div>
+          <div class="approval-stat">
+            <div class="approval-stat-num" style="color:var(--green);">4</div>
+            <div class="approval-stat-lbl">Valid</div>
+          </div>
+          <div class="approval-stat">
+            <div class="approval-stat-num" style="color:var(--amber);">2</div>
+            <div class="approval-stat-lbl">Flagged</div>
+          </div>
+          <div class="approval-stat">
+            <div class="approval-stat-num" style="color:var(--red);">1</div>
+            <div class="approval-stat-lbl">Violation</div>
+          </div>
+        </div>
+        <div class="approval-sidebar-header">
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Journey Summary</div>
+          <div style="display:flex;gap:16px;margin-bottom:12px;">
+            <div>
+              <div style="font-size:11px;color:var(--text-muted);">Start</div>
+              <div style="font-size:12px;font-weight:600;">9:02 AM · Andheri</div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--text-muted);">End</div>
+              <div style="font-size:12px;font-weight:600;">6:45 PM · Thane</div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--text-muted);">Distance</div>
+              <div style="font-size:12px;font-weight:600;color:var(--accent);">48.2 km ✓</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary btn-sm w-full" onclick="approveAll()"><i class="ri-check-double-line"></i> Approve All Valid</button>
+          </div>
+        </div>
+
+        <div class="claim-list" id="claim-list">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Map Area -->
+      <div class="map-area">
+        <div id="journey-map"></div>
+
+        <!-- Map Controls -->
+        <div class="map-controls">
+          <button class="map-ctrl-btn active" id="ctrl-all" onclick="filterMap('all',this)"><i class="ri-map-pin-2-line"></i> All Pins</button>
+          <button class="map-ctrl-btn" id="ctrl-flagged" onclick="filterMap('flagged',this)"><i class="ri-flag-line"></i> Flagged Only</button>
+          <button class="map-ctrl-btn" id="ctrl-path" onclick="filterMap('path',this)"><i class="ri-route-line"></i> Path Only</button>
+        </div>
+
+        <!-- Map Legend -->
+        <div class="map-legend">
+          <div style="font-size:11px;font-weight:600;color:#8b9dc3;margin-bottom:4px;">LEGEND</div>
+          <div class="legend-item"><div class="legend-line" style="background:#00d4aa;"></div>Breadcrumb Path</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#00d4aa;"></div>Valid Expense Pin</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div>Flagged (Deviated)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div>Policy Violation</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div>Activity / Client Visit</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6;border:2px solid #fff;"></div>Attendance Pin</div>
+        </div>
+
+        <!-- Detail Panel (slides up on click) -->
+        <div class="detail-panel" id="detail-panel">
+          <div id="detail-content" style="flex:1;"></div>
+          <div class="detail-actions">
+            <button class="btn btn-danger btn-sm" onclick="rejectSelected()"><i class="ri-close-line"></i> Reject</button>
+            <button class="btn btn-ghost btn-sm" onclick="flagSelected()"><i class="ri-flag-line"></i> Flag</button>
+            <button class="btn btn-primary btn-sm" onclick="approveSelected()"><i class="ri-check-line"></i> Approve</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../assets/js/shared.js"></script>
+<script>
+// ── RBAC Guard ──
+const _portalUser = Auth.requirePortal();
+if (!_portalUser) throw new Error('redirect');
+
+// --- Journey Data (simulated for Mumbai) ---
+const journey = {
+  employee: 'Rahul Sharma',
+  date: '2026-03-15',
+  attendanceStart: { lat: 19.1136, lng: 72.8697, time: '9:02 AM', label: 'Clock In — Andheri East' },
+  attendanceEnd:   { lat: 19.2183, lng: 72.9781, time: '6:45 PM', label: 'Clock Out — Thane' },
+  path: [
+    [19.1136, 72.8697], [19.1280, 72.8820], [19.1420, 72.9000],
+    [19.1500, 72.9150], [19.1650, 72.9300], [19.1800, 72.9500],
+    [19.1900, 72.9600], [19.2050, 72.9700], [19.2183, 72.9781]
+  ],
+  activities: [
+    { lat: 19.1300, lng: 72.8850, label: 'Client Visit: Zomato HQ', time: '10:30 AM', color: '#3b82f6' },
+    { lat: 19.1700, lng: 72.9350, label: 'Client Visit: Meesho Office', time: '2:00 PM', color: '#3b82f6' },
+    { lat: 19.2000, lng: 72.9650, label: 'Client Visit: Nykaa, Thane', time: '4:30 PM', color: '#3b82f6' },
+  ],
+  expenses: [
+    { id:'EXP-001', lat:19.1310, lng:72.8860, category:'Travel (TA)', amount:420, status:'valid', pin:'valid', time:'12:00 PM', note:'48.2 km × ₹8.7/km. Auto-approved.', invoice:'IMG_20260315_1.jpg' },
+    { id:'EXP-002', lat:19.1290, lng:72.8830, category:'Food/Meals', amount:280, status:'valid', pin:'valid', time:'1:15 PM', note:'Within 500m of activity pin. Bill matches OCR.', invoice:'IMG_20260315_2.jpg' },
+    { id:'EXP-003', lat:19.1800, lng:72.9600, category:'Toll', amount:60, status:'valid', pin:'valid', time:'3:20 PM', note:'Verified toll booth location.', invoice:'IMG_20260315_3.jpg' },
+    { id:'EXP-004', lat:19.2100, lng:72.9720, category:'Food/Meals', amount:350, status:'valid', pin:'valid', time:'5:00 PM', note:'Within 500m of Nykaa client visit.', invoice:'IMG_20260315_4.jpg' },
+    { id:'EXP-005', lat:19.2450, lng:73.0100, category:'Food/Meals', amount:950, status:'flagged', pin:'amber', time:'7:30 PM', note:'⚠️ Bill location 5.2km from nearest activity. Requires justification.', invoice:'IMG_20260315_5.jpg' },
+    { id:'EXP-006', lat:19.1050, lng:72.8550, category:'Misc/Others', amount:200, status:'flagged', pin:'amber', time:'8:00 AM', note:'⚠️ No recorded activity at this location.', invoice:'IMG_20260315_6.jpg' },
+    { id:'EXP-007', lat:19.3200, lng:73.0500, category:'Food/Meals', amount:1800, status:'violation', pin:'red', time:'9:00 PM', note:'🚫 Policy violation: ₹1800 exceeds ₹500 daily meal limit for Grade G3.', invoice:'IMG_20260315_7.jpg' },
+  ]
+};
+
+let selectedExpense = null;
+let map, markers = [], pathLayer;
+
+function initMap() {
+  map = L.map('journey-map', { zoomControl: false }).setView([19.165, 72.935], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 19
+  }).addTo(map);
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+  loadJourney();
+}
+
+function loadJourney() {
+  // Clear existing
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+  if (pathLayer) map.removeLayer(pathLayer);
+
+  // Draw breadcrumb path
+  pathLayer = L.polyline(journey.path, {
+    color: '#00d4aa', weight: 4, opacity: 0.8, dashArray: null,
+    className: 'breadcrumb-path'
+  }).addTo(map);
+
+  // Attendance Start Pin (purple)
+  const startIcon = L.divIcon({ className:'', html:`
+    <div style="background:#8b5cf6;border:3px solid #fff;width:20px;height:20px;border-radius:50%;
+    box-shadow:0 0 12px rgba(139,92,246,0.6);display:flex;align-items:center;justify-content:center;">
+      <span style="color:#fff;font-size:9px;font-weight:700;">S</span></div>`, iconSize:[20,20], iconAnchor:[10,10] });
+  const sm = L.marker([journey.attendanceStart.lat, journey.attendanceStart.lng], {icon:startIcon})
+    .bindPopup(`<b>${journey.attendanceStart.label}</b><br>${journey.attendanceStart.time}`).addTo(map);
+  markers.push(sm);
+
+  // Attendance End Pin
+  const endIcon = L.divIcon({ className:'', html:`
+    <div style="background:#8b5cf6;border:3px solid #fff;width:20px;height:20px;border-radius:50%;
+    box-shadow:0 0 12px rgba(139,92,246,0.6);display:flex;align-items:center;justify-content:center;">
+      <span style="color:#fff;font-size:9px;font-weight:700;">E</span></div>`, iconSize:[20,20], iconAnchor:[10,10] });
+  const em = L.marker([journey.attendanceEnd.lat, journey.attendanceEnd.lng], {icon:endIcon})
+    .bindPopup(`<b>${journey.attendanceEnd.label}</b><br>${journey.attendanceEnd.time}`).addTo(map);
+  markers.push(em);
+
+  // Activity pins (blue)
+  journey.activities.forEach(a => {
+    const icon = L.divIcon({ className:'', html:`
+      <div style="background:#3b82f6;border:3px solid #fff;width:16px;height:16px;border-radius:50%;
+      box-shadow:0 0 8px rgba(59,130,246,0.5);"></div>`, iconSize:[16,16], iconAnchor:[8,8] });
+    const m = L.marker([a.lat, a.lng], {icon}).bindPopup(`<b>${a.label}</b><br>${a.time}`).addTo(map);
+    markers.push(m);
+  });
+
+  // Expense pins
+  const colorMap = { valid:'#00d4aa', amber:'#f59e0b', red:'#ef4444' };
+  journey.expenses.forEach((exp, i) => {
+    const c = colorMap[exp.pin];
+    const icon = L.divIcon({ className:'', html:`
+      <div style="background:${c};border:3px solid #fff;width:18px;height:18px;border-radius:50%;
+      box-shadow:0 0 10px ${c}88;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        <span style="color:#fff;font-size:8px;font-weight:700;">${i+1}</span></div>`, iconSize:[18,18], iconAnchor:[9,9] });
+    const m = L.marker([exp.lat, exp.lng], {icon})
+      .bindPopup(`<b>${exp.category}</b><br>₹${exp.amount}<br>${exp.time}<br><span style="color:${c}">${exp.pin==='valid'?'✓ Valid':exp.pin==='amber'?'⚠ Flagged':'🚫 Violation'}</span>`)
+      .addTo(map)
+      .on('click', () => selectExpense(exp));
+    markers.push(m);
+  });
+
+  map.fitBounds(pathLayer.getBounds(), {padding:[40,40]});
+}
+
+// Populate claim list
+function populateClaimList() {
+  const list = document.getElementById('claim-list');
+  list.innerHTML = '';
+  const pinColors = { valid:'#00d4aa', amber:'#f59e0b', red:'#ef4444' };
+  const statusLabels = {
+    valid: '<span class="badge badge-green"><i class="ri-check-line"></i> Valid</span>',
+    amber: '<span class="badge badge-amber"><i class="ri-alert-line"></i> Flagged</span>',
+    red:   '<span class="badge badge-red"><i class="ri-close-circle-line"></i> Violation</span>',
+  };
+  journey.expenses.forEach((exp, i) => {
+    const item = document.createElement('div');
+    item.className = 'claim-item';
+    item.id = `claim-${exp.id}`;
+    item.innerHTML = `
+      <div class="claim-item-header">
+        <div class="claim-type"><i class="ri-receipt-line" style="margin-right:4px;color:var(--accent);"></i>${exp.category}</div>
+        <div class="claim-amount">${Fmt.currency(exp.amount)}</div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div class="claim-meta"><i class="ri-time-line"></i> ${exp.time} · ${exp.id}</div>
+        ${statusLabels[exp.pin]}
+      </div>
+      <div class="pin-indicator" style="color:${pinColors[exp.pin]};font-size:11px;">
+        <div class="pin-dot ${exp.pin}"></div> ${exp.note.slice(0,60)}${exp.note.length>60?'…':''}
+      </div>`;
+    item.addEventListener('click', () => selectExpense(exp));
+    list.appendChild(item);
+  });
+}
+
+function selectExpense(exp) {
+  selectedExpense = exp;
+  // Highlight in list
+  document.querySelectorAll('.claim-item').forEach(el => el.classList.remove('selected'));
+  const el = document.getElementById(`claim-${exp.id}`);
+  if (el) { el.classList.add('selected'); el.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+  // Pan map
+  map.panTo([exp.lat, exp.lng]);
+  // Show detail panel
+  const panel = document.getElementById('detail-panel');
+  panel.classList.add('visible');
+  const pinBadge = { valid:'badge-green', amber:'badge-amber', red:'badge-red' }[exp.pin];
+  document.getElementById('detail-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);">Category</div>
+        <div style="font-size:14px;font-weight:700;">${exp.category}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);">Amount</div>
+        <div style="font-size:14px;font-weight:700;color:var(--accent);">${Fmt.currency(exp.amount)}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);">Time</div>
+        <div style="font-size:13px;font-weight:600;">${exp.time}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);">Invoice</div>
+        <div style="font-size:12px;color:var(--blue);">${exp.invoice}</div>
+      </div>
+      <div style="flex:1;">
+        <span class="badge ${pinBadge}" style="font-size:12px;">${exp.note}</span>
+      </div>
+    </div>`;
+}
+
+function approveSelected() {
+  if (!selectedExpense) return;
+  Toast.show(`✓ ${selectedExpense.category} ${Fmt.currency(selectedExpense.amount)} approved!`, 'success');
+  document.getElementById('detail-panel').classList.remove('visible');
+}
+function rejectSelected() {
+  if (!selectedExpense) return;
+  Toast.show(`${selectedExpense.category} rejected.`, 'error');
+  document.getElementById('detail-panel').classList.remove('visible');
+}
+function flagSelected() {
+  if (!selectedExpense) return;
+  Toast.show(`${selectedExpense.category} sent for manual review.`, 'warning');
+  document.getElementById('detail-panel').classList.remove('visible');
+}
+function approveAll() {
+  Toast.show('All valid claims (4) approved successfully!', 'success');
+}
+
+function filterMap(type, btn) {
+  document.querySelectorAll('.map-ctrl-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function loadJourney() { initMapIfNeeded(); populateClaimList(); }
+let mapInited = false;
+function initMapIfNeeded() {
+  if (!mapInited) { mapInited = true; initMap(); }
+  else {
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+    if (pathLayer) map.removeLayer(pathLayer);
+    // reload
+    const colorMap = { valid:'#00d4aa', amber:'#f59e0b', red:'#ef4444' };
+    pathLayer = L.polyline(journey.path, {color:'#00d4aa',weight:4,opacity:0.8}).addTo(map);
+    journey.expenses.forEach((exp,i) => {
+      const c = colorMap[exp.pin];
+      const icon = L.divIcon({className:'',html:`<div style="background:${c};border:3px solid #fff;width:18px;height:18px;border-radius:50%;box-shadow:0 0 10px ${c}88;cursor:pointer;display:flex;align-items:center;justify-content:center;"><span style="color:#fff;font-size:8px;font-weight:700;">${i+1}</span></div>`,iconSize:[18,18],iconAnchor:[9,9]});
+      const m = L.marker([exp.lat,exp.lng],{icon}).addTo(map).on('click',()=>selectExpense(exp));
+      markers.push(m);
+    });
+    populateClaimList();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => { initMap(); populateClaimList(); });
+</script>
+</body>
+</html>

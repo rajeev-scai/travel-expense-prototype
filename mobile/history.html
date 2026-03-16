@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Expense History — Smart T&amp;E</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/shared.css">
+<style>
+  body { background:var(--bg);padding:20px 0; }
+  .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:120px;height:30px;background:var(--bg);border-radius:0 0 20px 20px;z-index:10;}
+  .m-topbar{display:flex;align-items:center;gap:10px;padding:56px 16px 12px;}
+  .m-back{width:36px;height:36px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text);font-size:18px;cursor:pointer;text-decoration:none;}
+
+  .summary-strip {
+    display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+    margin:0 16px 14px;
+  }
+  .sum-card { background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center; }
+  .sum-val { font-size:18px;font-weight:800; }
+  .sum-lbl { font-size:10px;color:var(--text-muted);margin-top:3px; }
+
+  .filter-pills { display:flex;gap:6px;overflow-x:auto;padding:0 16px 12px;scrollbar-width:none; }
+  .filter-pills::-webkit-scrollbar { display:none; }
+  .f-pill {
+    padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;
+    border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer;
+  }
+  .f-pill.active { background:var(--accent-glow);border-color:var(--accent);color:var(--accent); }
+
+  .month-label {
+    padding:8px 16px;font-size:11px;font-weight:600;
+    color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;
+    background:var(--bg2);
+  }
+  .exp-row {
+    display:flex;align-items:center;gap:12px;
+    padding:12px 16px;border-bottom:1px solid var(--border);
+    cursor:pointer;transition:background 0.15s;
+  }
+  .exp-row:hover { background:var(--border); }
+  .exp-row-icon {
+    width:40px;height:40px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;flex-shrink:0;
+  }
+  .exp-row-info { flex:1; }
+  .exp-row-title { font-size:13px;font-weight:600; }
+  .exp-row-date { font-size:11px;color:var(--text-muted);margin-top:2px; }
+  .exp-row-right { text-align:right;flex-shrink:0; }
+  .exp-row-amount { font-size:14px;font-weight:700; }
+</style>
+</head>
+<body>
+
+<div style="text-align:center;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:12px;">
+  <button class="icon-btn" id="theme-toggle"><i class="ri-moon-line"></i></button>
+  <span style="font-size:13px;color:var(--text-muted);">Expense History</span>
+</div>
+
+<div class="mobile-preview-wrap" style="padding-top:0;">
+  <div class="mobile-frame">
+    <div class="notch"></div>
+    <div class="mobile-status-bar">
+      <span>9:41</span>
+      <div style="display:flex;align-items:center;gap:6px;"><i class="ri-signal-wifi-fill"></i><i class="ri-battery-fill" style="color:var(--accent);"></i></div>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;background:var(--bg);">
+      <div class="m-topbar">
+        <a class="m-back" href="home.html"><i class="ri-arrow-left-line"></i></a>
+        <div style="font-size:16px;font-weight:700;flex:1;">Expense History</div>
+        <button class="icon-btn" style="background:var(--card);border:1px solid var(--border);" onclick="Toast.show('Filter options','info')"><i class="ri-filter-3-line"></i></button>
+      </div>
+
+      <!-- Summary -->
+      <div class="summary-strip">
+        <div class="sum-card"><div class="sum-val" style="color:var(--accent);">₹4,320</div><div class="sum-lbl">March Total</div></div>
+        <div class="sum-card"><div class="sum-val" style="color:var(--green);">12</div><div class="sum-lbl">Approved</div></div>
+        <div class="sum-card"><div class="sum-val" style="color:var(--amber);">2</div><div class="sum-lbl">Pending</div></div>
+      </div>
+
+      <!-- Filter Pills -->
+      <div class="filter-pills">
+        <div class="f-pill active" onclick="filterStatus('all',this)">All</div>
+        <div class="f-pill" onclick="filterStatus('auto',this)">Auto-Approved</div>
+        <div class="f-pill" onclick="filterStatus('pending',this)">Pending</div>
+        <div class="f-pill" onclick="filterStatus('flagged',this)">Flagged</div>
+        <div class="f-pill" onclick="filterStatus('rejected',this)">Rejected</div>
+      </div>
+
+      <!-- History List -->
+      <div id="history-list"></div>
+
+    </div>
+
+    <div class="mobile-nav-bar">
+      <a class="mobile-nav-item" href="home.html"><i class="ri-home-4-line"></i><span>Home</span></a>
+      <a class="mobile-nav-item" href="trip.html"><i class="ri-route-line"></i><span>Journey</span></a>
+      <a class="mobile-nav-item" href="expense.html"><i class="ri-camera-line"></i><span>Expense</span></a>
+      <a class="mobile-nav-item active" href="history.html"><i class="ri-history-fill"></i><span>History</span></a>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/shared.js"></script>
+<script>
+const historyData = [
+  // March 2026
+  { month:'March 2026', date:'Mar 16', id:'EXP-012', type:'Food/Meals', icon:'ri-restaurant-line', iconBg:'rgba(245,158,11,0.15)', iconColor:'#f59e0b', amount:280, status:'auto', note:'Café Mumbai Express · Auto-Approved' },
+  { month:'March 2026', date:'Mar 16', id:'EXP-011', type:'Toll', icon:'ri-road-line', iconBg:'rgba(59,130,246,0.15)', iconColor:'#3b82f6', amount:60, status:'auto', note:'Western Express Hwy · Auto-Approved' },
+  { month:'March 2026', date:'Mar 16', id:'EXP-010', type:'Travel TA', icon:'ri-road-map-line', iconBg:'rgba(0,212,170,0.15)', iconColor:'#00d4aa', amount:420, status:'auto', note:'48.2 km GPS verified · Auto-Approved' },
+  { month:'March 2026', date:'Mar 15', id:'EXP-009', type:'Food/Meals', icon:'ri-restaurant-line', iconBg:'rgba(245,158,11,0.15)', iconColor:'#f59e0b', amount:420, status:'flagged', note:'5.2 km from activity · Needs review' },
+  { month:'March 2026', date:'Mar 15', id:'EXP-008', type:'Night Halt', icon:'ri-hotel-line', iconBg:'rgba(139,92,246,0.15)', iconColor:'#8b5cf6', amount:1800, status:'auto', note:'Thane · Midnight GPS verified' },
+  { month:'March 2026', date:'Mar 14', id:'EXP-007', type:'Travel TA', icon:'ri-road-map-line', iconBg:'rgba(0,212,170,0.15)', iconColor:'#00d4aa', amount:600, status:'auto', note:'50 km · Auto-Approved' },
+  { month:'March 2026', date:'Mar 13', id:'EXP-006', type:'Misc/Others', icon:'ri-more-2-line', iconBg:'rgba(100,116,139,0.15)', iconColor:'#6b7280', amount:200, status:'pending', note:'Awaiting manager review' },
+  // February 2026
+  { month:'February 2026', date:'Feb 28', id:'EXP-005', type:'BYOD Internet', icon:'ri-wifi-line', iconBg:'rgba(59,130,246,0.15)', iconColor:'#3b82f6', amount:500, status:'auto', note:'Monthly flat allowance' },
+  { month:'February 2026', date:'Feb 20', id:'EXP-004', type:'Travel TA', icon:'ri-road-map-line', iconBg:'rgba(0,212,170,0.15)', iconColor:'#00d4aa', amount:380, status:'auto', note:'32 km · Auto-Approved' },
+  { month:'February 2026', date:'Feb 15', id:'EXP-003', type:'Food/Meals', icon:'ri-restaurant-line', iconBg:'rgba(245,158,11,0.15)', iconColor:'#f59e0b', amount:350, status:'auto', note:'₹350 meal limit met' },
+  { month:'February 2026', date:'Feb 10', id:'EXP-002', type:'Food/Meals', icon:'ri-restaurant-line', iconBg:'rgba(245,158,11,0.15)', iconColor:'#f59e0b', amount:620, status:'rejected', note:'Exceeded meal limit · Rejected' },
+];
+
+const statusBadges = {
+  auto: '<span class="badge badge-green" style="font-size:9px;"><i class="ri-robot-line"></i> Auto</span>',
+  pending: '<span class="badge badge-amber" style="font-size:9px;"><i class="ri-time-line"></i> Pending</span>',
+  flagged: '<span class="badge badge-amber" style="font-size:9px;"><i class="ri-flag-line"></i> Flagged</span>',
+  rejected: '<span class="badge badge-red" style="font-size:9px;"><i class="ri-close-line"></i> Rejected</span>',
+};
+const statusColors = { auto:'var(--accent)', pending:'var(--text)', flagged:'var(--amber)', rejected:'var(--red)' };
+
+function renderHistory(data) {
+  const container = document.getElementById('history-list');
+  container.innerHTML = '';
+  let lastMonth = '';
+  data.forEach(e => {
+    if (e.month !== lastMonth) {
+      container.innerHTML += `<div class="month-label">${e.month}</div>`;
+      lastMonth = e.month;
+    }
+    container.innerHTML += `
+      <div class="exp-row" onclick="Toast.show('${e.id}: ${e.type} detail view','info')">
+        <div class="exp-row-icon" style="background:${e.iconBg};color:${e.iconColor};"><i class="${e.icon}"></i></div>
+        <div class="exp-row-info">
+          <div class="exp-row-title">${e.type}</div>
+          <div class="exp-row-date">${e.date} · ${e.note.slice(0,30)}${e.note.length>30?'…':''}</div>
+        </div>
+        <div class="exp-row-right">
+          <div class="exp-row-amount" style="color:${statusColors[e.status]};">${e.status==='rejected'?'-':''}₹${e.amount}</div>
+          <div style="margin-top:3px;">${statusBadges[e.status]}</div>
+        </div>
+      </div>`;
+  });
+}
+
+function filterStatus(status, btn) {
+  document.querySelectorAll('.f-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  if (status === 'all') renderHistory(historyData);
+  else renderHistory(historyData.filter(e => e.status === status));
+}
+
+renderHistory(historyData);
+</script>
+</body>
+</html>

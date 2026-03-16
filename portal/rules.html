@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Rule Engine — Smart T&amp;E</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/shared.css">
+<style>
+  .matrix-table th, .matrix-table td { padding: 12px 16px; text-align: center; }
+  .matrix-table th:first-child, .matrix-table td:first-child { text-align: left; font-weight: 600; }
+  .rate-input {
+    width: 80px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 8px; color: var(--text);
+    font-size: 13px; text-align: center; outline: none;
+  }
+  .rate-input:focus { border-color: var(--accent); }
+  .vehicle-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
+    background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(0,212,170,0.3);
+    cursor: pointer;
+  }
+  .vehicle-pill.inactive { background: var(--border); color: var(--text-muted); border-color: var(--border); }
+  .rule-row {
+    display: grid; grid-template-columns: 1fr 180px 120px 60px;
+    align-items: center; gap: 16px;
+    padding: 14px 16px; border-bottom: 1px solid var(--border);
+  }
+  .rule-row:last-child { border-bottom: none; }
+  .rule-category { font-size: 13px; font-weight: 600; }
+  .rule-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .tier-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+  .tier-card {
+    background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 14px; cursor: pointer; transition: all 0.2s;
+  }
+  .tier-card:hover { border-color: var(--accent); }
+  .tier-card.selected { border-color: var(--accent); background: var(--accent-glow); }
+  .tier-label { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .tier-examples { font-size: 11px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">T&amp;E</div>
+      <div class="logo-text">Smart <span>T&amp;E</span></div>
+      <button class="sidebar-toggle" id="sidebar-toggle"><i class="ri-menu-fold-line"></i></button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Overview</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon"><i class="ri-home-4-line"></i></span><span>Dashboard</span></a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Approvals</div>
+      <a class="nav-item" href="approval.html"><span class="nav-icon"><i class="ri-map-pin-2-line"></i></span><span>Pinned Journeys</span></a>
+      <a class="nav-item" href="analytics.html"><span class="nav-icon"><i class="ri-bar-chart-grouped-line"></i></span><span>Analytics</span></a>
+    </div>
+    <div class="sidebar-section sidebar-section-admin">
+      <div class="sidebar-section-label">Admin</div>
+      <a class="nav-item active nav-admin-only" href="rules.html"><span class="nav-icon"><i class="ri-settings-3-line"></i></span><span>Rule Engine</span></a>
+      <a class="nav-item nav-admin-only" href="users.html"><span class="nav-icon"><i class="ri-team-line"></i></span><span>Users &amp; Grades</span></a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="sidebar-avatar">AD</div>
+        <div class="user-info"><div class="user-name" id="sidebar-user-name">Admin User</div><div class="user-role" id="sidebar-user-role">Admin/Finance</div><div id="sidebar-role-chip"></div></div>
+      </div>
+      <button class="logout-btn"><span class="nav-icon"><i class="ri-logout-box-r-line"></i></span><span>Logout</span></button>
+    </div>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="top-header">
+      <div class="page-title"><i class="ri-settings-3-line" style="color:var(--accent);margin-right:8px;"></i>Rule Engine Configuration</div>
+      <div class="header-actions">
+        <button class="icon-btn" id="theme-toggle"><i class="ri-moon-line"></i></button>
+        <button class="btn btn-primary btn-sm" onclick="saveRules()"><i class="ri-save-line"></i> Save All Rules</button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div data-tabs>
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="tab-vehicle">🚗 Vehicle Matrix</button>
+          <button class="tab-btn" data-tab="tab-allowance">💰 Allowance Rates</button>
+          <button class="tab-btn" data-tab="tab-autoapprove">🤖 Auto-Approve Rules</button>
+          <button class="tab-btn" data-tab="tab-geofence">📍 Geo-Fence Settings</button>
+        </div>
+
+        <!-- Vehicle Matrix -->
+        <div class="tab-pane active" id="tab-vehicle">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Grade → Vehicle Eligibility</div>
+                  <div class="card-subtitle">Click to toggle vehicle type per grade</div>
+                </div>
+                <span class="badge badge-green"><i class="ri-shield-check-line"></i> Active</span>
+              </div>
+              <table class="matrix-table w-full">
+                <thead><tr>
+                  <th>Grade</th><th>Role</th><th>2-Wheeler</th><th>4-Wheeler</th><th>Taxi/Cab</th>
+                </tr></thead>
+                <tbody id="vehicle-matrix-body"></tbody>
+              </table>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Grade → City Tier Assignment</div>
+                <div class="card-subtitle">Determines DA/TA rates</div>
+              </div>
+              <table class="matrix-table w-full">
+                <thead><tr><th>Grade</th><th>Role</th><th>City Tier</th><th>TA Rate/km</th></tr></thead>
+                <tbody id="tier-matrix-body"></tbody>
+              </table>
+              <div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:var(--radius-sm);">
+                <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">TIER REFERENCE</div>
+                <div class="tier-grid">
+                  <div class="tier-card"><div class="tier-label" style="color:var(--accent);">Tier 1</div><div class="tier-examples">Mumbai, Delhi, Bangalore, Chennai, Hyderabad, Kolkata</div></div>
+                  <div class="tier-card"><div class="tier-label" style="color:var(--amber);">Tier 2</div><div class="tier-examples">Pune, Ahmedabad, Jaipur, Surat, Lucknow</div></div>
+                  <div class="tier-card"><div class="tier-label" style="color:var(--text-muted);">Tier 3</div><div class="tier-examples">All other cities and towns</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Allowance Rates -->
+        <div class="tab-pane" id="tab-allowance">
+          <div class="card mb-24">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Daily Allowance (DA) &amp; Travel Allowance (TA) Matrix</div>
+                <div class="card-subtitle">Rates applied per grade and city tier. Edit inline and save.</div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="resetRates()"><i class="ri-refresh-line"></i> Reset to Default</button>
+            </div>
+            <div class="table-wrap">
+              <table class="matrix-table w-full">
+                <thead><tr>
+                  <th>Grade</th><th>Role</th>
+                  <th>DA Tier 1<br><small style="color:var(--text-dim);font-weight:400;">₹/day</small></th>
+                  <th>DA Tier 2<br><small>₹/day</small></th>
+                  <th>DA Tier 3<br><small>₹/day</small></th>
+                  <th>TA Tier 1<br><small>₹/km</small></th>
+                  <th>TA Tier 2<br><small>₹/km</small></th>
+                  <th>TA Tier 3<br><small>₹/km</small></th>
+                  <th>Meal Limit<br><small>₹/day</small></th>
+                  <th>Night Halt<br><small>₹/night</small></th>
+                </tr></thead>
+                <tbody id="allowance-matrix-body"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title mb-16"><i class="ri-phone-line" style="color:var(--accent);"></i> BYOD Internet Allowance</div>
+              <div class="rule-row" style="background:var(--bg);border-radius:var(--radius-sm);">
+                <div><div class="rule-category">BYOD Data Allowance</div><div class="rule-desc">Monthly flat rate for personal device usage</div></div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <select class="form-control" style="width:80px;"><option>G1</option><option selected>All</option></select>
+                  <input type="number" class="rate-input" value="500">
+                  <span style="font-size:12px;color:var(--text-muted);">₹/mo</span>
+                </div>
+              </div>
+              <div class="rule-row" style="background:var(--bg);border-radius:var(--radius-sm);margin-top:8px;">
+                <div><div class="rule-category">Tenant Accommodation</div><div class="rule-desc">City-based rent assistance cap</div></div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="number" class="rate-input" value="8000">
+                  <span style="font-size:12px;color:var(--text-muted);">₹/mo</span>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title mb-16"><i class="ri-fuel-line" style="color:var(--accent);"></i> Grade-wise Fuel Charges</div>
+              <table class="matrix-table w-full">
+                <thead><tr><th>Grade</th><th>2W ₹/L</th><th>4W ₹/L</th><th>Fuel Limit ₹/mo</th></tr></thead>
+                <tbody>
+                  <tr><td>G1-G2</td><td><input class="rate-input" value="90"></td><td>N/A</td><td><input class="rate-input" value="2000"></td></tr>
+                  <tr><td>G3</td><td><input class="rate-input" value="95"></td><td><input class="rate-input" value="100"></td><td><input class="rate-input" value="4000"></td></tr>
+                  <tr><td>G4-G5</td><td>N/A</td><td><input class="rate-input" value="105"></td><td><input class="rate-input" value="8000"></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Auto-Approve Rules -->
+        <div class="tab-pane" id="tab-autoapprove">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Auto-Approval Rule Configuration</div>
+                <div class="card-subtitle">Define which expense categories are eligible for automatic approval and set conditions</div>
+              </div>
+              <span class="badge badge-blue"><i class="ri-robot-line"></i> Rule Engine v2</span>
+            </div>
+            <div id="auto-approve-rules"><!-- populated by JS --></div>
+          </div>
+        </div>
+
+        <!-- Geo-Fence -->
+        <div class="tab-pane" id="tab-geofence">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header"><div class="card-title"><i class="ri-map-pin-range-line" style="color:var(--accent);"></i> Geo-Fence Parameters</div></div>
+              <div class="form-group">
+                <label class="form-label">Activity Proof Radius (meters)</label>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <input type="range" min="100" max="2000" value="500" id="radius-slider" style="flex:1;" oninput="document.getElementById('radius-val').textContent=this.value">
+                  <span id="radius-val" style="font-size:14px;font-weight:700;color:var(--accent);min-width:50px;">500 m</span>
+                </div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:6px;">If Expense Pin is within this radius of an Activity Pin, proof is considered valid.</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Night Halt Verification Distance</label>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <input type="range" min="50" max="500" value="100" id="halt-slider" style="flex:1;" oninput="document.getElementById('halt-val').textContent=this.value">
+                  <span id="halt-val" style="font-size:14px;font-weight:700;color:var(--accent);min-width:50px;">100 km</span>
+                </div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:6px;">Midnight GPS ping must confirm user is more than this distance from home base.</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Odometer vs GPS Variance Tolerance</label>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <input type="range" min="1" max="20" value="5" id="odo-slider" style="flex:1;" oninput="document.getElementById('odo-val').textContent=this.value+'%'">
+                  <span id="odo-val" style="font-size:14px;font-weight:700;color:var(--accent);min-width:50px;">5%</span>
+                </div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:6px;">Auto-approve TA if odometer reading is within this % of GPS path distance.</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title"><i class="ri-shield-keyhole-line" style="color:var(--accent);"></i> Anti-Fraud Rules</div></div>
+              <div id="fraud-rules-list"><!-- JS --></div>
+              <div style="margin-top:16px;padding:14px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius-sm);">
+                <div style="font-size:12px;font-weight:600;color:var(--red);margin-bottom:8px;"><i class="ri-alert-line"></i> Always-On Rules (Cannot be disabled)</div>
+                <div style="font-size:12px;color:var(--text-muted);line-height:1.8;">
+                  • No expense on dates marked "Absent" in attendance<br>
+                  • Duplicate bill detection (same vendor + date + amount)<br>
+                  • Vehicle grade enforcement — cannot claim higher grade vehicle<br>
+                  • Backdating limit — bills older than 30 days auto-rejected
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/shared.js"></script>
+<script>
+// ── RBAC Guard: Admin-only page ──
+const _adminUser = Auth.requireAdmin();
+if (!_adminUser) throw new Error('redirect');
+
+const grades = SampleData.grades;
+
+// Vehicle Matrix
+const vehicleBody = document.getElementById('vehicle-matrix-body');
+const tierBody    = document.getElementById('tier-matrix-body');
+const vehicleMap = { G1:'2W', G2:'2W', G3:'2W/4W', G4:'4W', G5:'4W' };
+grades.forEach(g => {
+  const can2W = ['2W','2W/4W'].includes(g.vehicle);
+  const can4W = ['4W','2W/4W'].includes(g.vehicle);
+  vehicleBody.innerHTML += `
+    <tr>
+      <td><span class="badge badge-blue">${g.grade}</span></td>
+      <td>${g.label}</td>
+      <td onclick="this.querySelector('span').classList.toggle('inactive')">
+        <span class="vehicle-pill${can2W?'':' inactive'}"><i class="ri-motorbike-line"></i> 2W</span>
+      </td>
+      <td onclick="this.querySelector('span').classList.toggle('inactive')">
+        <span class="vehicle-pill${can4W?'':' inactive'}"><i class="ri-car-line"></i> 4W</span>
+      </td>
+      <td onclick="this.querySelector('span').classList.toggle('inactive')">
+        <span class="vehicle-pill inactive"><i class="ri-taxi-line"></i> Taxi</span>
+      </td>
+    </tr>`;
+  tierBody.innerHTML += `
+    <tr>
+      <td><span class="badge badge-blue">${g.grade}</span></td>
+      <td>${g.label}</td>
+      <td>
+        <select class="form-control" style="width:80px;">
+          <option ${g.tier===1?'selected':''}>Tier 1</option>
+          <option ${g.tier===2?'selected':''}>Tier 2</option>
+          <option ${g.tier===3?'selected':''}>Tier 3</option>
+        </select>
+      </td>
+      <td><input class="rate-input" value="${g.taRate}"></td>
+    </tr>`;
+});
+
+// Allowance Matrix
+const allowBody = document.getElementById('allowance-matrix-body');
+const allowanceData = [
+  { grade:'G1', role:'Junior Exec', da:[200,150,100], ta:[2.5,2.0,1.5], meal:150, halt:500 },
+  { grade:'G2', role:'Executive',   da:[300,220,150], ta:[3.0,2.5,2.0], meal:200, halt:700 },
+  { grade:'G3', role:'Sr Executive',da:[450,350,250], ta:[4.0,3.5,2.5], meal:350, halt:1000 },
+  { grade:'G4', role:'Manager',     da:[700,550,400], ta:[6.0,5.0,4.0], meal:600, halt:1500 },
+  { grade:'G5', role:'Sr Manager',  da:[1000,800,600],ta:[8.0,7.0,6.0], meal:800, halt:2500 },
+];
+allowanceData.forEach(a => {
+  allowBody.innerHTML += `
+    <tr>
+      <td><span class="badge badge-blue">${a.grade}</span></td>
+      <td>${a.role}</td>
+      <td><input class="rate-input" value="${a.da[0]}"></td>
+      <td><input class="rate-input" value="${a.da[1]}"></td>
+      <td><input class="rate-input" value="${a.da[2]}"></td>
+      <td><input class="rate-input" value="${a.ta[0]}"></td>
+      <td><input class="rate-input" value="${a.ta[1]}"></td>
+      <td><input class="rate-input" value="${a.ta[2]}"></td>
+      <td><input class="rate-input" value="${a.meal}"></td>
+      <td><input class="rate-input" value="${a.halt}"></td>
+    </tr>`;
+});
+
+// Auto-Approve Rules
+const autoRules = [
+  { cat:'Travel (TA)', icon:'ri-road-map-line', col:'#00d4aa', auto:true,  desc:'Auto-approve if GPS path ≈ Odometer reading (±5%)', condition:'Path ≈ Odometer', threshold:'±5% variance' },
+  { cat:'Daily Allowance (DA)', icon:'ri-calendar-check-line', col:'#3b82f6', auto:true, desc:'Auto-approve full DA if attendance marked for the day', condition:'Attendance = Present', threshold:'Full day' },
+  { cat:'Food / Meals', icon:'ri-restaurant-line', col:'#f59e0b', auto:true,  desc:'Auto-approve if pin within 500m of activity and ≤ meal limit', condition:'Pin ≤ 500m from activity + ≤ limit', threshold:'Grade-wise limit' },
+  { cat:'Night Halt', icon:'ri-moon-line', col:'#8b5cf6', auto:true,  desc:'Auto-approve if midnight GPS confirms location > 100km from home', condition:'Midnight GPS > 100km', threshold:'Grade-wise cap' },
+  { cat:'Toll / Highway', icon:'ri-road-line', col:'#00d4aa', auto:true,  desc:'Auto-approve with valid OCR receipt if on recorded route', condition:'On route + OCR valid', threshold:'Actuals' },
+  { cat:'Client Meals', icon:'ri-group-2-line', col:'#f59e0b', auto:false, desc:'Manual review required — high-value entertainment category', condition:'Manual Review', threshold:'₹2,000/event' },
+  { cat:'Misc / Others', icon:'ri-more-2-line', col:'#6b7280', auto:false, desc:'Manual review required if no corresponding activity found', condition:'Activity pin required', threshold:'Actuals, capped' },
+  { cat:'BYOD Internet', icon:'ri-wifi-line', col:'#3b82f6', auto:true,  desc:'Auto-approve monthly flat allowance per grade', condition:'Monthly flat', threshold:'₹500/month' },
+];
+const rulesDiv = document.getElementById('auto-approve-rules');
+autoRules.forEach(r => {
+  rulesDiv.innerHTML += `
+    <div class="rule-row">
+      <div>
+        <div class="rule-category"><i class="${r.icon}" style="color:${r.col};margin-right:6px;"></i>${r.cat}</div>
+        <div class="rule-desc">${r.desc}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Condition</div>
+        <span class="badge badge-gray" style="font-size:11px;">${r.condition}</span>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Threshold</div>
+        <span style="font-size:12px;font-weight:600;">${r.threshold}</span>
+      </div>
+      <div>
+        <label class="toggle">
+          <input type="checkbox" ${r.auto?'checked':''}>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>`;
+});
+
+// Fraud Rules
+const fraudRules = [
+  { label:'Flag if Expense Pin > radius from any Activity', enabled: true },
+  { label:'Auto-reject if Breadcrumb path never passed expense location', enabled: false },
+  { label:'Flag duplicate submissions (same vendor+date+amount)', enabled: true },
+  { label:'Alert if total daily expense exceeds 200% of grade limit', enabled: true },
+  { label:'Flag if bill timestamp and GPS timestamp differ by > 2 hours', enabled: true },
+];
+const fraudDiv = document.getElementById('fraud-rules-list');
+fraudRules.forEach(f => {
+  fraudDiv.innerHTML += `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+      <label class="toggle"><input type="checkbox" ${f.enabled?'checked':''}><span class="toggle-slider"></span></label>
+      <span style="font-size:13px;">${f.label}</span>
+    </div>`;
+});
+
+function saveRules() { Toast.show('All rules saved successfully!', 'success'); }
+function resetRates() { Toast.show('Rates reset to policy defaults.', 'info'); }
+</script>
+</body>
+</html>

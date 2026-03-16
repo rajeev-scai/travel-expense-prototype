@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Analytics — Smart T&amp;E</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/shared.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  .filter-bar { display:flex; align-items:center; gap:10px; margin-bottom:24px; flex-wrap:wrap; }
+  .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+  .kpi-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+  .kpi-icon { font-size:28px; margin-bottom:8px; }
+  .kpi-val { font-size:28px; font-weight:800; }
+  .kpi-label { font-size:12px; color:var(--text-muted); margin-top:4px; }
+  .kpi-trend { font-size:11px; margin-top:6px; display:flex; align-items:center; gap:4px; }
+  .trend-up { color:var(--green); }
+  .trend-down { color:var(--red); }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">T&amp;E</div>
+      <div class="logo-text">Smart <span>T&amp;E</span></div>
+      <button class="sidebar-toggle" id="sidebar-toggle"><i class="ri-menu-fold-line"></i></button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Overview</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon"><i class="ri-home-4-line"></i></span><span>Dashboard</span></a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Approvals</div>
+      <a class="nav-item" href="approval.html"><span class="nav-icon"><i class="ri-map-pin-2-line"></i></span><span>Pinned Journeys</span></a>
+      <a class="nav-item active" href="analytics.html"><span class="nav-icon"><i class="ri-bar-chart-grouped-line"></i></span><span>Analytics</span></a>
+    </div>
+    <div class="sidebar-section sidebar-section-admin">
+      <div class="sidebar-section-label">Admin</div>
+      <a class="nav-item nav-admin-only" href="rules.html"><span class="nav-icon"><i class="ri-settings-3-line"></i></span><span>Rule Engine</span></a>
+      <a class="nav-item nav-admin-only" href="users.html"><span class="nav-icon"><i class="ri-team-line"></i></span><span>Users &amp; Grades</span></a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="sidebar-avatar">PM</div>
+        <div class="user-info"><div class="user-name" id="sidebar-user-name">Priya Mehta</div><div class="user-role" id="sidebar-user-role">Line Manager</div><div id="sidebar-role-chip"></div></div>
+      </div>
+      <button class="logout-btn"><span class="nav-icon"><i class="ri-logout-box-r-line"></i></span><span>Logout</span></button>
+    </div>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="top-header">
+      <div class="page-title"><i class="ri-bar-chart-grouped-line" style="color:var(--accent);margin-right:8px;"></i>Team Analytics</div>
+      <div class="header-actions">
+        <button class="icon-btn" id="theme-toggle"><i class="ri-moon-line"></i></button>
+        <button class="btn btn-outline btn-sm" onclick="Toast.show('Report exported!','success')"><i class="ri-download-2-line"></i> Export CSV</button>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <select class="form-control" style="width:140px;"><option>Q1 2026</option><option>Q4 2025</option><option>Q3 2025</option></select>
+        <select class="form-control" style="width:140px;"><option>All Teams</option><option>Sales</option><option>Support</option><option>Tech</option></select>
+        <select class="form-control" style="width:140px;"><option>All Grades</option><option>G1</option><option>G2</option><option>G3</option><option>G4</option><option>G5</option></select>
+        <select class="form-control" style="width:160px;"><option>All Categories</option><option>Travel TA</option><option>Food/Meals</option><option>Night Halt</option></select>
+        <button class="btn btn-primary btn-sm"><i class="ri-filter-line"></i> Apply Filters</button>
+      </div>
+
+      <!-- KPI Row -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-icon">💰</div>
+          <div class="kpi-val" style="color:var(--accent);">₹3.8L</div>
+          <div class="kpi-label">Total Expense Q1 2026</div>
+          <div class="kpi-trend trend-up"><i class="ri-arrow-up-line"></i> +14% vs Q4 2025</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">🤖</div>
+          <div class="kpi-val" style="color:var(--green);">71%</div>
+          <div class="kpi-label">Auto-Approval Rate</div>
+          <div class="kpi-trend trend-up"><i class="ri-arrow-up-line"></i> +6pp vs Q4 2025</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">⏱️</div>
+          <div class="kpi-val" style="color:var(--blue);">1.8 min</div>
+          <div class="kpi-label">Avg Submission Time</div>
+          <div class="kpi-trend trend-up"><i class="ri-arrow-down-line"></i> -42% reduction</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">🚨</div>
+          <div class="kpi-val" style="color:var(--red);">3.2%</div>
+          <div class="kpi-label">Fraud Flag Rate</div>
+          <div class="kpi-trend trend-up"><i class="ri-arrow-down-line"></i> -1.8pp improvement</div>
+        </div>
+      </div>
+
+      <!-- Charts Row 1 -->
+      <div class="grid-2 mb-24">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Monthly Spend Trend</div><div class="card-subtitle">Jan – Mar 2026 by category</div></div>
+          </div>
+          <canvas id="lineChart" height="200"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Category Breakdown</div><div class="card-subtitle">% of total spend Q1 2026</div></div>
+          </div>
+          <canvas id="pieChart" height="200"></canvas>
+        </div>
+      </div>
+
+      <!-- Charts Row 2 -->
+      <div class="grid-2 mb-24">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Auto vs Manual Approval by Month</div></div>
+          </div>
+          <canvas id="stackedBar" height="200"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">GPS vs Odometer Variance</div><div class="card-subtitle">Monthly average deviation %</div></div>
+          </div>
+          <canvas id="varianceChart" height="200"></canvas>
+        </div>
+      </div>
+
+      <!-- Top Spenders Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="ri-trophy-line" style="color:var(--amber);margin-right:6px;"></i>Top Spenders — Q1 2026</div>
+          <button class="btn btn-outline btn-sm" onclick="Toast.show('Detailed report opened','info')"><i class="ri-external-link-line"></i> Full Report</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>#</th><th>Employee</th><th>Grade</th><th>Team</th><th>Total Expense</th><th>TA</th><th>Food</th><th>Others</th><th>Auto-Approved%</th><th>Flags</th>
+            </tr></thead>
+            <tbody id="top-spenders"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/shared.js"></script>
+<script>
+// ── RBAC Guard ──
+const _portalUser = Auth.requirePortal();
+if (!_portalUser) throw new Error('redirect');
+
+// Line Chart
+const lineCtx = document.getElementById('lineChart').getContext('2d');
+new Chart(lineCtx, {
+  type:'line',
+  data:{
+    labels:['Jan','Feb','Mar'],
+    datasets:[
+      { label:'Travel TA', data:[38000,42000,45000], borderColor:'#00d4aa', backgroundColor:'rgba(0,212,170,0.1)', fill:true, tension:0.4 },
+      { label:'Food/Meals', data:[22000,26000,28000], borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.1)', fill:true, tension:0.4 },
+      { label:'Night Halt', data:[12000,15000,18000], borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,0.1)', fill:true, tension:0.4 },
+      { label:'Others', data:[8000,10000,12000], borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,0.1)', fill:true, tension:0.4 },
+    ]
+  },
+  options:{ responsive:true, plugins:{legend:{labels:{color:'#8b9dc3',font:{size:11}}}}, scales:{
+    x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#8b9dc3'}},
+    y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#8b9dc3',callback:v=>`₹${v/1000}K`}}
+  }}
+});
+
+// Pie Chart
+const pieCtx = document.getElementById('pieChart').getContext('2d');
+new Chart(pieCtx, {
+  type:'doughnut',
+  data:{
+    labels:['Travel TA','Food/Meals','Night Halt','Tolls','BYOD','Others'],
+    datasets:[{ data:[35,24,15,7,10,9], backgroundColor:['#00d4aa','#3b82f6','#8b5cf6','#f59e0b','#ef4444','#6b7280'], borderWidth:0, hoverOffset:4 }]
+  },
+  options:{ responsive:true, cutout:'60%', plugins:{legend:{position:'right',labels:{color:'#8b9dc3',font:{size:11},boxWidth:10}}} }
+});
+
+// Stacked Bar
+const sbCtx = document.getElementById('stackedBar').getContext('2d');
+new Chart(sbCtx, {
+  type:'bar',
+  data:{
+    labels:['Jan','Feb','Mar'],
+    datasets:[
+      { label:'Auto-Approved', data:[65,68,71], backgroundColor:'rgba(0,212,170,0.8)', stack:'a' },
+      { label:'Manual Approved', data:[22,20,18], backgroundColor:'rgba(59,130,246,0.8)', stack:'a' },
+      { label:'Flagged', data:[8,7,6], backgroundColor:'rgba(245,158,11,0.8)', stack:'a' },
+      { label:'Rejected', data:[5,5,5], backgroundColor:'rgba(239,68,68,0.8)', stack:'a' },
+    ]
+  },
+  options:{ responsive:true, scales:{
+    x:{stacked:true,grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#8b9dc3'}},
+    y:{stacked:true,grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#8b9dc3',callback:v=>v+'%'},max:100}
+  }, plugins:{legend:{labels:{color:'#8b9dc3',font:{size:11}}}} }
+});
+
+// Variance Chart
+const varCtx = document.getElementById('varianceChart').getContext('2d');
+new Chart(varCtx, {
+  type:'bar',
+  data:{
+    labels:['Rahul S.','Anjali S.','Vikram P.','Sneha N.','Arjun K.'],
+    datasets:[{
+      label:'GPS vs Odometer Variance %',
+      data:[2.1,4.8,1.9,3.2,6.1],
+      backgroundColor:d => d.raw > 5 ? 'rgba(239,68,68,0.7)' : d.raw > 3 ? 'rgba(245,158,11,0.7)' : 'rgba(0,212,170,0.7)',
+      borderRadius:6,
+    }]
+  },
+  options:{ responsive:true, plugins:{legend:{display:false}}, scales:{
+    x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#8b9dc3',font:{size:11}}},
+    y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#8b9dc3',callback:v=>v+'%'},max:10}
+  }, annotation:{ annotations:[{ type:'line', yMin:5, yMax:5, borderColor:'#ef4444', borderWidth:1, borderDash:[4,4] }] } }
+});
+
+// Top Spenders
+const spendersData = [
+  { name:'Arjun Kapoor', grade:'G4', team:'Tech', total:7200, ta:4200, food:1800, other:1200, auto:82, flags:1 },
+  { name:'Anjali Singh', grade:'G4', team:'Sales', total:6800, ta:3800, food:2000, other:1000, auto:75, flags:2 },
+  { name:'Rahul Sharma', grade:'G3', team:'Sales', total:4200, ta:2800, food:900, other:500, auto:88, flags:0 },
+  { name:'Sneha Nair', grade:'G2', team:'Sales', total:3500, ta:2100, food:800, other:600, auto:91, flags:0 },
+  { name:'Vikram Patel', grade:'G3', team:'Support', total:2100, ta:1400, food:500, other:200, auto:72, flags:3 },
+];
+const spendTbody = document.getElementById('top-spenders');
+spendersData.forEach((s,i) => {
+  const flagBadge = s.flags > 0 ? `<span class="badge badge-amber">${s.flags}</span>` : `<span class="badge badge-green">0</span>`;
+  const autoColor = s.auto >= 80 ? 'var(--green)' : s.auto >= 70 ? 'var(--amber)' : 'var(--red)';
+  spendTbody.innerHTML += `
+    <tr>
+      <td><strong>${i+1}</strong></td>
+      <td><strong>${s.name}</strong></td>
+      <td><span class="badge badge-blue">${s.grade}</span></td>
+      <td>${s.team}</td>
+      <td><strong>${Fmt.currency(s.total)}</strong></td>
+      <td>${Fmt.currency(s.ta)}</td>
+      <td>${Fmt.currency(s.food)}</td>
+      <td>${Fmt.currency(s.other)}</td>
+      <td><strong style="color:${autoColor}">${s.auto}%</strong></td>
+      <td>${flagBadge}</td>
+    </tr>`;
+});
+</script>
+</body>
+</html>

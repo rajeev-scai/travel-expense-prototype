@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Add Expense — Smart T&amp;E</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/shared.css">
+<style>
+  body { background:var(--bg);padding:20px 0; }
+  .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:120px;height:30px;background:var(--bg);border-radius:0 0 20px 20px;z-index:10;}
+  .m-topbar{display:flex;align-items:center;gap:10px;padding:56px 16px 12px;}
+  .m-back{width:36px;height:36px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text);font-size:18px;cursor:pointer;text-decoration:none;}
+
+  .category-scroll { display:flex;gap:8px;overflow-x:auto;padding:0 16px 12px;scrollbar-width:none; }
+  .category-scroll::-webkit-scrollbar { display:none; }
+  .cat-chip {
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    min-width:64px;padding:10px 6px;border-radius:12px;
+    border:2px solid var(--border);background:var(--bg);
+    cursor:pointer;flex-shrink:0;transition:all 0.2s;
+  }
+  .cat-chip:hover { border-color:rgba(0,212,170,0.4); }
+  .cat-chip.selected { border-color:var(--accent);background:var(--accent-glow); }
+  .cat-chip i { font-size:22px;color:var(--text-muted); }
+  .cat-chip.selected i { color:var(--accent); }
+  .cat-chip span { font-size:10px;font-weight:600;color:var(--text-muted);white-space:nowrap; }
+  .cat-chip.selected span { color:var(--accent); }
+
+  .camera-zone {
+    margin:0 16px 14px;
+    height:180px;border-radius:16px;
+    background:linear-gradient(135deg,#0a1628,#16213e);
+    border:2px dashed rgba(0,212,170,0.4);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;
+  }
+  .camera-zone:hover, .camera-zone.active { border-color:var(--accent);border-style:solid; }
+  .camera-zone i { font-size:40px;color:rgba(0,212,170,0.6);margin-bottom:10px; }
+  .camera-zone .cam-label { font-size:13px;font-weight:600;color:#8b9dc3; }
+  .camera-zone .cam-sub { font-size:11px;color:#4a5568;margin-top:4px; }
+  .camera-zone img { position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:14px; }
+  .camera-zone .cam-overlay {
+    position:absolute;inset:0;background:rgba(0,0,0,0.5);
+    display:flex;align-items:center;justify-content:center;border-radius:14px;
+  }
+
+  .ocr-result {
+    margin:0 16px 14px;
+    background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.3);
+    border-radius:14px;padding:14px;
+    display:none;
+  }
+  .ocr-result.visible { display:block;animation:fadeIn 0.3s ease; }
+  .ocr-header { display:flex;align-items:center;gap:8px;margin-bottom:12px; }
+  .ocr-field { display:flex;align-items:center;justify-content:space-between;margin-bottom:8px; }
+  .ocr-field-label { font-size:11px;color:var(--text-muted); }
+  .ocr-field-value { font-size:13px;font-weight:700; }
+  .ocr-edit { font-size:12px;color:var(--accent);cursor:pointer; }
+
+  .geo-tag {
+    margin:0 16px 14px;
+    display:flex;align-items:center;gap:10px;
+    background:var(--card);border:1px solid var(--border);
+    border-radius:12px;padding:12px;
+  }
+  .geo-icon { width:36px;height:36px;border-radius:10px;background:rgba(59,130,246,0.15);color:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0; }
+
+  .amount-big {
+    margin:0 16px 14px;
+    background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;
+  }
+  .amount-input-wrap { display:flex;align-items:center;gap:8px;margin-top:8px; }
+  .currency-symbol { font-size:24px;font-weight:800;color:var(--accent); }
+  .amount-input { font-size:28px;font-weight:800;background:none;border:none;color:var(--text);outline:none;width:100%;border-bottom:2px solid var(--border); }
+  .amount-input:focus { border-bottom-color:var(--accent); }
+
+  .submit-btn {
+    display:block;margin:0 16px 16px;padding:16px;
+    background:var(--accent);color:#0a1628;border-radius:14px;
+    font-size:15px;font-weight:700;text-align:center;border:none;cursor:pointer;
+    width:calc(100% - 32px);transition:all 0.2s;
+  }
+  .submit-btn:hover { background:var(--accent2);box-shadow:0 0 24px var(--accent-glow); }
+  .submit-btn:disabled { opacity:0.5;cursor:not-allowed; }
+
+  .validation-check { display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:6px; }
+  .check-pass { color:var(--green); }
+  .check-fail { color:var(--red); }
+  .check-pending { color:var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div style="text-align:center;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:12px;">
+  <button class="icon-btn" id="theme-toggle"><i class="ri-moon-line"></i></button>
+  <span style="font-size:13px;color:var(--text-muted);">Add Expense · Mobile</span>
+</div>
+
+<div class="mobile-preview-wrap" style="padding-top:0;">
+  <div class="mobile-frame">
+    <div class="notch"></div>
+    <div class="mobile-status-bar">
+      <span>9:41</span>
+      <div style="display:flex;align-items:center;gap:6px;"><i class="ri-signal-wifi-fill"></i><i class="ri-battery-fill" style="color:var(--accent);"></i></div>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;background:var(--bg);">
+      <!-- Top Bar -->
+      <div class="m-topbar">
+        <a class="m-back" href="home.html"><i class="ri-arrow-left-line"></i></a>
+        <div style="font-size:16px;font-weight:700;flex:1;">Add Expense</div>
+        <span class="badge badge-green"><i class="ri-map-pin-line"></i> GPS Pinned</span>
+      </div>
+
+      <!-- Attendance check -->
+      <div style="margin:0 16px 12px;padding:10px 12px;background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.3);border-radius:10px;display:flex;align-items:center;gap:8px;">
+        <i class="ri-checkbox-circle-fill" style="color:var(--accent);font-size:16px;"></i>
+        <span style="font-size:12px;">Attendance marked · Clocked in at 9:02 AM</span>
+      </div>
+
+      <!-- Category Selection -->
+      <div style="padding:0 16px;margin-bottom:6px;">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Expense Category</div>
+      </div>
+      <div class="category-scroll">
+        <div class="cat-chip selected" onclick="selectCat(this,'food')"><i class="ri-restaurant-line"></i><span>Food/Meal</span></div>
+        <div class="cat-chip" onclick="selectCat(this,'travel')"><i class="ri-road-map-line"></i><span>Travel TA</span></div>
+        <div class="cat-chip" onclick="selectCat(this,'toll')"><i class="ri-road-line"></i><span>Toll</span></div>
+        <div class="cat-chip" onclick="selectCat(this,'hotel')"><i class="ri-hotel-line"></i><span>Night Halt</span></div>
+        <div class="cat-chip" onclick="selectCat(this,'misc')"><i class="ri-more-2-line"></i><span>Misc</span></div>
+      </div>
+
+      <!-- Camera Zone -->
+      <div style="padding:0 16px;margin-bottom:6px;">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">📷 Bill Photo (Live Camera Only)</div>
+      </div>
+      <div class="camera-zone" id="cam-zone" onclick="capturePhoto()">
+        <i class="ri-camera-2-line" id="cam-icon"></i>
+        <div class="cam-label">Tap to Capture Bill</div>
+        <div class="cam-sub">Gallery uploads not allowed · GPS auto-tagged</div>
+        <input type="file" accept="image/*" capture="environment" id="photo-input" style="display:none;" onchange="handlePhoto(this)">
+      </div>
+
+      <!-- OCR Result (shown after photo) -->
+      <div class="ocr-result" id="ocr-result">
+        <div class="ocr-header">
+          <div style="width:28px;height:28px;background:rgba(0,212,170,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--accent);">
+            <i class="ri-magic-line"></i>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:700;">OCR Extraction Complete</div>
+            <div style="font-size:11px;color:var(--text-muted);">Verify and confirm the extracted data</div>
+          </div>
+        </div>
+        <div class="ocr-field">
+          <div><div class="ocr-field-label">Vendor / Restaurant</div><div class="ocr-field-value">Café Mumbai Express</div></div>
+          <span class="ocr-edit" onclick="Toast.show('Edit field','info')"><i class="ri-edit-line"></i></span>
+        </div>
+        <div class="ocr-field">
+          <div><div class="ocr-field-label">Bill Date</div><div class="ocr-field-value">16 Mar 2026 · 1:18 PM</div></div>
+          <span class="ocr-edit"><i class="ri-edit-line"></i></span>
+        </div>
+        <div class="ocr-field">
+          <div><div class="ocr-field-label">Amount (Detected)</div><div class="ocr-field-value" style="color:var(--accent);">₹ 280.00</div></div>
+          <span class="badge badge-green" style="font-size:10px;"><i class="ri-check-line"></i> Confirmed</span>
+        </div>
+        <div class="ocr-field">
+          <div><div class="ocr-field-label">GST Number</div><div class="ocr-field-value">27AABCT3518Q1ZB</div></div>
+        </div>
+      </div>
+
+      <!-- Amount Input -->
+      <div class="amount-big">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;">Amount</div>
+        <div class="amount-input-wrap">
+          <span class="currency-symbol">₹</span>
+          <input class="amount-input" type="number" id="amount-input" value="280" placeholder="0">
+        </div>
+        <div id="limit-check" style="margin-top:8px;font-size:11px;color:var(--green);display:flex;align-items:center;gap:4px;">
+          <i class="ri-checkbox-circle-fill"></i> Within G3 meal limit of ₹350
+        </div>
+      </div>
+
+      <!-- Geo Tag -->
+      <div class="geo-tag">
+        <div class="geo-icon"><i class="ri-map-pin-fill"></i></div>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:600;">Auto Geo-Tagged</div>
+          <div style="font-size:11px;color:var(--text-muted);">Zomato HQ Area, Andheri E · 19.1313°N 72.8861°E</div>
+        </div>
+        <span class="badge badge-green" style="font-size:10px;"><i class="ri-check-line"></i> Valid</span>
+      </div>
+
+      <!-- Validation Checks -->
+      <div id="validation-checks" style="margin:0 16px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;">Auto-Validation</div>
+        <div class="validation-check check-pass"><i class="ri-checkbox-circle-fill"></i> Attendance marked for today</div>
+        <div class="validation-check check-pass" id="check-pin"><i class="ri-checkbox-circle-fill"></i> Expense pin within 500m of activity</div>
+        <div class="validation-check check-pending" id="check-photo"><i class="ri-time-line"></i> Bill photo captured via live camera</div>
+        <div class="validation-check check-pass" id="check-limit"><i class="ri-checkbox-circle-fill"></i> Amount within grade meal limit</div>
+        <div class="validation-check check-pending" id="check-ocr"><i class="ri-time-line"></i> OCR extraction pending</div>
+      </div>
+
+      <!-- Notes -->
+      <div style="padding:0 16px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Notes (Optional)</div>
+        <textarea class="form-control" rows="2" placeholder="e.g., Lunch with client Zomato team"></textarea>
+      </div>
+
+      <!-- Submit -->
+      <button class="submit-btn" id="submit-btn" onclick="submitExpense()">
+        <i class="ri-send-plane-fill"></i> Submit Expense
+      </button>
+    </div>
+
+    <div class="mobile-nav-bar">
+      <a class="mobile-nav-item" href="home.html"><i class="ri-home-4-line"></i><span>Home</span></a>
+      <a class="mobile-nav-item" href="trip.html"><i class="ri-route-line"></i><span>Journey</span></a>
+      <a class="mobile-nav-item active" href="expense.html"><i class="ri-camera-fill"></i><span>Expense</span></a>
+      <a class="mobile-nav-item" href="history.html"><i class="ri-history-line"></i><span>History</span></a>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/shared.js"></script>
+<script>
+let photoCaptured = false;
+
+function selectCat(el, cat) {
+  document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  if (cat === 'travel') {
+    document.getElementById('cam-zone').style.display = 'none';
+    document.getElementById('ocr-result').classList.remove('visible');
+  } else {
+    document.getElementById('cam-zone').style.display = 'flex';
+  }
+}
+
+function capturePhoto() { document.getElementById('photo-input').click(); }
+
+function handlePhoto(input) {
+  if (input.files && input.files[0]) {
+    photoCaptured = true;
+    const zone = document.getElementById('cam-zone');
+    zone.classList.add('active');
+    zone.innerHTML = `
+      <i class="ri-checkbox-circle-fill" style="font-size:40px;color:var(--accent);margin-bottom:10px;"></i>
+      <div class="cam-label" style="color:var(--accent);">📸 Photo Captured!</div>
+      <div class="cam-sub">Processing OCR extraction...</div>
+    `;
+    // Show OCR after delay
+    setTimeout(() => {
+      document.getElementById('ocr-result').classList.add('visible');
+      document.getElementById('check-photo').innerHTML = '<i class="ri-checkbox-circle-fill" style="color:var(--green);"></i> Bill photo captured via live camera';
+      document.getElementById('check-photo').className = 'validation-check check-pass';
+      document.getElementById('check-ocr').innerHTML = '<i class="ri-checkbox-circle-fill" style="color:var(--green);"></i> OCR data extracted — vendor, date, amount';
+      document.getElementById('check-ocr').className = 'validation-check check-pass';
+      document.getElementById('amount-input').value = '280';
+    }, 1800);
+  }
+}
+
+// Simulate OCR on page load (for demo)
+setTimeout(() => {
+  document.getElementById('ocr-result').classList.add('visible');
+  document.getElementById('check-photo').innerHTML = '<i class="ri-checkbox-circle-fill" style="color:var(--green);"></i> Bill photo captured via live camera';
+  document.getElementById('check-photo').className = 'validation-check check-pass';
+  document.getElementById('check-ocr').innerHTML = '<i class="ri-checkbox-circle-fill" style="color:var(--green);"></i> OCR extracted — Café Mumbai Express, ₹280';
+  document.getElementById('check-ocr').className = 'validation-check check-pass';
+}, 800);
+
+document.getElementById('amount-input').addEventListener('input', function() {
+  const val = parseFloat(this.value) || 0;
+  const el = document.getElementById('limit-check');
+  if (val > 350) {
+    el.style.color = 'var(--red)';
+    el.innerHTML = '<i class="ri-alert-line"></i> Exceeds G3 meal limit of ₹350 — will require manual review';
+    document.getElementById('check-limit').innerHTML = '<i class="ri-close-circle-fill" style="color:var(--red);"></i> Amount exceeds grade meal limit';
+    document.getElementById('check-limit').className = 'validation-check check-fail';
+  } else {
+    el.style.color = 'var(--green)';
+    el.innerHTML = '<i class="ri-checkbox-circle-fill"></i> Within G3 meal limit of ₹350';
+    document.getElementById('check-limit').innerHTML = '<i class="ri-checkbox-circle-fill" style="color:var(--green);"></i> Amount within grade meal limit';
+    document.getElementById('check-limit').className = 'validation-check check-pass';
+  }
+});
+
+function submitExpense() {
+  Toast.show('✓ Expense submitted! Auto-approved ₹280 — Pinned to Zomato HQ.', 'success');
+  setTimeout(() => window.location.href = 'history.html', 1500);
+}
+</script>
+</body>
+</html>

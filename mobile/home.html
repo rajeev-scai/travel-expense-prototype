@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Mobile App — Smart T&amp;E</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/shared.css">
+<style>
+  body { background: var(--bg); padding: 20px 0; }
+  .page-meta {
+    text-align: center; margin-bottom: 20px;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+  }
+  .page-meta a { font-size:12px; color:var(--accent); }
+  .mobile-frame { position: relative; }
+  .notch {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 30px; background: var(--bg);
+    border-radius: 0 0 20px 20px; z-index: 10;
+  }
+
+  /* Mobile-specific styles */
+  .m-header {
+    padding: 60px 20px 16px;
+    background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
+  }
+  .m-greeting { font-size: 13px; color: var(--text-muted); }
+  .m-name { font-size: 20px; font-weight: 800; margin-top: 2px; }
+  .m-name span { color: var(--accent); }
+  .attendance-card {
+    margin: 0 16px 16px;
+    background: linear-gradient(135deg, #0f3460, #16213e);
+    border: 1px solid rgba(0,212,170,0.3);
+    border-radius: 16px; padding: 16px;
+    position: relative; overflow: hidden;
+  }
+  .attendance-card::before {
+    content: ''; position: absolute;
+    width: 150px; height: 150px;
+    background: radial-gradient(circle, rgba(0,212,170,0.15) 0%, transparent 70%);
+    right: -30px; top: -30px;
+  }
+  .att-status {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 12px;
+  }
+  .att-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse 2s infinite;
+  }
+  .att-label { font-size: 12px; font-weight: 600; color: var(--accent); }
+  .att-time { font-size: 22px; font-weight: 800; color: #fff; }
+  .att-sub { font-size: 11px; color: #8b9dc3; margin-top: 2px; }
+  .att-stats {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px; margin-top: 14px;
+  }
+  .att-stat { text-align: center; }
+  .att-stat-val { font-size: 16px; font-weight: 700; color: #fff; }
+  .att-stat-lbl { font-size: 10px; color: #8b9dc3; margin-top: 2px; }
+
+  .quick-actions-grid {
+    display: grid; grid-template-columns: repeat(4,1fr);
+    gap: 10px; margin: 0 16px 16px;
+  }
+  .m-quick-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 6px;
+    cursor: pointer; text-decoration: none; color: inherit;
+    transition: all 0.2s;
+  }
+  .m-quick-btn:hover, .m-quick-btn:active { border-color: var(--accent); background: var(--accent-glow); }
+  .m-quick-btn .m-btn-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .m-quick-btn span { font-size: 10px; font-weight: 600; text-align: center; color: var(--text-muted); }
+
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px; margin-bottom: 10px;
+  }
+  .section-title { font-size: 14px; font-weight: 700; }
+  .section-link { font-size: 12px; color: var(--accent); text-decoration: none; }
+
+  .expense-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .expense-item:last-child { border-bottom: none; }
+  .exp-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .exp-info { flex: 1; }
+  .exp-type { font-size: 13px; font-weight: 600; }
+  .exp-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .exp-amount { font-size: 14px; font-weight: 700; }
+  .exp-amount.credit { color: var(--accent); }
+
+  .today-journey {
+    margin: 0 16px 16px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px;
+  }
+  .journey-route {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  }
+  .route-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .route-line { flex: 1; height: 2px; border-top: 2px dashed var(--border); }
+  .route-info { font-size: 11px; color: var(--text-muted); flex: 1; }
+</style>
+</head>
+<body>
+<div class="page-meta">
+  <button class="icon-btn" id="theme-toggle" title="Theme"><i class="ri-moon-line"></i></button>
+  <span style="font-size:13px;color:var(--text-muted);">Mobile App Preview</span>
+  <a href="../portal/dashboard.html">→ Web Portal</a>
+</div>
+
+<div class="mobile-preview-wrap" style="padding-top:0;">
+  <div class="mobile-frame">
+    <div class="notch"></div>
+
+    <!-- Status Bar -->
+    <div class="mobile-status-bar">
+      <span>9:41</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <i class="ri-signal-wifi-fill"></i>
+        <i class="ri-battery-fill" style="color:var(--accent);"></i>
+      </div>
+    </div>
+
+    <!-- Mobile Content -->
+    <div style="flex:1;overflow-y:auto;background:var(--bg);">
+
+      <!-- Header -->
+      <div class="m-header">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div class="m-greeting">Good morning,</div>
+            <div class="m-name">Rahul <span>Sharma</span> 👋</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="icon-btn" style="background:var(--card);border:1px solid var(--border);"><i class="ri-notification-3-line"></i></button>
+            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#3b82f6);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;">RS</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attendance Card -->
+      <div class="attendance-card">
+        <div class="att-status">
+          <div class="att-dot"></div>
+          <div class="att-label">CLOCKED IN</div>
+          <span style="margin-left:auto;font-size:11px;color:#8b9dc3;"><i class="ri-map-pin-line"></i> Andheri East</span>
+        </div>
+        <div class="att-time">9:02 AM</div>
+        <div class="att-sub">Monday, 16 March 2026</div>
+        <div class="att-stats">
+          <div class="att-stat">
+            <div class="att-stat-val" style="color:var(--accent);">18.4</div>
+            <div class="att-stat-lbl">km Today</div>
+          </div>
+          <div class="att-stat">
+            <div class="att-stat-val">2</div>
+            <div class="att-stat-lbl">Activities</div>
+          </div>
+          <div class="att-stat">
+            <div class="att-stat-val">₹650</div>
+            <div class="att-stat-lbl">Claimed</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions-grid">
+        <a class="m-quick-btn" href="attendance.html">
+          <div class="m-btn-icon" style="background:rgba(0,212,170,0.15);color:var(--accent);"><i class="ri-map-pin-2-fill"></i></div>
+          <span>Check Out</span>
+        </a>
+        <a class="m-quick-btn" href="expense.html">
+          <div class="m-btn-icon" style="background:rgba(59,130,246,0.15);color:#3b82f6;"><i class="ri-camera-line"></i></div>
+          <span>Add Expense</span>
+        </a>
+        <a class="m-quick-btn" href="trip.html">
+          <div class="m-btn-icon" style="background:rgba(139,92,246,0.15);color:#8b5cf6;"><i class="ri-route-line"></i></div>
+          <span>My Journey</span>
+        </a>
+        <a class="m-quick-btn" href="history.html">
+          <div class="m-btn-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b;"><i class="ri-history-line"></i></div>
+          <span>History</span>
+        </a>
+      </div>
+
+      <!-- Today's Journey -->
+      <div class="section-header">
+        <div class="section-title">Today's Route</div>
+        <a class="section-link" href="trip.html">View Map →</a>
+      </div>
+      <div class="today-journey">
+        <div class="journey-route">
+          <div class="route-dot" style="background:#8b5cf6;"></div>
+          <div class="route-info">Andheri East · 9:02 AM</div>
+          <div class="route-line"></div>
+          <div class="route-dot" style="background:#3b82f6;"></div>
+          <div class="route-info">Zomato HQ · 10:30</div>
+          <div class="route-line"></div>
+          <div class="route-dot" style="background:var(--accent);"></div>
+          <div class="route-info">Now Here</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);">
+          <div style="text-align:center;"><div style="font-size:16px;font-weight:700;color:var(--accent);">18.4 km</div><div style="font-size:10px;color:var(--text-muted);">GPS Tracked</div></div>
+          <div style="text-align:center;"><div style="font-size:16px;font-weight:700;">2 h 38 m</div><div style="font-size:10px;color:var(--text-muted);">On Road</div></div>
+          <div style="text-align:center;"><div style="font-size:16px;font-weight:700;color:#3b82f6;">2</div><div style="font-size:10px;color:var(--text-muted);">Visits</div></div>
+          <div style="text-align:center;">
+            <span class="badge badge-green" style="font-size:10px;"><i class="ri-robot-line"></i> Auto ₹160</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Expenses -->
+      <div class="section-header">
+        <div class="section-title">Today's Expenses</div>
+        <a class="section-link" href="history.html">See All →</a>
+      </div>
+      <div style="background:var(--card);margin:0 16px 16px;border-radius:14px;border:1px solid var(--border);overflow:hidden;">
+        <div class="expense-item">
+          <div class="exp-icon" style="background:rgba(0,212,170,0.15);color:var(--accent);"><i class="ri-road-map-line"></i></div>
+          <div class="exp-info">
+            <div class="exp-type">Travel TA — 18.4 km</div>
+            <div class="exp-meta"><span class="badge badge-green" style="font-size:10px;">Auto-Approved</span> · Just now</div>
+          </div>
+          <div class="exp-amount credit">₹160</div>
+        </div>
+        <div class="expense-item">
+          <div class="exp-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b;"><i class="ri-restaurant-line"></i></div>
+          <div class="exp-info">
+            <div class="exp-type">Lunch · Café Mumbai</div>
+            <div class="exp-meta"><span class="badge badge-green" style="font-size:10px;">Auto-Approved</span> · 1:20 PM</div>
+          </div>
+          <div class="exp-amount credit">₹280</div>
+        </div>
+        <div class="expense-item">
+          <div class="exp-icon" style="background:rgba(59,130,246,0.15);color:#3b82f6;"><i class="ri-road-line"></i></div>
+          <div class="exp-info">
+            <div class="exp-type">Toll · Western Express</div>
+            <div class="exp-meta"><span class="badge badge-amber" style="font-size:10px;">Pending</span> · 11:05 AM</div>
+          </div>
+          <div class="exp-amount">₹60</div>
+        </div>
+      </div>
+
+      <!-- Bottom CTA -->
+      <div style="padding:0 16px 24px;">
+        <a href="expense.html" style="display:block;background:var(--accent);color:#0a1628;text-align:center;padding:14px;border-radius:14px;font-size:14px;font-weight:700;text-decoration:none;">
+          <i class="ri-add-circle-fill"></i> Add New Expense
+        </a>
+      </div>
+
+    </div><!-- /scroll -->
+
+    <!-- Bottom Nav -->
+    <div class="mobile-nav-bar">
+      <a class="mobile-nav-item active" href="home.html"><i class="ri-home-4-fill"></i><span>Home</span></a>
+      <a class="mobile-nav-item" href="trip.html"><i class="ri-route-line"></i><span>Journey</span></a>
+      <a class="mobile-nav-item" href="expense.html"><i class="ri-camera-line"></i><span>Expense</span></a>
+      <a class="mobile-nav-item" href="history.html"><i class="ri-history-line"></i><span>History</span></a>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/shared.js"></script>
+</body>
+</html>

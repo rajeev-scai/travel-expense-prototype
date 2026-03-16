@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Users &amp; Grades — Smart T&amp;E</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/shared.css">
+<style>
+  .user-table-avatar { width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff; }
+  .modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:480px;max-width:90vw;animation:fadeIn 0.2s ease; }
+  .modal-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:20px; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">T&amp;E</div>
+      <div class="logo-text">Smart <span>T&amp;E</span></div>
+      <button class="sidebar-toggle" id="sidebar-toggle"><i class="ri-menu-fold-line"></i></button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Overview</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon"><i class="ri-home-4-line"></i></span><span>Dashboard</span></a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Approvals</div>
+      <a class="nav-item" href="approval.html"><span class="nav-icon"><i class="ri-map-pin-2-line"></i></span><span>Pinned Journeys</span></a>
+      <a class="nav-item" href="analytics.html"><span class="nav-icon"><i class="ri-bar-chart-grouped-line"></i></span><span>Analytics</span></a>
+    </div>
+    <div class="sidebar-section sidebar-section-admin">
+      <div class="sidebar-section-label">Admin</div>
+      <a class="nav-item nav-admin-only" href="rules.html"><span class="nav-icon"><i class="ri-settings-3-line"></i></span><span>Rule Engine</span></a>
+      <a class="nav-item active nav-admin-only" href="users.html"><span class="nav-icon"><i class="ri-team-line"></i></span><span>Users &amp; Grades</span></a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="sidebar-avatar">AD</div>
+        <div class="user-info"><div class="user-name" id="sidebar-user-name">Admin</div><div class="user-role" id="sidebar-user-role">Admin/Finance</div><div id="sidebar-role-chip"></div></div>
+      </div>
+      <button class="logout-btn"><span class="nav-icon"><i class="ri-logout-box-r-line"></i></span><span>Logout</span></button>
+    </div>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="top-header">
+      <div class="page-title"><i class="ri-team-line" style="color:var(--accent);margin-right:8px;"></i>Users &amp; Grades</div>
+      <div class="header-actions">
+        <button class="icon-btn" id="theme-toggle"><i class="ri-moon-line"></i></button>
+        <button class="btn btn-primary btn-sm" onclick="openModal()"><i class="ri-user-add-line"></i> Add Employee</button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="stats-grid mb-24" style="grid-template-columns:repeat(4,1fr);">
+        <div class="stat-card"><div class="stat-icon teal"><i class="ri-group-line"></i></div><div class="stat-label">Total Employees</div><div class="stat-value">47</div></div>
+        <div class="stat-card"><div class="stat-icon blue"><i class="ri-user-location-line"></i></div><div class="stat-label">Active Today</div><div class="stat-value">34</div></div>
+        <div class="stat-card"><div class="stat-icon amber"><i class="ri-user-settings-line"></i></div><div class="stat-label">Managers</div><div class="stat-value">8</div></div>
+        <div class="stat-card"><div class="stat-icon teal"><i class="ri-shield-user-line"></i></div><div class="stat-label">Admins</div><div class="stat-value">3</div></div>
+      </div>
+
+      <!-- Search & Filter -->
+      <div class="card mb-24" style="padding:16px;">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <div style="flex:1;position:relative;min-width:200px;">
+            <i class="ri-search-line" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);"></i>
+            <input type="text" class="form-control" placeholder="Search employees..." style="padding-left:34px;" oninput="filterTable(this.value)">
+          </div>
+          <select class="form-control" style="width:120px;"><option>All Grades</option><option>G1</option><option>G2</option><option>G3</option><option>G4</option><option>G5</option></select>
+          <select class="form-control" style="width:130px;"><option>All Teams</option><option>Sales</option><option>Support</option><option>Tech</option></select>
+          <select class="form-control" style="width:140px;"><option>All Status</option><option>Active</option><option>On Leave</option><option>Offboarded</option></select>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Employee Directory</div>
+          <span class="text-muted text-small">47 employees · 5 shown</span>
+        </div>
+        <div class="table-wrap">
+          <table id="user-table">
+            <thead><tr>
+              <th>Employee</th><th>Grade</th><th>Team</th><th>Reporting To</th>
+              <th>Vehicle</th><th>City</th><th>Status</th><th>Last Active</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="user-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Employee Modal -->
+<div class="modal-overlay" id="add-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div style="font-size:16px;font-weight:700;"><i class="ri-user-add-line" style="color:var(--accent);margin-right:8px;"></i>Add New Employee</div>
+      <button class="icon-btn" onclick="closeModal()"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label class="form-label">First Name</label><input type="text" class="form-control" placeholder="Amit"></div>
+      <div class="form-group"><label class="form-label">Last Name</label><input type="text" class="form-control" placeholder="Kumar"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-control" placeholder="amit@company.com"></div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label">Grade</label>
+        <select class="form-control">
+          <option>G1 — Junior Executive</option><option>G2 — Executive</option>
+          <option selected>G3 — Senior Executive</option><option>G4 — Manager</option><option>G5 — Senior Manager</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Team</label>
+        <select class="form-control"><option>Sales</option><option>Support</option><option>Tech</option><option>Finance</option></select>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label">Reporting Manager</label>
+        <select class="form-control"><option>Priya Mehta</option><option>Raj Kumar</option><option>Ananya Das</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Base City</label>
+        <select class="form-control"><option>Mumbai</option><option>Delhi</option><option>Bangalore</option><option>Chennai</option><option>Ahmedabad</option></select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Vehicle Eligibility</label>
+      <div style="display:flex;gap:10px;margin-top:6px;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" checked> <i class="ri-motorbike-line"></i> 2-Wheeler</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox"> <i class="ri-car-line"></i> 4-Wheeler</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox"> <i class="ri-taxi-line"></i> Taxi/Cab</label>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEmployee()"><i class="ri-save-line"></i> Add Employee</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/shared.js"></script>
+<script>
+// ── RBAC Guard: Admin-only page ──
+const _adminUser = Auth.requireAdmin();
+if (!_adminUser) throw new Error('redirect');
+
+const colors = ['#00d4aa','#3b82f6','#8b5cf6','#f59e0b','#ef4444','#06b6d4','#10b981'];
+const employeesExt = [
+  { id:1, name:'Rahul Sharma', grade:'G3', team:'Sales', manager:'Priya Mehta', vehicle:'2W', city:'Mumbai', status:'active', lastActive:'Today 9:02 AM' },
+  { id:2, name:'Anjali Singh', grade:'G4', team:'Sales', manager:'Priya Mehta', vehicle:'4W', city:'Delhi', status:'active', lastActive:'Today 10:15 AM' },
+  { id:3, name:'Vikram Patel', grade:'G3', team:'Support', manager:'Raj Kumar', vehicle:'2W', city:'Ahmedabad', status:'active', lastActive:'Today 8:45 AM' },
+  { id:4, name:'Sneha Nair', grade:'G2', team:'Sales', manager:'Priya Mehta', vehicle:'2W', city:'Chennai', status:'on-leave', lastActive:'3 days ago' },
+  { id:5, name:'Arjun Kapoor', grade:'G4', team:'Tech', manager:'Raj Kumar', vehicle:'4W', city:'Bangalore', status:'active', lastActive:'Today 11:00 AM' },
+];
+
+function renderTable(data) {
+  const tbody = document.getElementById('user-tbody');
+  tbody.innerHTML = '';
+  data.forEach((e,i) => {
+    const initials = e.name.split(' ').map(n=>n[0]).join('');
+    const statusBadge = e.status === 'active' ? '<span class="badge badge-green"><i class="ri-checkbox-blank-circle-fill" style="font-size:6px;"></i> Active</span>'
+      : '<span class="badge badge-amber">On Leave</span>';
+    tbody.innerHTML += `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="user-table-avatar" style="background:${colors[i%colors.length]}22;color:${colors[i%colors.length]};">${initials}</div>
+            <div><div style="font-weight:600;">${e.name}</div><div style="font-size:11px;color:var(--text-muted);">ID: EMP-00${e.id}</div></div>
+          </div>
+        </td>
+        <td><span class="badge badge-blue">${e.grade}</span></td>
+        <td>${e.team}</td>
+        <td><span style="font-size:12px;">${e.manager}</span></td>
+        <td><i class="${e.vehicle==='4W'?'ri-car-line':'ri-motorbike-line'}" style="color:var(--accent);margin-right:4px;"></i>${e.vehicle}</td>
+        <td>${e.city}</td>
+        <td>${statusBadge}</td>
+        <td><span style="font-size:12px;color:var(--text-muted);">${e.lastActive}</span></td>
+        <td>
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-ghost btn-sm" onclick="Toast.show('Edit modal would open','info')"><i class="ri-edit-line"></i></button>
+            <a href="approval.html" class="btn btn-outline btn-sm"><i class="ri-map-pin-2-line"></i></a>
+          </div>
+        </td>
+      </tr>`;
+  });
+}
+
+function filterTable(q) {
+  const filtered = employeesExt.filter(e => e.name.toLowerCase().includes(q.toLowerCase()) || e.team.toLowerCase().includes(q.toLowerCase()));
+  renderTable(filtered);
+}
+
+function openModal() { document.getElementById('add-modal').classList.add('open'); }
+function closeModal() { document.getElementById('add-modal').classList.remove('open'); }
+function saveEmployee() { Toast.show('Employee added successfully!','success'); closeModal(); }
+
+renderTable(employeesExt);
+</script>
+</body>
+</html>
