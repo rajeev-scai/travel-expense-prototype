@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart T&amp;E — Login</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/shared.css">
+<style>
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+  .bg-mesh {
+    position: fixed; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(0,212,170,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(59,130,246,0.06) 0%, transparent 60%),
+                var(--bg);
+  }
+  .login-wrap {
+    position: relative; z-index: 1;
+    display: grid; grid-template-columns: 1fr 1fr;
+    max-width: 960px; width: 100%; min-height: 560px;
+    border-radius: 24px; overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+    border: 1px solid var(--border);
+  }
+  .login-left {
+    background: linear-gradient(135deg, #0a1628 0%, #16213e 50%, #0a2a3a 100%);
+    padding: 48px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    position: relative; overflow: hidden;
+  }
+  .login-left::before {
+    content: '';
+    position: absolute; width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(0,212,170,0.15) 0%, transparent 70%);
+    top: -80px; right: -80px;
+  }
+  .login-left::after {
+    content: '';
+    position: absolute; width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%);
+    bottom: -40px; left: -40px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; }
+  .brand-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, #00d4aa, #0096ff);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 800; color: #fff;
+  }
+  .brand-name { font-size: 18px; font-weight: 800; color: #fff; }
+  .brand-name span { color: #00d4aa; }
+  .hero-content { position: relative; z-index: 1; }
+  .hero-title {
+    font-size: 28px; font-weight: 800; color: #fff;
+    line-height: 1.3; margin-bottom: 14px;
+  }
+  .hero-title span { color: #00d4aa; }
+  .hero-desc { font-size: 14px; color: #8b9dc3; line-height: 1.6; margin-bottom: 28px; }
+  .feature-list { display: flex; flex-direction: column; gap: 10px; }
+  .feature-item {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: #b0b8c1;
+  }
+  .feature-item i { color: #00d4aa; font-size: 16px; }
+  .login-right {
+    background: var(--sidebar);
+    padding: 48px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .login-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .login-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 32px; }
+  .role-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; margin-bottom: 20px;
+  }
+  .role-card {
+    padding: 12px 8px; border-radius: 10px;
+    border: 2px solid var(--border);
+    background: var(--bg);
+    cursor: pointer; text-align: center;
+    transition: all 0.2s ease;
+  }
+  .role-card:hover { border-color: rgba(0,212,170,0.4); }
+  .role-card.selected {
+    border-color: #00d4aa;
+    background: rgba(0,212,170,0.08);
+  }
+  .role-card i { font-size: 22px; display: block; margin-bottom: 6px; color: var(--text-muted); }
+  .role-card.selected i { color: #00d4aa; }
+  .role-card span { font-size: 11px; font-weight: 600; color: var(--text-muted); }
+  .role-card.selected span { color: #00d4aa; }
+  .login-btn {
+    width: 100%; padding: 13px;
+    background: #00d4aa; color: #0a1628;
+    border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s ease;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 8px;
+  }
+  .login-btn:hover { background: #00b894; box-shadow: 0 0 24px rgba(0,212,170,0.4); }
+  .demo-hint {
+    text-align: center; margin-top: 16px;
+    font-size: 12px; color: var(--text-dim);
+  }
+  .demo-hint span { color: #00d4aa; cursor: pointer; }
+  .theme-toggle-float {
+    position: fixed; top: 20px; right: 20px; z-index: 100;
+  }
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+
+<button class="icon-btn theme-toggle-float" id="theme-toggle" title="Toggle Theme">
+  <i class="ri-sun-line"></i>
+</button>
+
+<div class="login-wrap">
+  <!-- Left: Branding -->
+  <div class="login-left">
+    <div class="brand">
+      <div class="brand-icon">T&amp;E</div>
+      <div class="brand-name">Smart <span>T&amp;E</span></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-title">GPS-Powered <span>Expense</span><br>Management</div>
+      <div class="hero-desc">Every claim anchored to a real location. Automate reimbursements, eliminate fraud, and get approvals in seconds — not days.</div>
+      <div class="feature-list">
+        <div class="feature-item"><i class="ri-map-pin-2-fill"></i> Pinned Journey with Breadcrumb Tracking</div>
+        <div class="feature-item"><i class="ri-camera-ai-line"></i> OCR Bill Capture — Auto-extract Amount &amp; Date</div>
+        <div class="feature-item"><i class="ri-robot-line"></i> 70% Auto-Approved by Rule Engine</div>
+        <div class="feature-item"><i class="ri-shield-check-line"></i> Geo-Fence Anti-Fraud Validation</div>
+      </div>
+    </div>
+    <div style="font-size:11px; color:#4a5568; position:relative;z-index:1;">© 2026 Smart T&amp;E Platform · Prototype v1.0</div>
+  </div>
+
+  <!-- Right: Login Form -->
+  <div class="login-right">
+    <div class="login-title">Welcome Back 👋</div>
+    <div class="login-sub">Sign in to continue to your workspace</div>
+
+    <!-- Role Selector -->
+    <div style="margin-bottom:8px; font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Select Your Role</div>
+    <div class="role-grid" id="role-grid">
+      <div class="role-card" data-role="field" data-label="Field User">
+        <i class="ri-user-location-line"></i>
+        <span>Field User</span>
+        <div style="font-size:9px;color:var(--text-dim);margin-top:2px;">Mobile App</div>
+      </div>
+      <div class="role-card selected" data-role="manager" data-label="Line Manager">
+        <i class="ri-group-line"></i>
+        <span>Manager</span>
+        <div style="font-size:9px;color:var(--text-dim);margin-top:2px;">Web Portal</div>
+      </div>
+      <div class="role-card" data-role="admin" data-label="Admin/Finance">
+        <i class="ri-settings-3-line"></i>
+        <span>Admin</span>
+        <div style="font-size:9px;color:var(--text-dim);margin-top:2px;">Full Access</div>
+      </div>
+    </div>
+    <div id="dest-hint" style="font-size:11px;color:var(--accent);margin-bottom:4px;min-height:16px;">→ Web Portal · Dashboard, Approvals, Analytics</div>
+
+    <div class="form-group" style="margin-top:16px;">
+      <label class="form-label">Email Address</label>
+      <input type="email" class="form-control" id="email" placeholder="you@company.com" value="priya.mehta@company.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <div style="position:relative;">
+        <input type="password" class="form-control" id="password" placeholder="••••••••" value="demo1234" style="padding-right:40px;">
+        <button onclick="togglePwd()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;"><i class="ri-eye-line" id="eye-icon"></i></button>
+      </div>
+    </div>
+
+    <button class="login-btn" onclick="doLogin()">
+      <i class="ri-login-box-line"></i> Sign In
+    </button>
+
+    <div class="demo-hint">
+      Demo prototype · <span onclick="doLogin()">Click Sign In</span> with any credentials
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/shared.js"></script>
+<script>
+  // ── Destination map: strictly enforced per role ──
+  const ROLE_DEST = {
+    field:   'mobile/home.html',        // Field users → mobile ONLY
+    manager: 'portal/dashboard.html',   // Managers → portal (no admin pages)
+    admin:   'portal/dashboard.html',   // Admins   → portal (all pages)
+  };
+
+  // Role selection
+  let selectedRole = { role: 'manager', label: 'Line Manager' };
+  document.querySelectorAll('.role-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedRole = { role: card.dataset.role, label: card.dataset.label };
+      // Show destination hint
+      const hints = {
+        field:   '→ Mobile App (Field Users only)',
+        manager: '→ Web Portal · Dashboard, Approvals, Analytics',
+        admin:   '→ Web Portal · All features including Rule Engine & Users',
+      };
+      document.getElementById('dest-hint').textContent = hints[card.dataset.role] || '';
+    });
+  });
+
+  function doLogin() {
+    const email = document.getElementById('email').value || 'demo@company.com';
+    const name  = email.split('@')[0].split('.').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+    const dest  = ROLE_DEST[selectedRole.role];
+    Auth.login({ name, email, role: selectedRole.role, roleLabel: selectedRole.label });
+    window.location.href = dest;
+  }
+
+  function togglePwd() {
+    const inp = document.getElementById('password');
+    const icon = document.getElementById('eye-icon');
+    if (inp.type === 'password') { inp.type = 'text'; icon.className = 'ri-eye-off-line'; }
+    else { inp.type = 'password'; icon.className = 'ri-eye-line'; }
+  }
+
+  // Enter key
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>
