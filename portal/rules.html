@@ -44,6 +44,30 @@
   .rule-row:last-child { border-bottom: none; }
   .rule-category { font-size: 13px; font-weight: 600; }
   .rule-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  /* Auto-approve visible toggle pill */
+  .ar-toggle-pill {
+    display: inline-flex; flex-direction: column; align-items: center; gap: 4px;
+    cursor: pointer; user-select: none; min-width: 84px;
+  }
+  .ar-toggle-track {
+    width: 84px; height: 34px; border-radius: 17px;
+    display: flex; align-items: center;
+    padding: 3px; transition: all 0.25s; position: relative;
+    border: 2px solid transparent;
+  }
+  .ar-toggle-track.on  { background: rgba(0,212,170,0.18); border-color: var(--accent); }
+  .ar-toggle-track.off { background: rgba(239,68,68,0.12); border-color: var(--red); }
+  .ar-toggle-knob {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; transition: all 0.25s; flex-shrink: 0;
+  }
+  .ar-toggle-track.on  .ar-toggle-knob { background: var(--accent); color: #0a1628; transform: translateX(48px); }
+  .ar-toggle-track.off .ar-toggle-knob { background: var(--red);    color: #fff;    transform: translateX(0); }
+  .ar-toggle-label-on  { font-size: 11px; font-weight: 800; color: var(--accent); letter-spacing: .6px; position: absolute; left: 10px; }
+  .ar-toggle-label-off { font-size: 11px; font-weight: 800; color: var(--red);    letter-spacing: .6px; position: absolute; right: 9px; }
+  .ar-toggle-caption { font-size: 10px; font-weight: 700; letter-spacing: .5px; }
   .tier-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
   .tier-card {
     background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
@@ -113,22 +137,31 @@
                   <div class="card-title">Grade → Vehicle Eligibility</div>
                   <div class="card-subtitle">Click to toggle vehicle type per grade</div>
                 </div>
-                <span class="badge badge-green"><i class="ri-shield-check-line"></i> Active</span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <button class="btn btn-primary btn-sm" onclick="addVehicleRow()"><i class="ri-add-line"></i> Add Grade</button>
+                  <button class="btn btn-outline btn-sm" onclick="resetVehicleMatrix()"><i class="ri-refresh-line"></i> Reset</button>
+                </div>
               </div>
               <table class="matrix-table w-full">
                 <thead><tr>
-                  <th>Grade</th><th>Role</th><th>2-Wheeler</th><th>4-Wheeler</th><th>Taxi/Cab</th>
+                  <th>Grade</th><th>Role</th><th>2-Wheeler</th><th>4-Wheeler</th><th>Taxi/Cab</th><th></th>
                 </tr></thead>
                 <tbody id="vehicle-matrix-body"></tbody>
               </table>
             </div>
             <div class="card">
               <div class="card-header">
-                <div class="card-title">Grade → City Tier Assignment</div>
-                <div class="card-subtitle">Determines DA/TA rates</div>
+                <div>
+                  <div class="card-title">Grade → City Tier Assignment</div>
+                  <div class="card-subtitle">Determines DA/TA rates</div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <button class="btn btn-primary btn-sm" onclick="addTierRow()"><i class="ri-add-line"></i> Add Grade</button>
+                  <button class="btn btn-outline btn-sm" onclick="resetTierMatrix()"><i class="ri-refresh-line"></i> Reset</button>
+                </div>
               </div>
               <table class="matrix-table w-full">
-                <thead><tr><th>Grade</th><th>Role</th><th>City Tier</th><th>TA Rate/km</th></tr></thead>
+                <thead><tr><th>Grade</th><th>Role</th><th>City Tier</th><th>TA Rate/km</th><th></th></tr></thead>
                 <tbody id="tier-matrix-body"></tbody>
               </table>
               <div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:var(--radius-sm);">
@@ -141,18 +174,95 @@
               </div>
             </div>
           </div>
+
+          <!-- Vehicle Matrix Modal -->
+          <div id="vehicle-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;">
+            <div style="background:var(--sidebar);border:1px solid var(--border);border-radius:16px;padding:24px;width:460px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 48px rgba(0,0,0,0.4);">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                <div style="font-size:16px;font-weight:700;"><i class="ri-add-circle-line" style="color:var(--accent);margin-right:8px;"></i>Add Grade</div>
+                <button class="icon-btn" onclick="closeVehicleModal()"><i class="ri-close-line"></i></button>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Grade <span style="color:var(--red);">*</span></label>
+                  <input class="form-control" id="vm-grade" placeholder="e.g. G6" style="font-weight:700;text-transform:uppercase;">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Role / Designation <span style="color:var(--red);">*</span></label>
+                  <input class="form-control" id="vm-role" placeholder="e.g. Deputy Manager">
+                </div>
+              </div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;">
+                <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:12px;"><i class="ri-car-line"></i> VEHICLE ELIGIBILITY</div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                  <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" id="vm-2w" checked> <span style="font-size:12px;">2-Wheeler <small style="color:var(--text-muted);">(default checked)</small></span></label>
+                  <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" id="vm-4w"> <span style="font-size:12px;">4-Wheeler</span></label>
+                  <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" id="vm-taxi"> <span style="font-size:12px;">Taxi / Cab</span></label>
+                </div>
+              </div>
+              <div id="vm-error" style="display:none;padding:8px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:12px;color:var(--red);margin-bottom:14px;"></div>
+              <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-outline btn-sm" onclick="closeVehicleModal()"><i class="ri-close-line"></i> Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="confirmAddVehicleRow()"><i class="ri-check-line"></i> Add Grade</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tier Matrix Modal -->
+          <div id="tier-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;">
+            <div style="background:var(--sidebar);border:1px solid var(--border);border-radius:16px;padding:24px;width:460px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 48px rgba(0,0,0,0.4);">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                <div style="font-size:16px;font-weight:700;"><i class="ri-add-circle-line" style="color:var(--accent);margin-right:8px;"></i>Add Grade</div>
+                <button class="icon-btn" onclick="closeTierModal()"><i class="ri-close-line"></i></button>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Grade <span style="color:var(--red);">*</span></label>
+                  <input class="form-control" id="tm-grade" placeholder="e.g. G6" style="font-weight:700;text-transform:uppercase;">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Role / Designation <span style="color:var(--red);">*</span></label>
+                  <input class="form-control" id="tm-role" placeholder="e.g. Deputy Manager">
+                </div>
+              </div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;">
+                <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:12px;"><i class="ri-map-pin-line"></i> CITY TIER ASSIGNMENT</div>
+                <div class="form-group" style="margin-bottom:12px;">
+                  <label class="form-label">City Tier <span style="color:var(--red);">*</span></label>
+                  <select class="form-control" id="tm-tier" style="width:100%;">
+                    <option value="">-- Select Tier --</option>
+                    <option value="1">Tier 1 (Metro)</option>
+                    <option value="2">Tier 2 (Tier 2 cities)</option>
+                    <option value="3">Tier 3 (Other cities)</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">TA Rate/km <span style="color:var(--red);">*</span></label>
+                  <input type="number" class="form-control" id="tm-ta-rate" placeholder="e.g. 5.5" step="0.5">
+                </div>
+              </div>
+              <div id="tm-error" style="display:none;padding:8px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:12px;color:var(--red);margin-bottom:14px;"></div>
+              <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-outline btn-sm" onclick="closeTierModal()"><i class="ri-close-line"></i> Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="confirmAddTierRow()"><i class="ri-check-line"></i> Add Grade</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Allowance Rates -->
         <div class="tab-pane" id="tab-allowance">
-          <!-- Matrix 1: Existing DA/TA by Grade+Tier -->
+          <!-- Matrix 1: DA/TA by Grade+Tier -->
           <div class="card mb-24">
             <div class="card-header">
               <div>
                 <div class="card-title">Daily Allowance (DA) &amp; Travel Allowance (TA) Matrix</div>
                 <div class="card-subtitle">Rates applied per grade and city tier. Edit inline and save.</div>
               </div>
-              <button class="btn btn-outline btn-sm" onclick="resetRates()"><i class="ri-refresh-line"></i> Reset to Default</button>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <button class="btn btn-primary btn-sm" onclick="addAllowanceRow()"><i class="ri-add-line"></i> Add Grade Row</button>
+                <button class="btn btn-outline btn-sm" onclick="resetRates()"><i class="ri-refresh-line"></i> Reset</button>
+              </div>
             </div>
             <div class="table-wrap">
               <table class="matrix-table w-full">
@@ -166,9 +276,99 @@
                   <th>TA Tier 3<br><small>₹/km</small></th>
                   <th>Meal Limit<br><small>₹/day</small></th>
                   <th>Night Halt<br><small>₹/night</small></th>
+                  <th></th>
                 </tr></thead>
                 <tbody id="allowance-matrix-body"></tbody>
               </table>
+            </div>
+          </div>
+
+          <!-- Add Grade Row Modal -->
+          <div id="allowance-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;">
+            <div style="background:var(--sidebar);border:1px solid var(--border);border-radius:16px;padding:24px;width:500px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 48px rgba(0,0,0,0.4);">
+
+              <!-- Header -->
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                <div style="font-size:16px;font-weight:700;"><i class="ri-add-circle-line" style="color:var(--accent);margin-right:8px;"></i>Add Grade Row</div>
+                <button class="icon-btn" onclick="closeAllowanceModal()"><i class="ri-close-line"></i></button>
+              </div>
+
+              <!-- Grade & Role -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Grade <span style="color:var(--red);">*</span></label>
+                  <input class="form-control" id="am-grade" placeholder="e.g. G6" style="font-weight:700;text-transform:uppercase;">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Role / Designation <span style="color:var(--red);">*</span></label>
+                  <input class="form-control" id="am-role" placeholder="e.g. Deputy Manager">
+                </div>
+              </div>
+
+              <!-- DA Section -->
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;">
+                <div style="font-size:11px;font-weight:700;color:#3b82f6;letter-spacing:.5px;margin-bottom:12px;"><i class="ri-calendar-check-line"></i> DAILY ALLOWANCE (DA)</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">Tier 1 <small style="color:var(--text-muted);">₹/day</small></label>
+                    <input type="number" class="form-control" id="am-da1" placeholder="e.g. 800">
+                  </div>
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">Tier 2 <small style="color:var(--text-muted);">₹/day</small></label>
+                    <input type="number" class="form-control" id="am-da2" placeholder="e.g. 600">
+                  </div>
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">Tier 3 <small style="color:var(--text-muted);">₹/day</small></label>
+                    <input type="number" class="form-control" id="am-da3" placeholder="e.g. 400">
+                  </div>
+                </div>
+              </div>
+
+              <!-- TA Section -->
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;">
+                <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:12px;"><i class="ri-road-map-line"></i> TRAVEL ALLOWANCE (TA)</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">Tier 1 <small style="color:var(--text-muted);">₹/km</small></label>
+                    <input type="number" class="form-control" id="am-ta1" placeholder="e.g. 7.0" step="0.5">
+                  </div>
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">Tier 2 <small style="color:var(--text-muted);">₹/km</small></label>
+                    <input type="number" class="form-control" id="am-ta2" placeholder="e.g. 6.0" step="0.5">
+                  </div>
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">Tier 3 <small style="color:var(--text-muted);">₹/km</small></label>
+                    <input type="number" class="form-control" id="am-ta3" placeholder="e.g. 5.0" step="0.5">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Meal + Night Halt -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+                <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;">
+                  <div style="font-size:11px;font-weight:700;color:var(--amber);letter-spacing:.5px;margin-bottom:10px;"><i class="ri-restaurant-line"></i> MEAL LIMIT</div>
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">Per Day <small style="color:var(--text-muted);">₹/day</small></label>
+                    <input type="number" class="form-control" id="am-meal" placeholder="e.g. 700">
+                  </div>
+                </div>
+                <div style="background:var(--bg);border:1px solid rgba(139,92,246,0.3);border-radius:var(--radius-sm);padding:14px;">
+                  <div style="font-size:11px;font-weight:700;color:#8b5cf6;letter-spacing:.5px;margin-bottom:10px;"><i class="ri-moon-line"></i> NIGHT HALT</div>
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">Per Night <small style="color:var(--text-muted);">₹/night</small></label>
+                    <input type="number" class="form-control" id="am-halt" placeholder="e.g. 2800">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Validation hint -->
+              <div id="am-error" style="display:none;padding:8px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:12px;color:var(--red);margin-bottom:14px;"></div>
+
+              <!-- Footer buttons -->
+              <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-outline btn-sm" onclick="closeAllowanceModal()"><i class="ri-close-line"></i> Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="confirmAddAllowanceRow()"><i class="ri-check-line"></i> Add Row</button>
+              </div>
             </div>
           </div>
 
@@ -181,7 +381,9 @@
               </div>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                 <span class="badge badge-green" id="route-count-badge"><i class="ri-map-pin-2-line"></i> 0 Routes</span>
-                <button class="btn btn-primary btn-sm" onclick="openAddRouteModal()"><i class="ri-add-line"></i> Add Route Config</button>
+                <button class="btn btn-primary btn-sm" onclick="openAddRouteModal()"><i class="ri-add-line"></i> Add Route</button>
+                <button class="btn btn-outline btn-sm" onclick="downloadRouteTemplate()"><i class="ri-download-2-line"></i> Download Template</button>
+                <button class="btn btn-outline btn-sm" onclick="openBulkUploadModal()" style="border-color:var(--accent);color:var(--accent);"><i class="ri-upload-cloud-2-line"></i> Bulk Upload</button>
                 <button class="btn btn-outline btn-sm" onclick="resetRouteRates()"><i class="ri-refresh-line"></i> Reset</button>
               </div>
             </div>
@@ -233,7 +435,7 @@
           </div>
 
           <!-- Add Route Config Modal -->
-          <div id="route-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;display:none;align-items:center;justify-content:center;">
+          <div id="route-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;">
             <div style="background:var(--sidebar);border:1px solid var(--border);border-radius:16px;padding:24px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 48px rgba(0,0,0,0.4);">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
                 <div style="font-size:16px;font-weight:700;"><i class="ri-route-line" style="color:var(--accent);margin-right:8px;"></i>Add Route Configuration</div>
@@ -286,6 +488,123 @@
                 <button class="btn btn-outline btn-sm" onclick="closeAddRouteModal()">Cancel</button>
                 <button class="btn btn-primary btn-sm" onclick="confirmAddRoute()"><i class="ri-check-line"></i> Add Route Config</button>
               </div>
+            </div>
+          </div>
+
+          <!-- Bulk Upload Modal -->
+          <div id="bulk-upload-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:1001;display:none;align-items:center;justify-content:center;">
+            <div style="background:var(--sidebar);border:1px solid var(--border);border-radius:16px;padding:28px;width:780px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 28px 56px rgba(0,0,0,0.5);">
+
+              <!-- Header -->
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                <div>
+                  <div style="font-size:16px;font-weight:700;"><i class="ri-upload-cloud-2-line" style="color:var(--accent);margin-right:8px;"></i>Bulk Upload Route Configurations</div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">Upload a filled CSV template to import multiple routes at once</div>
+                </div>
+                <button class="icon-btn" onclick="closeBulkUploadModal()"><i class="ri-close-line"></i></button>
+              </div>
+
+              <!-- Step indicator -->
+              <div style="display:flex;align-items:center;gap:0;margin-bottom:20px;" id="bulk-steps">
+                <div class="bulk-step active" id="bstep-1" style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px 0 0 20px;background:var(--accent);color:#0a1628;">
+                  <i class="ri-upload-2-line"></i> 1. Upload File
+                </div>
+                <div class="bulk-step" id="bstep-2" style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:6px 14px;background:var(--border);color:var(--text-muted);">
+                  <i class="ri-eye-line"></i> 2. Preview &amp; Validate
+                </div>
+                <div class="bulk-step" id="bstep-3" style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:6px 14px;border-radius:0 20px 20px 0;background:var(--border);color:var(--text-muted);">
+                  <i class="ri-check-double-line"></i> 3. Import
+                </div>
+              </div>
+
+              <!-- Step 1: Upload zone -->
+              <div id="bulk-step-1">
+                <!-- Template info box -->
+                <div style="background:rgba(0,212,170,0.07);border:1px solid rgba(0,212,170,0.25);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;">
+                  <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;"><i class="ri-information-line"></i> CSV Template Format</div>
+                  <div style="font-family:monospace;font-size:11px;color:var(--text-muted);line-height:1.8;word-break:break-all;">
+                    route_code, from_town, to_town, distance_km, grade, role, ta_per_km, da_per_day, nh_per_night<br>
+                    <span style="color:var(--text-dim);">RT001, Mumbai, Pune, 148, G1, Junior Exec, 2.5, 200, 600</span><br>
+                    <span style="color:var(--text-dim);">RT001, Mumbai, Pune, 148, G2, Executive, 3.0, 280, 800</span><br>
+                    <span style="color:var(--text-dim);">RT002, Delhi, Agra, 206, G1, Junior Exec, 2.5, 200, 600</span>
+                  </div>
+                  <div style="margin-top:10px;font-size:11px;color:var(--text-muted);">
+                    <i class="ri-checkbox-circle-line" style="color:var(--accent);"></i> One row per route+grade combination &nbsp;|&nbsp;
+                    <i class="ri-checkbox-circle-line" style="color:var(--accent);"></i> Same route_code groups into one route block &nbsp;|&nbsp;
+                    <i class="ri-checkbox-circle-line" style="color:var(--accent);"></i> Duplicate route_code+grade rows are skipped
+                  </div>
+                </div>
+
+                <!-- Drop zone -->
+                <div id="bulk-drop-zone"
+                  style="border:2px dashed var(--border);border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--bg);"
+                  onclick="document.getElementById('bulk-file-input').click()"
+                  ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='var(--accent-glow)';"
+                  ondragleave="this.style.borderColor='var(--border)';this.style.background='var(--bg)';"
+                  ondrop="handleBulkDrop(event)">
+                  <i class="ri-file-excel-2-line" style="font-size:40px;color:var(--accent);display:block;margin-bottom:10px;"></i>
+                  <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Drop your CSV file here</div>
+                  <div style="font-size:12px;color:var(--text-muted);">or click to browse &nbsp;·&nbsp; Accepts .csv files only</div>
+                  <input type="file" id="bulk-file-input" accept=".csv" style="display:none;" onchange="handleBulkFileSelect(this)">
+                </div>
+
+                <div id="bulk-upload-status" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px;"></div>
+
+                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
+                  <button class="btn btn-outline btn-sm" onclick="closeBulkUploadModal()">Cancel</button>
+                  <button class="btn btn-primary btn-sm" id="bulk-next-btn" disabled onclick="showBulkPreview()"><i class="ri-arrow-right-line"></i> Preview Data</button>
+                </div>
+              </div>
+
+              <!-- Step 2: Preview -->
+              <div id="bulk-step-2" style="display:none;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                  <div id="bulk-preview-summary" style="font-size:13px;font-weight:600;"></div>
+                  <div style="display:flex;gap:8px;">
+                    <select class="form-control" id="bulk-conflict-mode" style="font-size:12px;width:auto;">
+                      <option value="skip">Skip duplicate route+grade rows</option>
+                      <option value="overwrite">Overwrite existing routes</option>
+                      <option value="merge">Merge — add new grades only</option>
+                    </select>
+                  </div>
+                </div>
+                <div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);">
+                  <table class="matrix-table w-full" style="font-size:12px;" id="bulk-preview-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Route Code</th>
+                        <th>From Town</th>
+                        <th>To Town</th>
+                        <th>Dist km</th>
+                        <th>Grade</th>
+                        <th>Role</th>
+                        <th style="background:rgba(0,212,170,0.08);">TA ₹/km</th>
+                        <th style="background:rgba(59,130,246,0.08);">DA ₹/day</th>
+                        <th style="background:rgba(139,92,246,0.08);">NH ₹/night</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="bulk-preview-body"></tbody>
+                  </table>
+                </div>
+                <div style="display:flex;justify-content:space-between;gap:10px;margin-top:16px;">
+                  <button class="btn btn-outline btn-sm" onclick="showBulkStep(1)"><i class="ri-arrow-left-line"></i> Back</button>
+                  <div style="display:flex;gap:8px;">
+                    <button class="btn btn-outline btn-sm" onclick="closeBulkUploadModal()">Cancel</button>
+                    <button class="btn btn-primary btn-sm" id="bulk-import-btn" onclick="executeBulkImport()"><i class="ri-check-line"></i> Import Valid Rows</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 3: Result -->
+              <div id="bulk-step-3" style="display:none;text-align:center;padding:16px 0;">
+                <div id="bulk-result-icon" style="font-size:48px;margin-bottom:12px;"></div>
+                <div id="bulk-result-title" style="font-size:18px;font-weight:700;margin-bottom:6px;"></div>
+                <div id="bulk-result-detail" style="font-size:13px;color:var(--text-muted);margin-bottom:24px;"></div>
+                <button class="btn btn-primary btn-sm" onclick="closeBulkUploadModal()"><i class="ri-check-line"></i> Done</button>
+              </div>
+
             </div>
           </div>
 
@@ -390,33 +709,111 @@
 
           <div class="grid-2">
             <div class="card">
-              <div class="card-title mb-16"><i class="ri-phone-line" style="color:var(--accent);"></i> BYOD Internet Allowance</div>
-              <div class="rule-row" style="background:var(--bg);border-radius:var(--radius-sm);">
-                <div><div class="rule-category">BYOD Data Allowance</div><div class="rule-desc">Monthly flat rate for personal device usage</div></div>
+              <div class="card-header">
+                <div class="card-title"><i class="ri-phone-line" style="color:var(--accent);"></i> BYOD Internet Allowance</div>
                 <div style="display:flex;gap:8px;align-items:center;">
-                  <select class="form-control" style="width:80px;"><option>G1</option><option selected>All</option></select>
-                  <input type="number" class="rate-input" value="500">
-                  <span style="font-size:12px;color:var(--text-muted);">₹/mo</span>
+                  <button class="btn btn-primary btn-sm" onclick="addByodEntry()"><i class="ri-add-line"></i> Add Entry</button>
+                  <button class="btn btn-outline btn-sm" onclick="resetByodRules()"><i class="ri-refresh-line"></i> Reset</button>
                 </div>
               </div>
-              <div class="rule-row" style="background:var(--bg);border-radius:var(--radius-sm);margin-top:8px;">
-                <div><div class="rule-category">Tenant Accommodation</div><div class="rule-desc">City-based rent assistance cap</div></div>
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <input type="number" class="rate-input" value="8000">
-                  <span style="font-size:12px;color:var(--text-muted);">₹/mo</span>
-                </div>
-              </div>
+              <div id="byod-rules-list"><!-- populated by JS --></div>
             </div>
             <div class="card">
-              <div class="card-title mb-16"><i class="ri-fuel-line" style="color:var(--accent);"></i> Grade-wise Fuel Charges</div>
+              <div class="card-header">
+                <div class="card-title"><i class="ri-fuel-line" style="color:var(--accent);"></i> Grade-wise Fuel Charges</div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <button class="btn btn-primary btn-sm" onclick="addFuelRow()"><i class="ri-add-line"></i> Add Row</button>
+                  <button class="btn btn-outline btn-sm" onclick="resetFuelMatrix()"><i class="ri-refresh-line"></i> Reset</button>
+                </div>
+              </div>
               <table class="matrix-table w-full">
-                <thead><tr><th>Grade</th><th>2W ₹/L</th><th>4W ₹/L</th><th>Fuel Limit ₹/mo</th></tr></thead>
-                <tbody>
-                  <tr><td>G1-G2</td><td><input class="rate-input" value="90"></td><td>N/A</td><td><input class="rate-input" value="2000"></td></tr>
-                  <tr><td>G3</td><td><input class="rate-input" value="95"></td><td><input class="rate-input" value="100"></td><td><input class="rate-input" value="4000"></td></tr>
-                  <tr><td>G4-G5</td><td>N/A</td><td><input class="rate-input" value="105"></td><td><input class="rate-input" value="8000"></td></tr>
-                </tbody>
+                <thead><tr><th>Grade</th><th>2W ₹/L</th><th>4W ₹/L</th><th>Fuel Limit ₹/mo</th><th></th></tr></thead>
+                <tbody id="fuel-matrix-body"></tbody>
               </table>
+            </div>
+          </div>
+
+          <!-- BYOD Internet Allowance Modal -->
+          <div id="byod-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;">
+            <div style="background:var(--sidebar);border:1px solid var(--border);border-radius:16px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 48px rgba(0,0,0,0.4);">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                <div style="font-size:16px;font-weight:700;"><i class="ri-add-circle-line" style="color:var(--accent);margin-right:8px;"></i>Add BYOD Entry</div>
+                <button class="icon-btn" onclick="closeByodModal()"><i class="ri-close-line"></i></button>
+              </div>
+              <div class="form-group" style="margin-bottom:14px;">
+                <label class="form-label">Category Name <span style="color:var(--red);">*</span></label>
+                <input class="form-control" id="byod-category" placeholder="e.g. BYOD Data Allowance">
+              </div>
+              <div class="form-group" style="margin-bottom:14px;">
+                <label class="form-label">Description <span style="color:var(--red);">*</span></label>
+                <input class="form-control" id="byod-desc" placeholder="e.g. Monthly flat rate for personal device usage">
+              </div>
+              <div class="form-group" style="margin-bottom:14px;">
+                <label class="form-label">Applicable Grade <span style="color:var(--red);">*</span></label>
+                <select class="form-control" id="byod-grade">
+                  <option value="">-- Select Grade --</option>
+                  <option value="All">All Grades</option>
+                  <option value="G1">G1 · Junior Exec</option>
+                  <option value="G2">G2 · Executive</option>
+                  <option value="G3">G3 · Sr Executive</option>
+                  <option value="G4">G4 · Manager</option>
+                  <option value="G5">G5 · Sr Manager</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:14px;">
+                <label class="form-label">Amount <span style="color:var(--red);">*</span></label>
+                <input type="number" class="form-control" id="byod-amount" placeholder="e.g. 500">
+              </div>
+              <div class="form-group" style="margin-bottom:16px;">
+                <label class="form-label">Unit <span style="color:var(--red);">*</span></label>
+                <select class="form-control" id="byod-unit">
+                  <option value="">-- Select Unit --</option>
+                  <option value="month">₹/month</option>
+                  <option value="day">₹/day</option>
+                  <option value="year">₹/year</option>
+                </select>
+              </div>
+              <div id="byod-error" style="display:none;padding:8px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:12px;color:var(--red);margin-bottom:14px;"></div>
+              <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-outline btn-sm" onclick="closeByodModal()"><i class="ri-close-line"></i> Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="confirmAddByodEntry()"><i class="ri-check-line"></i> Add Entry</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fuel Matrix Modal -->
+          <div id="fuel-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;">
+            <div style="background:var(--sidebar);border:1px solid var(--border);border-radius:16px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 48px rgba(0,0,0,0.4);">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                <div style="font-size:16px;font-weight:700;"><i class="ri-add-circle-line" style="color:var(--accent);margin-right:8px;"></i>Add Fuel Rate Row</div>
+                <button class="icon-btn" onclick="closeFuelModal()"><i class="ri-close-line"></i></button>
+              </div>
+              <div class="form-group" style="margin-bottom:14px;">
+                <label class="form-label">Grade / Range Label <span style="color:var(--red);">*</span></label>
+                <input class="form-control" id="fuel-range" placeholder="e.g. G1-G2" style="font-weight:700;text-transform:uppercase;">
+              </div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;">
+                <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:12px;"><i class="ri-fuel-line"></i> FUEL RATES</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">2-Wheeler ₹/L <span style="color:var(--text-muted);">(0 = N/A)</span></label>
+                    <input type="number" class="form-control" id="fuel-2w" placeholder="e.g. 90" step="0.5">
+                  </div>
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">4-Wheeler ₹/L <span style="color:var(--text-muted);">(0 = N/A)</span></label>
+                    <input type="number" class="form-control" id="fuel-4w" placeholder="e.g. 100" step="0.5">
+                  </div>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom:16px;">
+                <label class="form-label">Monthly Fuel Limit ₹ <span style="color:var(--red);">*</span></label>
+                <input type="number" class="form-control" id="fuel-limit" placeholder="e.g. 4000">
+              </div>
+              <div id="fuel-error" style="display:none;padding:8px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:12px;color:var(--red);margin-bottom:14px;"></div>
+              <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-outline btn-sm" onclick="closeFuelModal()"><i class="ri-close-line"></i> Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="confirmAddFuelRow()"><i class="ri-check-line"></i> Add Row</button>
+              </div>
             </div>
           </div>
         </div>
@@ -429,9 +826,62 @@
                 <div class="card-title">Auto-Approval Rule Configuration</div>
                 <div class="card-subtitle">Define which expense categories are eligible for automatic approval and set conditions</div>
               </div>
-              <span class="badge badge-blue"><i class="ri-robot-line"></i> Rule Engine v2</span>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <button class="btn btn-primary btn-sm" onclick="addAutoRule()"><i class="ri-add-line"></i> Add Rule</button>
+                <button class="btn btn-outline btn-sm" onclick="resetAutoRules()"><i class="ri-refresh-line"></i> Reset</button>
+              </div>
             </div>
             <div id="auto-approve-rules"><!-- populated by JS --></div>
+          </div>
+
+          <!-- Auto-Approve Rule Modal (Add / Edit) -->
+          <div id="auto-rule-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;">
+            <div style="background:var(--sidebar);border:1px solid var(--border);border-radius:16px;padding:24px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 48px rgba(0,0,0,0.4);">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                <div style="font-size:16px;font-weight:700;" id="ar-modal-title"><i class="ri-add-circle-line" style="color:var(--accent);margin-right:8px;"></i>Add Auto-Approval Rule</div>
+                <button class="icon-btn" onclick="closeAutoRuleModal()"><i class="ri-close-line"></i></button>
+              </div>
+
+              <!-- Category + Status row -->
+              <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;margin-bottom:14px;">
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Category Name <span style="color:var(--red);">*</span></label>
+                  <input class="form-control" id="ar-category" placeholder="e.g. Travel (TA)">
+                </div>
+                <!-- Visible toggle in modal -->
+                <div style="text-align:center;padding-bottom:2px;">
+                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:600;">APPROVAL MODE</div>
+                  <div class="ar-toggle-pill" id="ar-modal-toggle-pill" onclick="toggleArModal()">
+                    <div class="ar-toggle-track on" id="ar-modal-track">
+                      <span class="ar-toggle-label-on" id="ar-modal-label">AUTO</span>
+                      <div class="ar-toggle-knob" id="ar-modal-knob"><i class="ri-robot-line" id="ar-modal-icon"></i></div>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="ar-enabled" checked style="display:none;">
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom:14px;">
+                <label class="form-label">Description <span style="color:var(--red);">*</span></label>
+                <input class="form-control" id="ar-desc" placeholder="e.g. Auto-approve if GPS path ≈ Odometer reading">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Condition <span style="color:var(--red);">*</span></label>
+                  <input class="form-control" id="ar-condition" placeholder="e.g. Path ≈ Odometer">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Threshold <span style="color:var(--red);">*</span></label>
+                  <input class="form-control" id="ar-threshold" placeholder="e.g. ±5% variance">
+                </div>
+              </div>
+
+              <div id="ar-error" style="display:none;padding:8px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:12px;color:var(--red);margin-bottom:14px;"></div>
+              <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-outline btn-sm" onclick="closeAutoRuleModal()"><i class="ri-close-line"></i> Cancel</button>
+                <button class="btn btn-primary btn-sm" id="ar-confirm-btn" onclick="confirmAddAutoRule()"><i class="ri-check-line"></i> Add Rule</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -466,7 +916,13 @@
               </div>
             </div>
             <div class="card">
-              <div class="card-header"><div class="card-title"><i class="ri-shield-keyhole-line" style="color:var(--accent);"></i> Anti-Fraud Rules</div></div>
+              <div class="card-header">
+                <div class="card-title"><i class="ri-shield-keyhole-line" style="color:var(--accent);"></i> Anti-Fraud Rules</div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <button class="btn btn-primary btn-sm" onclick="addFraudRule()"><i class="ri-add-line"></i> Add Rule</button>
+                  <button class="btn btn-outline btn-sm" onclick="resetFraudRules()"><i class="ri-refresh-line"></i> Reset</button>
+                </div>
+              </div>
               <div id="fraud-rules-list"><!-- JS --></div>
               <div style="margin-top:16px;padding:14px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius-sm);">
                 <div style="font-size:12px;font-weight:600;color:var(--red);margin-bottom:8px;"><i class="ri-alert-line"></i> Always-On Rules (Cannot be disabled)</div>
@@ -475,6 +931,31 @@
                   • Duplicate bill detection (same vendor + date + amount)<br>
                   • Vehicle grade enforcement — cannot claim higher grade vehicle<br>
                   • Backdating limit — bills older than 30 days auto-rejected
+                </div>
+              </div>
+            </div>
+
+            <!-- Anti-Fraud Rule Modal -->
+            <div id="fraud-rule-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;">
+              <div style="background:var(--sidebar);border:1px solid var(--border);border-radius:16px;padding:24px;width:460px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 48px rgba(0,0,0,0.4);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                  <div style="font-size:16px;font-weight:700;"><i class="ri-add-circle-line" style="color:var(--accent);margin-right:8px;"></i>Add Anti-Fraud Rule</div>
+                  <button class="icon-btn" onclick="closeFraudRuleModal()"><i class="ri-close-line"></i></button>
+                </div>
+                <div class="form-group" style="margin-bottom:14px;">
+                  <label class="form-label">Rule Description <span style="color:var(--red);">*</span></label>
+                  <input class="form-control" id="fr-desc" placeholder="e.g. Flag if Expense Pin > radius from Activity">
+                </div>
+                <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;">
+                  <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                    <input type="checkbox" id="fr-enabled" checked>
+                    <span style="font-size:12px;font-weight:600;">Enable this anti-fraud rule</span>
+                  </label>
+                </div>
+                <div id="fr-error" style="display:none;padding:8px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:12px;color:var(--red);margin-bottom:14px;"></div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;">
+                  <button class="btn btn-outline btn-sm" onclick="closeFraudRuleModal()"><i class="ri-close-line"></i> Cancel</button>
+                  <button class="btn btn-primary btn-sm" onclick="confirmAddFraudRule()"><i class="ri-check-line"></i> Add Rule</button>
                 </div>
               </div>
             </div>
@@ -494,66 +975,294 @@ if (!_adminUser) throw new Error('redirect');
 
 const grades = SampleData.grades;
 
-// Vehicle Matrix
-const vehicleBody = document.getElementById('vehicle-matrix-body');
-const tierBody    = document.getElementById('tier-matrix-body');
-const vehicleMap = { G1:'2W', G2:'2W', G3:'2W/4W', G4:'4W', G5:'4W' };
-grades.forEach(g => {
+// Vehicle Matrix Data
+let vehicleData = grades.map(g => {
   const can2W = ['2W','2W/4W'].includes(g.vehicle);
   const can4W = ['4W','2W/4W'].includes(g.vehicle);
-  vehicleBody.innerHTML += `
-    <tr>
-      <td><span class="badge badge-blue">${g.grade}</span></td>
-      <td>${g.label}</td>
+  return { grade:g.grade, label:g.label, can2W, can4W, canTaxi:false };
+});
+
+function renderVehicleMatrix() {
+  const vehicleBody = document.getElementById('vehicle-matrix-body');
+  let html = '';
+  vehicleData.forEach((v, idx) => {
+    html += `<tr>
+      <td><span class="badge badge-blue">${v.grade}</span></td>
+      <td>${v.label}</td>
       <td onclick="this.querySelector('span').classList.toggle('inactive')">
-        <span class="vehicle-pill${can2W?'':' inactive'}"><i class="ri-motorbike-line"></i> 2W</span>
+        <span class="vehicle-pill${v.can2W?'':' inactive'}"><i class="ri-motorbike-line"></i> 2W</span>
       </td>
       <td onclick="this.querySelector('span').classList.toggle('inactive')">
-        <span class="vehicle-pill${can4W?'':' inactive'}"><i class="ri-car-line"></i> 4W</span>
+        <span class="vehicle-pill${v.can4W?'':' inactive'}"><i class="ri-car-line"></i> 4W</span>
       </td>
       <td onclick="this.querySelector('span').classList.toggle('inactive')">
-        <span class="vehicle-pill inactive"><i class="ri-taxi-line"></i> Taxi</span>
+        <span class="vehicle-pill${v.canTaxi?'':' inactive'}"><i class="ri-taxi-line"></i> Taxi</span>
+      </td>
+      <td>
+        <button class="icon-btn" style="color:var(--red);font-size:15px;" title="Remove row"
+          onclick="deleteVehicleRow(${idx})"><i class="ri-delete-bin-line"></i></button>
       </td>
     </tr>`;
-  tierBody.innerHTML += `
-    <tr>
-      <td><span class="badge badge-blue">${g.grade}</span></td>
-      <td>${g.label}</td>
+  });
+  vehicleBody.innerHTML = html;
+}
+
+function addVehicleRow() {
+  document.getElementById('vm-grade').value = '';
+  document.getElementById('vm-role').value = '';
+  document.getElementById('vm-2w').checked = true;
+  document.getElementById('vm-4w').checked = false;
+  document.getElementById('vm-taxi').checked = false;
+  document.getElementById('vm-error').style.display = 'none';
+  document.getElementById('vehicle-modal-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('vm-grade').focus(), 50);
+}
+
+function closeVehicleModal() {
+  document.getElementById('vehicle-modal-overlay').style.display = 'none';
+}
+
+function confirmAddVehicleRow() {
+  const grade = document.getElementById('vm-grade').value.trim().toUpperCase();
+  const label = document.getElementById('vm-role').value.trim();
+  const can2W = document.getElementById('vm-2w').checked;
+  const can4W = document.getElementById('vm-4w').checked;
+  const canTaxi = document.getElementById('vm-taxi').checked;
+
+  const errs = [];
+  if (!grade) errs.push('Grade is required');
+  if (!label) errs.push('Role / Designation is required');
+  if (!can2W && !can4W && !canTaxi) errs.push('At least one vehicle type must be selected');
+
+  const errEl = document.getElementById('vm-error');
+  if (errs.length) {
+    errEl.style.display = 'block';
+    errEl.innerHTML = '<i class="ri-error-warning-line"></i> ' + errs.join(' &nbsp;·&nbsp; ');
+    return;
+  }
+  errEl.style.display = 'none';
+
+  vehicleData.push({ grade, label, can2W, can4W, canTaxi });
+  renderVehicleMatrix();
+  closeVehicleModal();
+  Toast.show(`Grade "${grade}" added successfully.`, 'success');
+}
+
+document.getElementById('vehicle-modal-overlay').addEventListener('click', function(e){
+  if (e.target === this) closeVehicleModal();
+});
+
+function deleteVehicleRow(idx) {
+  if (vehicleData.length <= 1) { Toast.show('At least one grade row is required.', 'error'); return; }
+  vehicleData.splice(idx, 1);
+  renderVehicleMatrix();
+  Toast.show('Row removed.', 'info');
+}
+
+function resetVehicleMatrix() {
+  vehicleData = grades.map(g => {
+    const can2W = ['2W','2W/4W'].includes(g.vehicle);
+    const can4W = ['4W','2W/4W'].includes(g.vehicle);
+    return { grade:g.grade, label:g.label, can2W, can4W, canTaxi:false };
+  });
+  renderVehicleMatrix();
+  Toast.show('Vehicle matrix reset to defaults.', 'info');
+}
+
+renderVehicleMatrix();
+
+// City Tier Assignment Data
+let tierData = grades.map(g => {
+  return { grade:g.grade, label:g.label, tier:g.tier, taRate:g.taRate };
+});
+
+function renderTierMatrix() {
+  const tierBody = document.getElementById('tier-matrix-body');
+  let html = '';
+  tierData.forEach((t, idx) => {
+    const tierLabel = t.tier === 1 ? 'Tier 1' : t.tier === 2 ? 'Tier 2' : 'Tier 3';
+    html += `<tr>
+      <td><span class="badge badge-blue">${t.grade}</span></td>
+      <td>${t.label}</td>
       <td>
-        <select class="form-control" style="width:80px;">
-          <option ${g.tier===1?'selected':''}>Tier 1</option>
-          <option ${g.tier===2?'selected':''}>Tier 2</option>
-          <option ${g.tier===3?'selected':''}>Tier 3</option>
+        <select class="form-control" style="width:80px;"
+          onchange="tierData[${idx}].tier=parseInt(this.value)">
+          <option value="1" ${t.tier===1?'selected':''}>Tier 1</option>
+          <option value="2" ${t.tier===2?'selected':''}>Tier 2</option>
+          <option value="3" ${t.tier===3?'selected':''}>Tier 3</option>
         </select>
       </td>
-      <td><input class="rate-input" value="${g.taRate}"></td>
+      <td><input class="rate-input" value="${t.taRate}" onchange="tierData[${idx}].taRate=parseFloat(this.value)"></td>
+      <td>
+        <button class="icon-btn" style="color:var(--red);font-size:15px;" title="Remove row"
+          onclick="deleteTierRow(${idx})"><i class="ri-delete-bin-line"></i></button>
+      </td>
     </tr>`;
+  });
+  tierBody.innerHTML = html;
+}
+
+function addTierRow() {
+  document.getElementById('tm-grade').value = '';
+  document.getElementById('tm-role').value = '';
+  document.getElementById('tm-tier').value = '';
+  document.getElementById('tm-ta-rate').value = '';
+  document.getElementById('tm-error').style.display = 'none';
+  document.getElementById('tier-modal-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('tm-grade').focus(), 50);
+}
+
+function closeTierModal() {
+  document.getElementById('tier-modal-overlay').style.display = 'none';
+}
+
+function confirmAddTierRow() {
+  const grade = document.getElementById('tm-grade').value.trim().toUpperCase();
+  const label = document.getElementById('tm-role').value.trim();
+  const tier = parseInt(document.getElementById('tm-tier').value) || 0;
+  const taRate = parseFloat(document.getElementById('tm-ta-rate').value) || 0;
+
+  const errs = [];
+  if (!grade) errs.push('Grade is required');
+  if (!label) errs.push('Role / Designation is required');
+  if (!tier) errs.push('City Tier is required');
+  if (taRate <= 0) errs.push('TA Rate/km must be > 0');
+
+  const errEl = document.getElementById('tm-error');
+  if (errs.length) {
+    errEl.style.display = 'block';
+    errEl.innerHTML = '<i class="ri-error-warning-line"></i> ' + errs.join(' &nbsp;·&nbsp; ');
+    return;
+  }
+  errEl.style.display = 'none';
+
+  tierData.push({ grade, label, tier, taRate });
+  renderTierMatrix();
+  closeTierModal();
+  Toast.show(`Grade "${grade}" added successfully.`, 'success');
+}
+
+document.getElementById('tier-modal-overlay').addEventListener('click', function(e){
+  if (e.target === this) closeTierModal();
 });
+
+function deleteTierRow(idx) {
+  if (tierData.length <= 1) { Toast.show('At least one grade row is required.', 'error'); return; }
+  tierData.splice(idx, 1);
+  renderTierMatrix();
+  Toast.show('Row removed.', 'info');
+}
+
+function resetTierMatrix() {
+  tierData = grades.map(g => {
+    return { grade:g.grade, label:g.label, tier:g.tier, taRate:g.taRate };
+  });
+  renderTierMatrix();
+  Toast.show('City Tier matrix reset to defaults.', 'info');
+}
+
+renderTierMatrix();
 
 // Allowance Matrix
 const allowBody = document.getElementById('allowance-matrix-body');
-const allowanceData = [
+let allowanceData = [
   { grade:'G1', role:'Junior Exec', da:[200,150,100], ta:[2.5,2.0,1.5], meal:150, halt:500 },
   { grade:'G2', role:'Executive',   da:[300,220,150], ta:[3.0,2.5,2.0], meal:200, halt:700 },
   { grade:'G3', role:'Sr Executive',da:[450,350,250], ta:[4.0,3.5,2.5], meal:350, halt:1000 },
   { grade:'G4', role:'Manager',     da:[700,550,400], ta:[6.0,5.0,4.0], meal:600, halt:1500 },
   { grade:'G5', role:'Sr Manager',  da:[1000,800,600],ta:[8.0,7.0,6.0], meal:800, halt:2500 },
 ];
-allowanceData.forEach(a => {
-  allowBody.innerHTML += `
-    <tr>
-      <td><span class="badge badge-blue">${a.grade}</span></td>
-      <td>${a.role}</td>
-      <td><input class="rate-input" value="${a.da[0]}"></td>
-      <td><input class="rate-input" value="${a.da[1]}"></td>
-      <td><input class="rate-input" value="${a.da[2]}"></td>
-      <td><input class="rate-input" value="${a.ta[0]}"></td>
-      <td><input class="rate-input" value="${a.ta[1]}"></td>
-      <td><input class="rate-input" value="${a.ta[2]}"></td>
-      <td><input class="rate-input" value="${a.meal}"></td>
-      <td><input class="rate-input" value="${a.halt}"></td>
+
+function renderAllowanceMatrix() {
+  const gradeColors = { G1:'badge-blue', G2:'badge-blue', G3:'badge-blue', G4:'badge-blue', G5:'badge-blue' };
+  let html = '';
+  allowanceData.forEach((a, idx) => {
+    html += `<tr>
+      <td>
+        <input class="rate-input" value="${a.grade}" style="width:52px;font-weight:700;text-align:center;"
+          onchange="allowanceData[${idx}].grade=this.value.toUpperCase();this.value=this.value.toUpperCase();">
+      </td>
+      <td>
+        <input class="rate-input" value="${a.role}" style="width:110px;text-align:left;"
+          onchange="allowanceData[${idx}].role=this.value;">
+      </td>
+      <td><input class="rate-input" value="${a.da[0]}" onchange="allowanceData[${idx}].da[0]=parseFloat(this.value)"></td>
+      <td><input class="rate-input" value="${a.da[1]}" onchange="allowanceData[${idx}].da[1]=parseFloat(this.value)"></td>
+      <td><input class="rate-input" value="${a.da[2]}" onchange="allowanceData[${idx}].da[2]=parseFloat(this.value)"></td>
+      <td><input class="rate-input" value="${a.ta[0]}" onchange="allowanceData[${idx}].ta[0]=parseFloat(this.value)"></td>
+      <td><input class="rate-input" value="${a.ta[1]}" onchange="allowanceData[${idx}].ta[1]=parseFloat(this.value)"></td>
+      <td><input class="rate-input" value="${a.ta[2]}" onchange="allowanceData[${idx}].ta[2]=parseFloat(this.value)"></td>
+      <td><input class="rate-input" value="${a.meal}" onchange="allowanceData[${idx}].meal=parseFloat(this.value)"></td>
+      <td><input class="rate-input" value="${a.halt}" onchange="allowanceData[${idx}].halt=parseFloat(this.value)"></td>
+      <td>
+        <button class="icon-btn" style="color:var(--red);font-size:15px;" title="Remove row"
+          onclick="deleteAllowanceRow(${idx})"><i class="ri-delete-bin-line"></i></button>
+      </td>
     </tr>`;
+  });
+  allowBody.innerHTML = html;
+}
+
+function addAllowanceRow() {
+  // Clear previous values & errors
+  ['am-grade','am-role','am-da1','am-da2','am-da3','am-ta1','am-ta2','am-ta3','am-meal','am-halt']
+    .forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('am-error').style.display = 'none';
+  document.getElementById('allowance-modal-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('am-grade').focus(), 50);
+}
+
+function closeAllowanceModal() {
+  document.getElementById('allowance-modal-overlay').style.display = 'none';
+}
+
+function confirmAddAllowanceRow() {
+  const grade = document.getElementById('am-grade').value.trim().toUpperCase();
+  const role  = document.getElementById('am-role').value.trim();
+  const da1   = parseFloat(document.getElementById('am-da1').value) || 0;
+  const da2   = parseFloat(document.getElementById('am-da2').value) || 0;
+  const da3   = parseFloat(document.getElementById('am-da3').value) || 0;
+  const ta1   = parseFloat(document.getElementById('am-ta1').value) || 0;
+  const ta2   = parseFloat(document.getElementById('am-ta2').value) || 0;
+  const ta3   = parseFloat(document.getElementById('am-ta3').value) || 0;
+  const meal  = parseFloat(document.getElementById('am-meal').value) || 0;
+  const halt  = parseFloat(document.getElementById('am-halt').value) || 0;
+
+  const errs = [];
+  if (!grade)  errs.push('Grade is required');
+  if (!role)   errs.push('Role / Designation is required');
+  if (da1 <= 0 && da2 <= 0 && da3 <= 0) errs.push('At least one DA rate must be > 0');
+  if (ta1 <= 0 && ta2 <= 0 && ta3 <= 0) errs.push('At least one TA rate must be > 0');
+
+  const errEl = document.getElementById('am-error');
+  if (errs.length) {
+    errEl.style.display = 'block';
+    errEl.innerHTML = '<i class="ri-error-warning-line"></i> ' + errs.join(' &nbsp;·&nbsp; ');
+    return;
+  }
+  errEl.style.display = 'none';
+
+  allowanceData.push({ grade, role, da:[da1,da2,da3], ta:[ta1,ta2,ta3], meal, halt });
+  renderAllowanceMatrix();
+  closeAllowanceModal();
+  // Scroll new row into view
+  setTimeout(() => allowBody.lastElementChild?.scrollIntoView({ behavior:'smooth', block:'nearest' }), 80);
+  Toast.show(`Grade row "${grade} · ${role}" added successfully.`, 'success');
+}
+
+// Close allowance modal on overlay click
+document.getElementById('allowance-modal-overlay').addEventListener('click', function(e){
+  if (e.target === this) closeAllowanceModal();
 });
+
+function deleteAllowanceRow(idx) {
+  if (allowanceData.length <= 1) { Toast.show('At least one grade row is required.', 'error'); return; }
+  allowanceData.splice(idx, 1);
+  renderAllowanceMatrix();
+  Toast.show('Row removed.', 'info');
+}
+
+renderAllowanceMatrix();
 
 // ── Route-wise TA/DA & Night Allowance Matrix ──────────────────────────────
 const gradeRoleMeta = [
@@ -701,8 +1410,12 @@ function editRouteHeader(ri) {
 
 // Modal: Add Route Config
 function openAddRouteModal() {
-  document.getElementById('route-modal-overlay').classList.add('open');
-  // Populate modal grade table with defaults
+  // Reset fields
+  document.getElementById('modal-route-code').value = '';
+  document.getElementById('modal-from').value = '';
+  document.getElementById('modal-to').value = '';
+  document.getElementById('modal-dist').value = '';
+  // Populate grade table with defaults
   const tbody = document.getElementById('modal-grade-body');
   tbody.innerHTML = '';
   gradeRoleMeta.forEach(gm => {
@@ -716,15 +1429,12 @@ function openAddRouteModal() {
         <td style="padding:4px;"><input class="rate-input" data-grade="${gm.grade}" data-field="nh" value="${d.nh}" style="width:70px;"></td>
       </tr>`;
   });
-  document.getElementById('modal-route-code').value = '';
-  document.getElementById('modal-from').value = '';
-  document.getElementById('modal-to').value = '';
-  document.getElementById('modal-dist').value = '';
-  const overlay = document.getElementById('route-modal-overlay');
-  overlay.style.display = 'flex';
+  document.getElementById('route-modal-overlay').style.display = 'flex';
+  // Focus first input
+  setTimeout(() => document.getElementById('modal-route-code').focus(), 50);
 }
 function closeAddRouteModal() {
-  document.getElementById('route-modal-overlay').classList.remove('open');
+  document.getElementById('route-modal-overlay').style.display = 'none';
 }
 function confirmAddRoute() {
   const code = document.getElementById('modal-route-code').value.trim().toUpperCase();
@@ -744,9 +1454,22 @@ function confirmAddRoute() {
   closeAddRouteModal();
   Toast.show(`Route ${code} (${from} → ${to}) added with ${grades.length} grade configurations.`, 'success');
 }
-// Close modal on overlay click
+// Close route modal on overlay click or Escape key
 document.getElementById('route-modal-overlay').addEventListener('click', function(e){
   if (e.target === this) closeAddRouteModal();
+});
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') {
+    closeAllowanceModal();
+    closeAddRouteModal();
+    closeBulkUploadModal();
+    closeVehicleModal();
+    closeTierModal();
+    closeAutoRuleModal();
+    closeFraudRuleModal();
+    closeByodModal();
+    closeFuelModal();
+  }
 });
 
 // Initial render
@@ -758,7 +1481,7 @@ document.getElementById('global-override-toggle').addEventListener('change', fun
 });
 
 // Auto-Approve Rules
-const autoRules = [
+let autoRules = [
   { cat:'Travel (TA)', icon:'ri-road-map-line', col:'#00d4aa', auto:true,  desc:'Auto-approve if GPS path ≈ Odometer reading (±5%)', condition:'Path ≈ Odometer', threshold:'±5% variance' },
   { cat:'Daily Allowance (DA)', icon:'ri-calendar-check-line', col:'#3b82f6', auto:true, desc:'Auto-approve full DA if attendance marked for the day', condition:'Attendance = Present', threshold:'Full day' },
   { cat:'Food / Meals', icon:'ri-restaurant-line', col:'#f59e0b', auto:true,  desc:'Auto-approve if pin within 500m of activity and ≤ meal limit', condition:'Pin ≤ 500m from activity + ≤ limit', threshold:'Grade-wise limit' },
@@ -768,51 +1491,729 @@ const autoRules = [
   { cat:'Misc / Others', icon:'ri-more-2-line', col:'#6b7280', auto:false, desc:'Manual review required if no corresponding activity found', condition:'Activity pin required', threshold:'Actuals, capped' },
   { cat:'BYOD Internet', icon:'ri-wifi-line', col:'#3b82f6', auto:true,  desc:'Auto-approve monthly flat allowance per grade', condition:'Monthly flat', threshold:'₹500/month' },
 ];
-const rulesDiv = document.getElementById('auto-approve-rules');
-autoRules.forEach(r => {
-  rulesDiv.innerHTML += `
-    <div class="rule-row">
-      <div>
-        <div class="rule-category"><i class="${r.icon}" style="color:${r.col};margin-right:6px;"></i>${r.cat}</div>
-        <div class="rule-desc">${r.desc}</div>
+
+function renderAutoRules() {
+  const rulesDiv = document.getElementById('auto-approve-rules');
+  let html = '';
+  autoRules.forEach((r, idx) => {
+    const isOn = r.auto;
+    html += `<div class="rule-row" style="display:flex;align-items:center;gap:12px;flex-wrap:nowrap;">
+      <!-- Category + Description -->
+      <div style="flex:1;min-width:0;">
+        <div class="rule-category" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+          <i class="${r.icon}" style="color:${r.col};margin-right:6px;"></i>${r.cat}
+        </div>
+        <div class="rule-desc" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.desc}</div>
       </div>
-      <div>
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Condition</div>
-        <span class="badge badge-gray" style="font-size:11px;">${r.condition}</span>
+      <!-- Condition -->
+      <div style="width:138px;flex-shrink:0;overflow:hidden;">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;">Condition</div>
+        <span class="badge badge-gray" title="${r.condition}" style="font-size:11px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">${r.condition}</span>
       </div>
-      <div>
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Threshold</div>
-        <span style="font-size:12px;font-weight:600;">${r.threshold}</span>
+      <!-- Threshold -->
+      <div style="width:110px;flex-shrink:0;overflow:hidden;">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;">Threshold</div>
+        <span title="${r.threshold}" style="font-size:12px;font-weight:700;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">${r.threshold}</span>
       </div>
-      <div>
-        <label class="toggle">
-          <input type="checkbox" ${r.auto?'checked':''}>
-          <span class="toggle-slider"></span>
-        </label>
+      <!-- Toggle + Edit + Delete — all on one line -->
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <div class="ar-toggle-pill" onclick="autoRules[${idx}].auto=!autoRules[${idx}].auto;renderAutoRules();" title="Click to toggle">
+          <div class="ar-toggle-track ${isOn?'on':'off'}">
+            <span class="${isOn?'ar-toggle-label-on':'ar-toggle-label-off'}">${isOn?'AUTO':'MANUAL'}</span>
+            <div class="ar-toggle-knob"><i class="${isOn?'ri-robot-line':'ri-user-line'}"></i></div>
+          </div>
+        </div>
+        <button class="icon-btn" style="color:var(--accent);font-size:14px;border:1px solid var(--border);border-radius:7px;width:28px;height:28px;flex-shrink:0;" title="Edit" onclick="editAutoRule(${idx})"><i class="ri-edit-line"></i></button>
+        <button class="icon-btn" style="color:var(--red);font-size:14px;border:1px solid var(--border);border-radius:7px;width:28px;height:28px;flex-shrink:0;" title="Delete" onclick="deleteAutoRule(${idx})"><i class="ri-delete-bin-line"></i></button>
       </div>
     </div>`;
+  });
+  rulesDiv.innerHTML = html;
+}
+
+// ── Auto-Rule modal: edit-mode tracking ──
+let _arEditIdx = -1; // -1 = add mode, >=0 = edit mode
+
+function _syncArModalToggle(isOn) {
+  const track = document.getElementById('ar-modal-track');
+  const label = document.getElementById('ar-modal-label');
+  const icon  = document.getElementById('ar-modal-icon');
+  document.getElementById('ar-enabled').checked = isOn;
+  track.className = 'ar-toggle-track ' + (isOn ? 'on' : 'off');
+  label.className = isOn ? 'ar-toggle-label-on' : 'ar-toggle-label-off';
+  label.textContent = isOn ? 'AUTO' : 'MANUAL';
+  icon.className = isOn ? 'ri-robot-line' : 'ri-user-line';
+}
+
+function toggleArModal() {
+  _syncArModalToggle(!document.getElementById('ar-enabled').checked);
+}
+
+function _openArModal(editIdx) {
+  _arEditIdx = editIdx;
+  const isEdit = editIdx >= 0;
+  const r = isEdit ? autoRules[editIdx] : null;
+
+  // Update modal title & confirm button
+  document.getElementById('ar-modal-title').innerHTML =
+    `<i class="${isEdit ? 'ri-edit-line' : 'ri-add-circle-line'}" style="color:var(--accent);margin-right:8px;"></i>${isEdit ? 'Edit Auto-Approval Rule' : 'Add Auto-Approval Rule'}`;
+  document.getElementById('ar-confirm-btn').innerHTML =
+    `<i class="${isEdit ? 'ri-save-line' : 'ri-check-line'}"></i> ${isEdit ? 'Save Changes' : 'Add Rule'}`;
+
+  // Fill fields
+  document.getElementById('ar-category').value  = r ? r.cat        : '';
+  document.getElementById('ar-desc').value       = r ? r.desc       : '';
+  document.getElementById('ar-condition').value  = r ? r.condition  : '';
+  document.getElementById('ar-threshold').value  = r ? r.threshold  : '';
+  _syncArModalToggle(r ? r.auto : true);
+  document.getElementById('ar-error').style.display = 'none';
+
+  document.getElementById('auto-rule-modal-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('ar-category').focus(), 50);
+}
+
+function addAutoRule()       { _openArModal(-1); }
+function editAutoRule(idx)   { _openArModal(idx); }
+
+function closeAutoRuleModal() {
+  document.getElementById('auto-rule-modal-overlay').style.display = 'none';
+  _arEditIdx = -1;
+}
+
+function confirmAddAutoRule() {
+  const cat       = document.getElementById('ar-category').value.trim();
+  const desc      = document.getElementById('ar-desc').value.trim();
+  const condition = document.getElementById('ar-condition').value.trim();
+  const threshold = document.getElementById('ar-threshold').value.trim();
+  const auto      = document.getElementById('ar-enabled').checked;
+
+  const errs = [];
+  if (!cat)       errs.push('Category Name is required');
+  if (!desc)      errs.push('Description is required');
+  if (!condition) errs.push('Condition is required');
+  if (!threshold) errs.push('Threshold is required');
+
+  const errEl = document.getElementById('ar-error');
+  if (errs.length) {
+    errEl.style.display = 'block';
+    errEl.innerHTML = '<i class="ri-error-warning-line"></i> ' + errs.join(' &nbsp;·&nbsp; ');
+    return;
+  }
+  errEl.style.display = 'none';
+
+  const isEdit = _arEditIdx >= 0;
+  if (isEdit) {
+    // Preserve icon/col from existing rule, update the rest
+    autoRules[_arEditIdx] = { ...autoRules[_arEditIdx], cat, desc, condition, threshold, auto };
+    Toast.show(`Rule "${cat}" updated.`, 'success');
+  } else {
+    autoRules.push({ cat, icon:'ri-more-2-line', col:'#6b7280', auto, desc, condition, threshold });
+    Toast.show(`Rule "${cat}" added successfully.`, 'success');
+  }
+  renderAutoRules();
+  closeAutoRuleModal();
+}
+
+document.getElementById('auto-rule-modal-overlay').addEventListener('click', function(e){
+  if (e.target === this) closeAutoRuleModal();
 });
 
+function deleteAutoRule(idx) {
+  if (autoRules.length <= 1) { Toast.show('At least one rule is required.', 'error'); return; }
+  autoRules.splice(idx, 1);
+  renderAutoRules();
+  Toast.show('Rule removed.', 'info');
+}
+
+function resetAutoRules() {
+  autoRules = [
+    { cat:'Travel (TA)', icon:'ri-road-map-line', col:'#00d4aa', auto:true,  desc:'Auto-approve if GPS path ≈ Odometer reading (±5%)', condition:'Path ≈ Odometer', threshold:'±5% variance' },
+    { cat:'Daily Allowance (DA)', icon:'ri-calendar-check-line', col:'#3b82f6', auto:true, desc:'Auto-approve full DA if attendance marked for the day', condition:'Attendance = Present', threshold:'Full day' },
+    { cat:'Food / Meals', icon:'ri-restaurant-line', col:'#f59e0b', auto:true,  desc:'Auto-approve if pin within 500m of activity and ≤ meal limit', condition:'Pin ≤ 500m from activity + ≤ limit', threshold:'Grade-wise limit' },
+    { cat:'Night Halt', icon:'ri-moon-line', col:'#8b5cf6', auto:true,  desc:'Auto-approve if midnight GPS confirms location > 100km from home', condition:'Midnight GPS > 100km', threshold:'Grade-wise cap' },
+    { cat:'Toll / Highway', icon:'ri-road-line', col:'#00d4aa', auto:true,  desc:'Auto-approve with valid OCR receipt if on recorded route', condition:'On route + OCR valid', threshold:'Actuals' },
+    { cat:'Client Meals', icon:'ri-group-2-line', col:'#f59e0b', auto:false, desc:'Manual review required — high-value entertainment category', condition:'Manual Review', threshold:'₹2,000/event' },
+    { cat:'Misc / Others', icon:'ri-more-2-line', col:'#6b7280', auto:false, desc:'Manual review required if no corresponding activity found', condition:'Activity pin required', threshold:'Actuals, capped' },
+    { cat:'BYOD Internet', icon:'ri-wifi-line', col:'#3b82f6', auto:true,  desc:'Auto-approve monthly flat allowance per grade', condition:'Monthly flat', threshold:'₹500/month' },
+  ];
+  renderAutoRules();
+  Toast.show('Auto-Approval Rules reset to defaults.', 'info');
+}
+
+renderAutoRules();
+
 // Fraud Rules
-const fraudRules = [
+let fraudRules = [
   { label:'Flag if Expense Pin > radius from any Activity', enabled: true },
   { label:'Auto-reject if Breadcrumb path never passed expense location', enabled: false },
   { label:'Flag duplicate submissions (same vendor+date+amount)', enabled: true },
   { label:'Alert if total daily expense exceeds 200% of grade limit', enabled: true },
   { label:'Flag if bill timestamp and GPS timestamp differ by > 2 hours', enabled: true },
 ];
-const fraudDiv = document.getElementById('fraud-rules-list');
-fraudRules.forEach(f => {
-  fraudDiv.innerHTML += `
-    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
-      <label class="toggle"><input type="checkbox" ${f.enabled?'checked':''}><span class="toggle-slider"></span></label>
-      <span style="font-size:13px;">${f.label}</span>
+
+function renderFraudRules() {
+  const fraudDiv = document.getElementById('fraud-rules-list');
+  let html = '';
+  fraudRules.forEach((f, idx) => {
+    html += `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+      <label class="toggle"><input type="checkbox" ${f.enabled?'checked':''} onchange="fraudRules[${idx}].enabled=this.checked;"><span class="toggle-slider"></span></label>
+      <span style="font-size:13px;flex:1;">${f.label}</span>
+      <button class="icon-btn" style="color:var(--red);font-size:14px;" title="Remove rule" onclick="deleteFraudRule(${idx})"><i class="ri-delete-bin-line"></i></button>
     </div>`;
+  });
+  fraudDiv.innerHTML = html;
+}
+
+function addFraudRule() {
+  document.getElementById('fr-desc').value = '';
+  document.getElementById('fr-enabled').checked = true;
+  document.getElementById('fr-error').style.display = 'none';
+  document.getElementById('fraud-rule-modal-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('fr-desc').focus(), 50);
+}
+
+function closeFraudRuleModal() {
+  document.getElementById('fraud-rule-modal-overlay').style.display = 'none';
+}
+
+function confirmAddFraudRule() {
+  const label = document.getElementById('fr-desc').value.trim();
+  const enabled = document.getElementById('fr-enabled').checked;
+
+  const errEl = document.getElementById('fr-error');
+  if (!label) {
+    errEl.style.display = 'block';
+    errEl.innerHTML = '<i class="ri-error-warning-line"></i> Rule Description is required';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  fraudRules.push({ label, enabled });
+  renderFraudRules();
+  closeFraudRuleModal();
+  Toast.show('Anti-fraud rule added successfully.', 'success');
+}
+
+document.getElementById('fraud-rule-modal-overlay').addEventListener('click', function(e){
+  if (e.target === this) closeFraudRuleModal();
 });
 
+function deleteFraudRule(idx) {
+  if (fraudRules.length <= 1) { Toast.show('At least one rule is required.', 'error'); return; }
+  fraudRules.splice(idx, 1);
+  renderFraudRules();
+  Toast.show('Rule removed.', 'info');
+}
+
+function resetFraudRules() {
+  fraudRules = [
+    { label:'Flag if Expense Pin > radius from any Activity', enabled: true },
+    { label:'Auto-reject if Breadcrumb path never passed expense location', enabled: false },
+    { label:'Flag duplicate submissions (same vendor+date+amount)', enabled: true },
+    { label:'Alert if total daily expense exceeds 200% of grade limit', enabled: true },
+    { label:'Flag if bill timestamp and GPS timestamp differ by > 2 hours', enabled: true },
+  ];
+  renderFraudRules();
+  Toast.show('Anti-Fraud Rules reset to defaults.', 'info');
+}
+
+renderFraudRules();
+
+// BYOD Internet Allowance
+let byodData = [
+  { category:'BYOD Data Allowance', desc:'Monthly flat rate for personal device usage', grade:'All', amount:500, unit:'month' },
+  { category:'Tenant Accommodation', desc:'City-based rent assistance cap', grade:'All', amount:8000, unit:'month' },
+];
+
+function renderByodRules() {
+  const byodDiv = document.getElementById('byod-rules-list');
+  let html = '';
+  byodData.forEach((b, idx) => {
+    const unitLabel = b.unit === 'month' ? '₹/mo' : b.unit === 'day' ? '₹/day' : '₹/year';
+    html += `<div class="rule-row" style="background:var(--bg);border-radius:var(--radius-sm);margin-bottom:8px;">
+      <div><div class="rule-category">${b.category}</div><div class="rule-desc">${b.desc}</div></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select class="form-control" style="width:80px;" onchange="byodData[${idx}].grade=this.value;"><option ${b.grade==='All'?'selected':''}>All</option><option ${b.grade==='G1'?'selected':''}>G1</option><option ${b.grade==='G2'?'selected':''}>G2</option><option ${b.grade==='G3'?'selected':''}>G3</option><option ${b.grade==='G4'?'selected':''}>G4</option><option ${b.grade==='G5'?'selected':''}>G5</option></select>
+        <input type="number" class="rate-input" value="${b.amount}" onchange="byodData[${idx}].amount=parseFloat(this.value);">
+        <span style="font-size:12px;color:var(--text-muted);min-width:50px;">${unitLabel}</span>
+        <button class="icon-btn" style="color:var(--red);font-size:15px;" title="Remove" onclick="deleteByodEntry(${idx})"><i class="ri-delete-bin-line"></i></button>
+      </div>
+    </div>`;
+  });
+  byodDiv.innerHTML = html;
+}
+
+function addByodEntry() {
+  document.getElementById('byod-category').value = '';
+  document.getElementById('byod-desc').value = '';
+  document.getElementById('byod-grade').value = '';
+  document.getElementById('byod-amount').value = '';
+  document.getElementById('byod-unit').value = '';
+  document.getElementById('byod-error').style.display = 'none';
+  document.getElementById('byod-modal-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('byod-category').focus(), 50);
+}
+
+function closeByodModal() {
+  document.getElementById('byod-modal-overlay').style.display = 'none';
+}
+
+function confirmAddByodEntry() {
+  const category = document.getElementById('byod-category').value.trim();
+  const desc = document.getElementById('byod-desc').value.trim();
+  const grade = document.getElementById('byod-grade').value;
+  const amount = parseFloat(document.getElementById('byod-amount').value) || 0;
+  const unit = document.getElementById('byod-unit').value;
+
+  const errs = [];
+  if (!category) errs.push('Category Name is required');
+  if (!desc) errs.push('Description is required');
+  if (!grade) errs.push('Grade is required');
+  if (amount <= 0) errs.push('Amount must be > 0');
+  if (!unit) errs.push('Unit is required');
+
+  const errEl = document.getElementById('byod-error');
+  if (errs.length) {
+    errEl.style.display = 'block';
+    errEl.innerHTML = '<i class="ri-error-warning-line"></i> ' + errs.join(' &nbsp;·&nbsp; ');
+    return;
+  }
+  errEl.style.display = 'none';
+
+  byodData.push({ category, desc, grade, amount, unit });
+  renderByodRules();
+  closeByodModal();
+  Toast.show(`BYOD entry "${category}" added successfully.`, 'success');
+}
+
+document.getElementById('byod-modal-overlay').addEventListener('click', function(e){
+  if (e.target === this) closeByodModal();
+});
+
+function deleteByodEntry(idx) {
+  if (byodData.length <= 1) { Toast.show('At least one entry is required.', 'error'); return; }
+  byodData.splice(idx, 1);
+  renderByodRules();
+  Toast.show('Entry removed.', 'info');
+}
+
+function resetByodRules() {
+  byodData = [
+    { category:'BYOD Data Allowance', desc:'Monthly flat rate for personal device usage', grade:'All', amount:500, unit:'month' },
+    { category:'Tenant Accommodation', desc:'City-based rent assistance cap', grade:'All', amount:8000, unit:'month' },
+  ];
+  renderByodRules();
+  Toast.show('BYOD rules reset to defaults.', 'info');
+}
+
+renderByodRules();
+
+// Grade-wise Fuel Charges
+let fuelData = [
+  { gradeRange:'G1-G2', rate2w:90, rate4w:0, limit:2000 },
+  { gradeRange:'G3', rate2w:95, rate4w:100, limit:4000 },
+  { gradeRange:'G4-G5', rate2w:0, rate4w:105, limit:8000 },
+];
+
+function renderFuelMatrix() {
+  const fuelBody = document.getElementById('fuel-matrix-body');
+  let html = '';
+  fuelData.forEach((f, idx) => {
+    html += `<tr>
+      <td><span style="font-weight:600;">${f.gradeRange}</span></td>
+      <td><input class="rate-input" value="${f.rate2w === 0 ? '' : f.rate2w}" onchange="fuelData[${idx}].rate2w=parseFloat(this.value)||0;" placeholder="N/A" style="width:70px;"></td>
+      <td><input class="rate-input" value="${f.rate4w === 0 ? '' : f.rate4w}" onchange="fuelData[${idx}].rate4w=parseFloat(this.value)||0;" placeholder="N/A" style="width:70px;"></td>
+      <td><input class="rate-input" value="${f.limit}" onchange="fuelData[${idx}].limit=parseFloat(this.value);"></td>
+      <td>
+        <button class="icon-btn" style="color:var(--red);font-size:15px;" title="Remove row" onclick="deleteFuelRow(${idx})"><i class="ri-delete-bin-line"></i></button>
+      </td>
+    </tr>`;
+  });
+  fuelBody.innerHTML = html;
+}
+
+function addFuelRow() {
+  document.getElementById('fuel-range').value = '';
+  document.getElementById('fuel-2w').value = '';
+  document.getElementById('fuel-4w').value = '';
+  document.getElementById('fuel-limit').value = '';
+  document.getElementById('fuel-error').style.display = 'none';
+  document.getElementById('fuel-modal-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('fuel-range').focus(), 50);
+}
+
+function closeFuelModal() {
+  document.getElementById('fuel-modal-overlay').style.display = 'none';
+}
+
+function confirmAddFuelRow() {
+  const gradeRange = document.getElementById('fuel-range').value.trim().toUpperCase();
+  const rate2w = parseFloat(document.getElementById('fuel-2w').value) || 0;
+  const rate4w = parseFloat(document.getElementById('fuel-4w').value) || 0;
+  const limit = parseFloat(document.getElementById('fuel-limit').value) || 0;
+
+  const errs = [];
+  if (!gradeRange) errs.push('Grade / Range Label is required');
+  if (rate2w < 0 || rate4w < 0) errs.push('Rates cannot be negative');
+  if (limit <= 0) errs.push('Monthly Fuel Limit must be > 0');
+  if (rate2w === 0 && rate4w === 0) errs.push('At least one fuel rate must be specified');
+
+  const errEl = document.getElementById('fuel-error');
+  if (errs.length) {
+    errEl.style.display = 'block';
+    errEl.innerHTML = '<i class="ri-error-warning-line"></i> ' + errs.join(' &nbsp;·&nbsp; ');
+    return;
+  }
+  errEl.style.display = 'none';
+
+  fuelData.push({ gradeRange, rate2w, rate4w, limit });
+  renderFuelMatrix();
+  closeFuelModal();
+  Toast.show(`Fuel row "${gradeRange}" added successfully.`, 'success');
+}
+
+document.getElementById('fuel-modal-overlay').addEventListener('click', function(e){
+  if (e.target === this) closeFuelModal();
+});
+
+function deleteFuelRow(idx) {
+  if (fuelData.length <= 1) { Toast.show('At least one row is required.', 'error'); return; }
+  fuelData.splice(idx, 1);
+  renderFuelMatrix();
+  Toast.show('Row removed.', 'info');
+}
+
+function resetFuelMatrix() {
+  fuelData = [
+    { gradeRange:'G1-G2', rate2w:90, rate4w:0, limit:2000 },
+    { gradeRange:'G3', rate2w:95, rate4w:100, limit:4000 },
+    { gradeRange:'G4-G5', rate2w:0, rate4w:105, limit:8000 },
+  ];
+  renderFuelMatrix();
+  Toast.show('Fuel charges reset to defaults.', 'info');
+}
+
+renderFuelMatrix();
+
 function saveRules() { Toast.show('All rules saved successfully!', 'success'); }
-function resetRates() { Toast.show('Rates reset to policy defaults.', 'info'); }
-function resetRouteRates() { Toast.show('Route allowance rates reset to policy defaults.', 'info'); }
+function resetRates() {
+  allowanceData = [
+    { grade:'G1', role:'Junior Exec', da:[200,150,100], ta:[2.5,2.0,1.5], meal:150, halt:500 },
+    { grade:'G2', role:'Executive',   da:[300,220,150], ta:[3.0,2.5,2.0], meal:200, halt:700 },
+    { grade:'G3', role:'Sr Executive',da:[450,350,250], ta:[4.0,3.5,2.5], meal:350, halt:1000 },
+    { grade:'G4', role:'Manager',     da:[700,550,400], ta:[6.0,5.0,4.0], meal:600, halt:1500 },
+    { grade:'G5', role:'Sr Manager',  da:[1000,800,600],ta:[8.0,7.0,6.0], meal:800, halt:2500 },
+  ];
+  renderAllowanceMatrix();
+  Toast.show('DA/TA rates reset to policy defaults.', 'info');
+}
+function resetRouteRates() {
+  if (!confirm('Reset all route configurations to system defaults?')) return;
+  Toast.show('Route allowance rates reset to policy defaults.', 'info');
+}
+
+// ── BULK UPLOAD ──────────────────────────────────────────────────────────────
+
+// CSV Template column order
+const TEMPLATE_HEADERS = [
+  'route_code','from_town','to_town','distance_km',
+  'grade','role','ta_per_km','da_per_day','nh_per_night'
+];
+
+// Download Template
+function downloadRouteTemplate() {
+  const sampleRows = [
+    // RT001 × 5 grades
+    ['RT001','Mumbai','Pune',148,'G1','Junior Exec',2.5,200,600],
+    ['RT001','Mumbai','Pune',148,'G2','Executive',3.0,280,800],
+    ['RT001','Mumbai','Pune',148,'G3','Sr Executive',4.0,400,1200],
+    ['RT001','Mumbai','Pune',148,'G4','Manager',6.0,650,2000],
+    ['RT001','Mumbai','Pune',148,'G5','Sr Manager',8.0,900,3000],
+    // RT002 × 2 grades (example of partial)
+    ['RT002','Delhi','Agra',206,'G1','Junior Exec',2.5,200,600],
+    ['RT002','Delhi','Agra',206,'G3','Sr Executive',4.0,400,1200],
+    // Blank template row
+    ['RT003','[From Town]','[To Town]','[km]','G1','Junior Exec','[TA]','[DA]','[NH]'],
+  ];
+  let csv = TEMPLATE_HEADERS.join(',') + '\n';
+  sampleRows.forEach(r => { csv += r.map(v => `"${v}"`).join(',') + '\n'; });
+
+  // Add instruction sheet as comments at bottom
+  csv += '\n# INSTRUCTIONS (delete these lines before uploading)\n';
+  csv += '# route_code    : Unique code e.g. RT001 — rows with same code are grouped as one route\n';
+  csv += '# from_town     : Departure city/town name\n';
+  csv += '# to_town       : Destination city/town name\n';
+  csv += '# distance_km   : Approximate road distance in km\n';
+  csv += '# grade         : G1 / G2 / G3 / G4 / G5\n';
+  csv += '# role          : Grade label e.g. Junior Exec, Executive, Sr Executive, Manager, Sr Manager\n';
+  csv += '# ta_per_km     : Travel Allowance rate in ₹ per km\n';
+  csv += '# da_per_day    : Daily Allowance in ₹ per day\n';
+  csv += '# nh_per_night  : Night Halt allowance in ₹ per night\n';
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'route_ta_da_nh_template.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  Toast.show('Template downloaded — fill and upload.', 'success');
+}
+
+// ── Bulk Upload Modal state ──
+let _bulkParsedRows = [];
+
+function openBulkUploadModal() {
+  _bulkParsedRows = [];
+  document.getElementById('bulk-file-input').value = '';
+  document.getElementById('bulk-upload-status').style.display = 'none';
+  document.getElementById('bulk-next-btn').disabled = true;
+  document.getElementById('bulk-drop-zone').style.borderColor = 'var(--border)';
+  document.getElementById('bulk-drop-zone').style.background = 'var(--bg)';
+  showBulkStep(1);
+  document.getElementById('bulk-upload-overlay').style.display = 'flex';
+}
+function closeBulkUploadModal() {
+  document.getElementById('bulk-upload-overlay').style.display = 'none';
+}
+document.getElementById('bulk-upload-overlay').addEventListener('click', function(e){
+  if (e.target === this) closeBulkUploadModal();
+});
+
+function showBulkStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById(`bulk-step-${i}`).style.display = i===n ? 'block' : 'none';
+    const s = document.getElementById(`bstep-${i}`);
+    if (i < n) {
+      s.style.background = 'rgba(0,212,170,0.2)'; s.style.color = 'var(--accent)';
+    } else if (i === n) {
+      s.style.background = 'var(--accent)'; s.style.color = '#0a1628';
+    } else {
+      s.style.background = 'var(--border)'; s.style.color = 'var(--text-muted)';
+    }
+  });
+}
+
+// ── CSV parsing ──
+function parseCSV(text) {
+  // Strip comment lines and blank lines
+  const lines = text.split('\n').filter(l => l.trim() && !l.trim().startsWith('#'));
+  if (lines.length < 2) return { rows:[], error:'File appears empty or has no data rows.' };
+
+  // Detect header row
+  const rawHeader = lines[0].split(',').map(h => h.replace(/["\r]/g,'').trim().toLowerCase().replace(/\s+/g,'_'));
+  const colIdx = {};
+  TEMPLATE_HEADERS.forEach(h => { colIdx[h] = rawHeader.indexOf(h); });
+  const missing = TEMPLATE_HEADERS.filter(h => colIdx[h] === -1);
+  if (missing.length) return { rows:[], error:`Missing columns: ${missing.join(', ')}` };
+
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    // Handle quoted fields with commas
+    const cells = [];
+    let inQ = false, cur = '';
+    for (let c of line) {
+      if (c === '"') { inQ = !inQ; continue; }
+      if (c === ',' && !inQ) { cells.push(cur.trim()); cur = ''; continue; }
+      cur += c;
+    }
+    cells.push(cur.trim());
+
+    const get = key => (cells[colIdx[key]] || '').replace(/["\r]/g,'').trim();
+    const code  = get('route_code').toUpperCase();
+    const from  = get('from_town');
+    const to    = get('to_town');
+    const dist  = parseFloat(get('distance_km')) || 0;
+    const grade = get('grade').toUpperCase();
+    const role  = get('role');
+    const ta    = parseFloat(get('ta_per_km'))   || 0;
+    const da    = parseFloat(get('da_per_day'))   || 0;
+    const nh    = parseFloat(get('nh_per_night')) || 0;
+
+    // Validate
+    const errs = [];
+    if (!code)  errs.push('route_code empty');
+    if (!from)  errs.push('from_town empty');
+    if (!to)    errs.push('to_town empty');
+    if (!['G1','G2','G3','G4','G5'].includes(grade)) errs.push(`grade "${grade}" invalid`);
+    if (ta <= 0) errs.push('ta_per_km must be > 0');
+    if (da <= 0) errs.push('da_per_day must be > 0');
+    if (nh <= 0) errs.push('nh_per_night must be > 0');
+
+    rows.push({ lineNum:i+1, code, from, to, dist, grade, role, ta, da, nh,
+                valid: errs.length === 0, errors: errs });
+  }
+  return { rows, error: null };
+}
+
+function handleBulkDrop(e) {
+  e.preventDefault();
+  const zone = document.getElementById('bulk-drop-zone');
+  zone.style.borderColor = 'var(--border)'; zone.style.background = 'var(--bg)';
+  const file = e.dataTransfer.files[0];
+  if (file) processBulkFile(file);
+}
+function handleBulkFileSelect(input) {
+  if (input.files[0]) processBulkFile(input.files[0]);
+}
+function processBulkFile(file) {
+  const status = document.getElementById('bulk-upload-status');
+  if (!file.name.endsWith('.csv')) {
+    status.style.display = 'block';
+    status.style.background = 'rgba(239,68,68,0.12)';
+    status.style.border = '1px solid rgba(239,68,68,0.3)';
+    status.style.color = 'var(--red)';
+    status.innerHTML = '<i class="ri-error-warning-line"></i> Only .csv files are accepted.';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const result = parseCSV(ev.target.result);
+    if (result.error) {
+      status.style.display = 'block';
+      status.style.background = 'rgba(239,68,68,0.12)';
+      status.style.border = '1px solid rgba(239,68,68,0.3)';
+      status.style.color = 'var(--red)';
+      status.innerHTML = `<i class="ri-error-warning-line"></i> ${result.error}`;
+      document.getElementById('bulk-next-btn').disabled = true;
+      return;
+    }
+    _bulkParsedRows = result.rows;
+    const valid   = result.rows.filter(r => r.valid).length;
+    const invalid = result.rows.length - valid;
+    status.style.display = 'block';
+    status.style.background = valid > 0 ? 'rgba(0,212,170,0.1)' : 'rgba(239,68,68,0.1)';
+    status.style.border     = valid > 0 ? '1px solid rgba(0,212,170,0.3)' : '1px solid rgba(239,68,68,0.3)';
+    status.style.color      = valid > 0 ? 'var(--accent)' : 'var(--red)';
+    status.innerHTML = `<i class="ri-checkbox-circle-line"></i> <strong>${file.name}</strong> parsed —
+      ${valid} valid row${valid!==1?'s':''} · ${invalid} error${invalid!==1?'s':''} found.
+      ${invalid > 0 ? '<span style="color:var(--red);"> Invalid rows will be highlighted in preview.</span>' : ''}`;
+    document.getElementById('bulk-next-btn').disabled = valid === 0;
+    document.getElementById('bulk-drop-zone').style.borderColor = 'var(--accent)';
+  };
+  reader.readAsText(file);
+}
+
+function showBulkPreview() {
+  const body = document.getElementById('bulk-preview-body');
+  const conflictMap = {};
+  routeConfigData.forEach(r => {
+    r.grades.forEach(g => { conflictMap[`${r.code}|${g.grade}`] = true; });
+  });
+
+  let html = '';
+  _bulkParsedRows.forEach((row, idx) => {
+    const isConflict = conflictMap[`${row.code}|${row.grade}`];
+    let statusBadge = '';
+    if (!row.valid) {
+      statusBadge = `<span class="badge" style="background:rgba(239,68,68,0.15);color:var(--red);border:1px solid rgba(239,68,68,0.3);font-size:10px;" title="${row.errors.join(', ')}"><i class="ri-error-warning-line"></i> Error</span>`;
+    } else if (isConflict) {
+      statusBadge = `<span class="badge badge-amber" style="font-size:10px;"><i class="ri-alert-line"></i> Exists</span>`;
+    } else {
+      statusBadge = `<span class="badge badge-green" style="font-size:10px;"><i class="ri-check-line"></i> New</span>`;
+    }
+    const rowBg = !row.valid ? 'rgba(239,68,68,0.05)' : isConflict ? 'rgba(245,158,11,0.05)' : '';
+    html += `<tr style="background:${rowBg};">
+      <td style="color:var(--text-muted);font-size:11px;">${row.lineNum}</td>
+      <td><span class="badge badge-green" style="font-size:11px;">${row.code}</span></td>
+      <td>${row.from}</td>
+      <td>${row.to}</td>
+      <td style="color:var(--text-muted);">${row.dist||'—'}</td>
+      <td><span class="badge badge-blue" style="font-size:11px;">${row.grade}</span></td>
+      <td style="font-size:11px;">${row.role||'—'}</td>
+      <td style="background:rgba(0,212,170,0.05);">${row.ta}</td>
+      <td style="background:rgba(59,130,246,0.05);">${row.da}</td>
+      <td style="background:rgba(139,92,246,0.05);">${row.nh}</td>
+      <td>${statusBadge}</td>
+    </tr>`;
+    if (!row.valid) {
+      html += `<tr style="background:rgba(239,68,68,0.04);">
+        <td colspan="11" style="font-size:11px;color:var(--red);padding:4px 12px;"><i class="ri-close-circle-line"></i> ${row.errors.join(' · ')}</td>
+      </tr>`;
+    }
+  });
+  body.innerHTML = html;
+
+  const total   = _bulkParsedRows.length;
+  const valid   = _bulkParsedRows.filter(r => r.valid).length;
+  const invalid = total - valid;
+  const exists  = _bulkParsedRows.filter(r => r.valid && conflictMap[`${r.code}|${r.grade}`]).length;
+  document.getElementById('bulk-preview-summary').innerHTML =
+    `<span style="color:var(--accent);">${valid} valid</span> · ` +
+    `<span style="color:var(--red);">${invalid} errors</span> · ` +
+    `<span style="color:var(--amber);">${exists} already exist</span> &nbsp;|&nbsp; ${total} total rows`;
+
+  showBulkStep(2);
+}
+
+function executeBulkImport() {
+  const mode = document.getElementById('bulk-conflict-mode').value;
+  const validRows = _bulkParsedRows.filter(r => r.valid);
+  const conflictMap = {};
+  routeConfigData.forEach((r,ri) => {
+    r.grades.forEach((g,gi) => { conflictMap[`${r.code}|${g.grade}`] = {ri,gi}; });
+  });
+
+  let added=0, skipped=0, overwritten=0;
+
+  // Group rows by route code
+  const routeMap = {};
+  validRows.forEach(row => {
+    if (!routeMap[row.code]) routeMap[row.code] = { code:row.code, from:row.from, to:row.to, dist:row.dist, grades:[] };
+    routeMap[row.code].grades.push({ grade:row.grade, role:row.role||row.grade, ta:row.ta, da:row.da, nh:row.nh });
+  });
+
+  Object.values(routeMap).forEach(newRoute => {
+    // Find existing route entry
+    const existingRouteIdx = routeConfigData.findIndex(r => r.code === newRoute.code);
+
+    newRoute.grades.forEach(g => {
+      const key = `${newRoute.code}|${g.grade}`;
+      const existing = conflictMap[key];
+
+      if (existing) {
+        if (mode === 'skip') { skipped++; return; }
+        if (mode === 'overwrite' || mode === 'merge') {
+          routeConfigData[existing.ri].grades[existing.gi] = g;
+          overwritten++; return;
+        }
+      }
+
+      // New entry
+      if (existingRouteIdx >= 0) {
+        routeConfigData[existingRouteIdx].grades.push(g);
+      } else {
+        // New route entirely
+        const alreadyQueued = routeConfigData.find(r => r.code === newRoute.code);
+        if (!alreadyQueued) {
+          routeConfigData.push({ code:newRoute.code, from:newRoute.from, to:newRoute.to, dist:newRoute.dist, grades:[g] });
+        } else {
+          alreadyQueued.grades.push(g);
+        }
+      }
+      added++;
+    });
+  });
+
+  renderRouteTable();
+
+  // Show result step
+  const icon  = document.getElementById('bulk-result-icon');
+  const title = document.getElementById('bulk-result-title');
+  const detail= document.getElementById('bulk-result-detail');
+  icon.textContent  = added > 0 ? '✅' : '⚠️';
+  title.textContent = added > 0 ? `Import Complete!` : 'Nothing Imported';
+  title.style.color = added > 0 ? 'var(--accent)' : 'var(--amber)';
+  detail.innerHTML  = `
+    <span style="color:var(--accent);">${added} rows imported</span> &nbsp;·&nbsp;
+    <span style="color:var(--amber);">${overwritten} rows updated</span> &nbsp;·&nbsp;
+    <span style="color:var(--text-muted);">${skipped} rows skipped (already exist)</span><br><br>
+    Route table now has <strong>${routeConfigData.length} route${routeConfigData.length!==1?'s':''}</strong> configured.
+  `;
+  showBulkStep(3);
+  Toast.show(`Bulk import done — ${added} new, ${overwritten} updated, ${skipped} skipped.`, 'success');
+}
 </script>
 </body>
 </html>
