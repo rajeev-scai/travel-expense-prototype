@@ -16,6 +16,19 @@
     font-size: 13px; text-align: center; outline: none;
   }
   .rate-input:focus { border-color: var(--accent); }
+  /* Grade filter pills */
+  .f-pill {
+    padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text-muted);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .f-pill:hover { border-color: var(--accent); color: var(--accent); }
+  .f-pill.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+  /* Route group header */
+  .route-group-header td { padding: 8px 16px !important; }
+  /* Modal overlay */
+  #route-modal-overlay { display: none; }
+  #route-modal-overlay.open { display: flex !important; }
   .vehicle-pill {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
@@ -132,6 +145,7 @@
 
         <!-- Allowance Rates -->
         <div class="tab-pane" id="tab-allowance">
+          <!-- Matrix 1: Existing DA/TA by Grade+Tier -->
           <div class="card mb-24">
             <div class="card-header">
               <div>
@@ -157,6 +171,223 @@
               </table>
             </div>
           </div>
+
+          <!-- Matrix 2: Route-wise TA/DA & Night Allowance — Route Code × Grade/Role -->
+          <div class="card mb-24" id="route-matrix-card">
+            <div class="card-header" style="flex-wrap:wrap;gap:10px;">
+              <div>
+                <div class="card-title"><i class="ri-route-line" style="color:var(--accent);margin-right:6px;"></i>Route-wise TA / DA &amp; Night Allowance Matrix</div>
+                <div class="card-subtitle">Configure TA · DA · Night Halt per Route Code, From Town → To Town, Grade &amp; Role</div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <span class="badge badge-green" id="route-count-badge"><i class="ri-map-pin-2-line"></i> 0 Routes</span>
+                <button class="btn btn-primary btn-sm" onclick="openAddRouteModal()"><i class="ri-add-line"></i> Add Route Config</button>
+                <button class="btn btn-outline btn-sm" onclick="resetRouteRates()"><i class="ri-refresh-line"></i> Reset</button>
+              </div>
+            </div>
+
+            <!-- Grade filter pills -->
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;background:var(--bg2);">
+              <span style="font-size:11px;font-weight:600;color:var(--text-muted);">FILTER BY GRADE:</span>
+              <button class="f-pill active" data-grade-filter="all" onclick="filterRouteGrade(this,'all')">All Grades</button>
+              <button class="f-pill" data-grade-filter="G1" onclick="filterRouteGrade(this,'G1')">G1 · Junior Exec</button>
+              <button class="f-pill" data-grade-filter="G2" onclick="filterRouteGrade(this,'G2')">G2 · Executive</button>
+              <button class="f-pill" data-grade-filter="G3" onclick="filterRouteGrade(this,'G3')">G3 · Sr Executive</button>
+              <button class="f-pill" data-grade-filter="G4" onclick="filterRouteGrade(this,'G4')">G4 · Manager</button>
+              <button class="f-pill" data-grade-filter="G5" onclick="filterRouteGrade(this,'G5')">G5 · Sr Manager</button>
+            </div>
+
+            <!-- Main table -->
+            <div class="table-wrap" style="max-height:480px;overflow-y:auto;">
+              <table class="matrix-table w-full" id="route-config-table">
+                <thead style="position:sticky;top:0;z-index:2;">
+                  <tr>
+                    <th style="white-space:nowrap;min-width:90px;">Route Code</th>
+                    <th style="min-width:110px;">From Town</th>
+                    <th style="min-width:110px;">To Town</th>
+                    <th style="min-width:60px;">Dist.<br><small style="font-weight:400;">km</small></th>
+                    <th style="min-width:60px;">Grade</th>
+                    <th style="min-width:100px;">Role</th>
+                    <th style="background:rgba(0,212,170,0.08);min-width:80px;">TA<br><small style="font-weight:400;color:var(--text-muted);">₹/km</small></th>
+                    <th style="background:rgba(59,130,246,0.08);min-width:80px;">DA<br><small style="font-weight:400;color:var(--text-muted);">₹/day</small></th>
+                    <th style="background:rgba(139,92,246,0.08);min-width:90px;">NH Allowance<br><small style="font-weight:400;color:var(--text-muted);">₹/night</small></th>
+                    <th style="min-width:40px;"></th>
+                  </tr>
+                </thead>
+                <tbody id="route-config-body">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+              <div id="route-empty-state" style="display:none;text-align:center;padding:32px;color:var(--text-muted);">
+                <i class="ri-route-line" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+                No route configurations yet. Click <strong>Add Route Config</strong> to begin.
+              </div>
+            </div>
+
+            <!-- Footer hint -->
+            <div style="display:flex;gap:20px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--border);background:var(--bg2);border-radius:0 0 var(--radius-sm) var(--radius-sm);font-size:11px;color:var(--text-muted);">
+              <span><i class="ri-pencil-line" style="color:var(--accent);"></i> Click any cell to edit inline</span>
+              <span><i class="ri-information-line" style="color:#3b82f6;"></i> TA = Travel Allowance per km travelled on this route</span>
+              <span><i class="ri-moon-line" style="color:#8b5cf6;"></i> NH = Night Halt hotel/accommodation allowance per night</span>
+            </div>
+          </div>
+
+          <!-- Add Route Config Modal -->
+          <div id="route-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;display:none;align-items:center;justify-content:center;">
+            <div style="background:var(--sidebar);border:1px solid var(--border);border-radius:16px;padding:24px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 48px rgba(0,0,0,0.4);">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                <div style="font-size:16px;font-weight:700;"><i class="ri-route-line" style="color:var(--accent);margin-right:8px;"></i>Add Route Configuration</div>
+                <button class="icon-btn" onclick="closeAddRouteModal()"><i class="ri-close-line"></i></button>
+              </div>
+
+              <!-- Route details -->
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;">
+                <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:12px;">ROUTE DETAILS</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">Route Code</label>
+                    <input class="form-control" id="modal-route-code" placeholder="e.g. RT006" style="font-weight:700;">
+                  </div>
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">Distance (km)</label>
+                    <input type="number" class="form-control" id="modal-dist" placeholder="e.g. 148">
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">From Town</label>
+                    <input class="form-control" id="modal-from" placeholder="e.g. Mumbai">
+                  </div>
+                  <div class="form-group" style="margin:0;">
+                    <label class="form-label">To Town</label>
+                    <input class="form-control" id="modal-to" placeholder="e.g. Pune">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Grade-wise rates -->
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;">
+                <div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;margin-bottom:10px;">GRADE-WISE ALLOWANCE RATES</div>
+                <table style="width:100%;border-collapse:collapse;font-size:12px;" id="modal-grade-table">
+                  <thead>
+                    <tr style="border-bottom:1px solid var(--border);">
+                      <th style="padding:6px 8px;text-align:left;color:var(--text-muted);font-weight:600;">Grade</th>
+                      <th style="padding:6px 8px;text-align:left;color:var(--text-muted);font-weight:600;">Role</th>
+                      <th style="padding:6px 8px;text-align:center;color:var(--accent);font-weight:600;">TA ₹/km</th>
+                      <th style="padding:6px 8px;text-align:center;color:#3b82f6;font-weight:600;">DA ₹/day</th>
+                      <th style="padding:6px 8px;text-align:center;color:#8b5cf6;font-weight:600;">NH ₹/night</th>
+                    </tr>
+                  </thead>
+                  <tbody id="modal-grade-body"></tbody>
+                </table>
+              </div>
+
+              <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-outline btn-sm" onclick="closeAddRouteModal()">Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="confirmAddRoute()"><i class="ri-check-line"></i> Add Route Config</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Global TA/DA & Night Halt Allowance -->
+          <div class="card mb-24">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i class="ri-global-line" style="color:var(--accent);margin-right:6px;"></i>Global TA / DA &amp; Night Halt Allowance</div>
+                <div class="card-subtitle">Fallback rates applied when no grade-specific rule matches. Also used as caps for reimbursement.</div>
+              </div>
+              <label class="toggle" title="Enable global overrides">
+                <input type="checkbox" id="global-override-toggle">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:4px 0 16px;">
+
+              <!-- TA Block -->
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;">
+                <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:12px;"><i class="ri-road-map-line"></i> TRAVEL ALLOWANCE (TA)</div>
+                <div class="form-group" style="margin-bottom:12px;">
+                  <label class="form-label">Local TA (within city)</label>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="number" class="rate-input" id="global-ta-local" value="3.0" style="width:80px;"> <span style="font-size:12px;color:var(--text-muted);">₹/km</span>
+                  </div>
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                  <label class="form-label">Outstation TA (town-to-town)</label>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="number" class="rate-input" id="global-ta-outstation" value="4.5" style="width:80px;"> <span style="font-size:12px;color:var(--text-muted);">₹/km</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Max TA per day (cap)</label>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="number" class="rate-input" id="global-ta-cap" value="500" style="width:80px;"> <span style="font-size:12px;color:var(--text-muted);">₹/day</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- DA Block -->
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;">
+                <div style="font-size:11px;font-weight:700;color:#3b82f6;letter-spacing:.5px;margin-bottom:12px;"><i class="ri-calendar-check-line"></i> DAILY ALLOWANCE (DA)</div>
+                <div class="form-group" style="margin-bottom:12px;">
+                  <label class="form-label">Local DA (home city)</label>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="number" class="rate-input" id="global-da-local" value="150" style="width:80px;"> <span style="font-size:12px;color:var(--text-muted);">₹/day</span>
+                  </div>
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                  <label class="form-label">Outstation DA (on road)</label>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="number" class="rate-input" id="global-da-outstation" value="300" style="width:80px;"> <span style="font-size:12px;color:var(--text-muted);">₹/day</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Global Meal Allowance</label>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="number" class="rate-input" id="global-meal" value="250" style="width:80px;"> <span style="font-size:12px;color:var(--text-muted);">₹/day</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Night Halt Block -->
+              <div style="background:var(--bg);border:1px solid rgba(139,92,246,0.3);border-radius:var(--radius-sm);padding:16px;">
+                <div style="font-size:11px;font-weight:700;color:#8b5cf6;letter-spacing:.5px;margin-bottom:12px;"><i class="ri-moon-line"></i> NIGHT HALT ALLOWANCE</div>
+                <div class="form-group" style="margin-bottom:12px;">
+                  <label class="form-label">Class A City (Metro)</label>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="number" class="rate-input" id="global-halt-a" value="1500" style="width:80px;"> <span style="font-size:12px;color:var(--text-muted);">₹/night</span>
+                  </div>
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                  <label class="form-label">Class B Town (Tier 2)</label>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="number" class="rate-input" id="global-halt-b" value="900" style="width:80px;"> <span style="font-size:12px;color:var(--text-muted);">₹/night</span>
+                  </div>
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                  <label class="form-label">Class C Town (Tier 3 / Rural)</label>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="number" class="rate-input" id="global-halt-c" value="500" style="width:80px;"> <span style="font-size:12px;color:var(--text-muted);">₹/night</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Max Halt Duration (consecutive nights)</label>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="number" class="rate-input" id="global-halt-maxdays" value="7" style="width:80px;"> <span style="font-size:12px;color:var(--text-muted);">nights</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Apply to section -->
+            <div style="padding:12px 16px;background:rgba(0,212,170,0.05);border:1px solid rgba(0,212,170,0.15);border-radius:var(--radius-sm);display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+              <span style="font-size:12px;font-weight:600;color:var(--accent);"><i class="ri-information-line"></i> Apply Global Rates To:</span>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;"><input type="checkbox" id="global-apply-unassigned" checked> <span>Unassigned / new grades</span></label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;"><input type="checkbox" id="global-apply-no-route"> <span>Routes with no specific rule</span></label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;"><input type="checkbox" id="global-apply-cap"> <span>Use as upper cap for all grade-specific rates</span></label>
+            </div>
+          </div>
+
           <div class="grid-2">
             <div class="card">
               <div class="card-title mb-16"><i class="ri-phone-line" style="color:var(--accent);"></i> BYOD Internet Allowance</div>
@@ -324,6 +555,208 @@ allowanceData.forEach(a => {
     </tr>`;
 });
 
+// ── Route-wise TA/DA & Night Allowance Matrix ──────────────────────────────
+const gradeRoleMeta = [
+  { grade:'G1', role:'Junior Exec'  },
+  { grade:'G2', role:'Executive'    },
+  { grade:'G3', role:'Sr Executive' },
+  { grade:'G4', role:'Manager'      },
+  { grade:'G5', role:'Sr Manager'   },
+];
+// Default per-grade TA/DA/NH seed values used when adding a new route
+const gradeDefaults = {
+  G1:{ ta:2.5, da:200, nh:600  },
+  G2:{ ta:3.0, da:280, nh:800  },
+  G3:{ ta:4.0, da:400, nh:1200 },
+  G4:{ ta:6.0, da:650, nh:2000 },
+  G5:{ ta:8.0, da:900, nh:3000 },
+};
+// routeConfigData: array of { code, from, to, dist, grades:[{grade,role,ta,da,nh}] }
+let routeConfigData = [
+  { code:'RT001', from:'Mumbai', to:'Pune',      dist:148, grades:[
+    {grade:'G1',role:'Junior Exec',  ta:2.5, da:200, nh:600 },
+    {grade:'G2',role:'Executive',    ta:3.0, da:280, nh:800 },
+    {grade:'G3',role:'Sr Executive', ta:4.0, da:400, nh:1200},
+    {grade:'G4',role:'Manager',      ta:6.0, da:650, nh:2000},
+    {grade:'G5',role:'Sr Manager',   ta:8.0, da:900, nh:3000},
+  ]},
+  { code:'RT002', from:'Mumbai', to:'Nashik',    dist:165, grades:[
+    {grade:'G1',role:'Junior Exec',  ta:2.5, da:200, nh:600 },
+    {grade:'G2',role:'Executive',    ta:3.0, da:280, nh:800 },
+    {grade:'G3',role:'Sr Executive', ta:4.0, da:400, nh:1200},
+    {grade:'G4',role:'Manager',      ta:6.0, da:650, nh:2000},
+    {grade:'G5',role:'Sr Manager',   ta:8.0, da:900, nh:3000},
+  ]},
+  { code:'RT003', from:'Pune',   to:'Nagpur',    dist:710, grades:[
+    {grade:'G1',role:'Junior Exec',  ta:2.8, da:220, nh:650 },
+    {grade:'G2',role:'Executive',    ta:3.2, da:300, nh:850 },
+    {grade:'G3',role:'Sr Executive', ta:4.5, da:450, nh:1300},
+    {grade:'G4',role:'Manager',      ta:7.0, da:700, nh:2200},
+    {grade:'G5',role:'Sr Manager',   ta:9.0, da:950, nh:3200},
+  ]},
+  { code:'RT004', from:'Delhi',  to:'Agra',      dist:206, grades:[
+    {grade:'G1',role:'Junior Exec',  ta:2.5, da:200, nh:600 },
+    {grade:'G2',role:'Executive',    ta:3.0, da:280, nh:800 },
+    {grade:'G3',role:'Sr Executive', ta:4.0, da:400, nh:1200},
+    {grade:'G4',role:'Manager',      ta:6.0, da:650, nh:2000},
+    {grade:'G5',role:'Sr Manager',   ta:8.0, da:900, nh:3000},
+  ]},
+  { code:'RT005', from:'Bangalore', to:'Mysore', dist:144, grades:[
+    {grade:'G1',role:'Junior Exec',  ta:2.5, da:200, nh:600 },
+    {grade:'G2',role:'Executive',    ta:3.0, da:280, nh:800 },
+    {grade:'G3',role:'Sr Executive', ta:4.0, da:400, nh:1200},
+    {grade:'G4',role:'Manager',      ta:6.0, da:650, nh:2000},
+    {grade:'G5',role:'Sr Manager',   ta:8.0, da:900, nh:3000},
+  ]},
+];
+
+let activeGradeFilter = 'all';
+
+function renderRouteTable() {
+  const tbody = document.getElementById('route-config-body');
+  const empty = document.getElementById('route-empty-state');
+  const badge = document.getElementById('route-count-badge');
+  badge.innerHTML = `<i class="ri-map-pin-2-line"></i> ${routeConfigData.length} Route${routeConfigData.length!==1?'s':''}`;
+
+  if (routeConfigData.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  let html = '';
+  const routeColors = ['rgba(0,212,170,0.04)','rgba(59,130,246,0.04)','rgba(139,92,246,0.04)','rgba(245,158,11,0.04)','rgba(239,68,68,0.04)'];
+  routeConfigData.forEach((r, ri) => {
+    const bg = routeColors[ri % routeColors.length];
+    // Route group header row
+    html += `<tr class="route-group-header" data-route-idx="${ri}" style="background:var(--bg2);border-top:2px solid var(--border);">
+      <td colspan="10" style="padding:8px 16px;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span class="badge badge-green" style="font-size:12px;font-weight:700;">${r.code}</span>
+          <span style="font-size:13px;font-weight:700;"><i class="ri-map-pin-line" style="color:var(--accent);"></i> ${r.from}</span>
+          <span style="color:var(--text-muted);font-size:12px;">→</span>
+          <span style="font-size:13px;font-weight:700;"><i class="ri-map-pin-line" style="color:#ef4444;"></i> ${r.to}</span>
+          <span style="font-size:11px;color:var(--text-muted);background:var(--border);padding:2px 8px;border-radius:8px;"><i class="ri-road-line"></i> ${r.dist} km</span>
+          <span style="margin-left:auto;display:flex;gap:6px;">
+            <button class="btn btn-outline btn-sm" style="padding:3px 10px;font-size:11px;" onclick="editRouteHeader(${ri})"><i class="ri-edit-line"></i> Edit Route</button>
+            <button class="btn btn-outline btn-sm" style="padding:3px 10px;font-size:11px;color:var(--red);border-color:var(--red);" onclick="deleteRoute(${ri})"><i class="ri-delete-bin-line"></i> Remove</button>
+          </span>
+        </div>
+      </td>
+    </tr>`;
+    // Grade rows
+    r.grades.forEach((g, gi) => {
+      const hidden = (activeGradeFilter !== 'all' && activeGradeFilter !== g.grade) ? 'display:none;' : '';
+      html += `<tr class="route-grade-row" data-grade="${g.grade}" style="${hidden}background:${bg};">
+        <td style="padding-left:28px;"></td>
+        <td>${r.from}</td>
+        <td>${r.to}</td>
+        <td style="color:var(--text-muted);font-size:12px;">${r.dist}</td>
+        <td><span class="badge badge-blue">${g.grade}</span></td>
+        <td style="font-size:12px;">${g.role}</td>
+        <td style="background:rgba(0,212,170,0.06);"><input class="rate-input" value="${g.ta}" onchange="routeConfigData[${ri}].grades[${gi}].ta=parseFloat(this.value)"></td>
+        <td style="background:rgba(59,130,246,0.06);"><input class="rate-input" value="${g.da}" onchange="routeConfigData[${ri}].grades[${gi}].da=parseFloat(this.value)"></td>
+        <td style="background:rgba(139,92,246,0.06);"><input class="rate-input" value="${g.nh}" onchange="routeConfigData[${ri}].grades[${gi}].nh=parseFloat(this.value)"></td>
+        <td><button class="icon-btn" style="color:var(--red);font-size:14px;" title="Remove this grade row" onclick="deleteRouteGrade(${ri},${gi})"><i class="ri-close-line"></i></button></td>
+      </tr>`;
+    });
+  });
+  tbody.innerHTML = html;
+}
+
+function filterRouteGrade(btn, grade) {
+  document.querySelectorAll('[data-grade-filter]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeGradeFilter = grade;
+  document.querySelectorAll('.route-grade-row').forEach(row => {
+    row.style.display = (grade === 'all' || row.dataset.grade === grade) ? '' : 'none';
+  });
+}
+
+function deleteRoute(ri) {
+  if (!confirm(`Remove route ${routeConfigData[ri].code} (${routeConfigData[ri].from} → ${routeConfigData[ri].to}) and all its grade configurations?`)) return;
+  routeConfigData.splice(ri, 1);
+  renderRouteTable();
+  Toast.show('Route removed.', 'info');
+}
+
+function deleteRouteGrade(ri, gi) {
+  routeConfigData[ri].grades.splice(gi, 1);
+  renderRouteTable();
+}
+
+function editRouteHeader(ri) {
+  const r = routeConfigData[ri];
+  const newCode = prompt('Route Code:', r.code); if (newCode === null) return;
+  const newFrom = prompt('From Town:', r.from); if (newFrom === null) return;
+  const newTo   = prompt('To Town:', r.to);     if (newTo === null) return;
+  const newDist = prompt('Distance (km):', r.dist); if (newDist === null) return;
+  routeConfigData[ri].code = newCode.trim().toUpperCase();
+  routeConfigData[ri].from = newFrom.trim();
+  routeConfigData[ri].to   = newTo.trim();
+  routeConfigData[ri].dist = parseInt(newDist) || r.dist;
+  renderRouteTable();
+  Toast.show('Route details updated.', 'success');
+}
+
+// Modal: Add Route Config
+function openAddRouteModal() {
+  document.getElementById('route-modal-overlay').classList.add('open');
+  // Populate modal grade table with defaults
+  const tbody = document.getElementById('modal-grade-body');
+  tbody.innerHTML = '';
+  gradeRoleMeta.forEach(gm => {
+    const d = gradeDefaults[gm.grade];
+    tbody.innerHTML += `
+      <tr>
+        <td style="padding:6px 8px;"><span class="badge badge-blue">${gm.grade}</span></td>
+        <td style="padding:6px 8px;font-size:12px;">${gm.role}</td>
+        <td style="padding:4px;"><input class="rate-input" data-grade="${gm.grade}" data-field="ta" value="${d.ta}" style="width:70px;"></td>
+        <td style="padding:4px;"><input class="rate-input" data-grade="${gm.grade}" data-field="da" value="${d.da}" style="width:70px;"></td>
+        <td style="padding:4px;"><input class="rate-input" data-grade="${gm.grade}" data-field="nh" value="${d.nh}" style="width:70px;"></td>
+      </tr>`;
+  });
+  document.getElementById('modal-route-code').value = '';
+  document.getElementById('modal-from').value = '';
+  document.getElementById('modal-to').value = '';
+  document.getElementById('modal-dist').value = '';
+  const overlay = document.getElementById('route-modal-overlay');
+  overlay.style.display = 'flex';
+}
+function closeAddRouteModal() {
+  document.getElementById('route-modal-overlay').classList.remove('open');
+}
+function confirmAddRoute() {
+  const code = document.getElementById('modal-route-code').value.trim().toUpperCase();
+  const from = document.getElementById('modal-from').value.trim();
+  const to   = document.getElementById('modal-to').value.trim();
+  const dist = parseInt(document.getElementById('modal-dist').value) || 0;
+  if (!code || !from || !to) { Toast.show('Please fill Route Code, From Town and To Town.', 'error'); return; }
+  const grades = [];
+  gradeRoleMeta.forEach(gm => {
+    const ta = parseFloat(document.querySelector(`[data-grade="${gm.grade}"][data-field="ta"]`).value) || gradeDefaults[gm.grade].ta;
+    const da = parseFloat(document.querySelector(`[data-grade="${gm.grade}"][data-field="da"]`).value) || gradeDefaults[gm.grade].da;
+    const nh = parseFloat(document.querySelector(`[data-grade="${gm.grade}"][data-field="nh"]`).value) || gradeDefaults[gm.grade].nh;
+    grades.push({ grade:gm.grade, role:gm.role, ta, da, nh });
+  });
+  routeConfigData.push({ code, from, to, dist, grades });
+  renderRouteTable();
+  closeAddRouteModal();
+  Toast.show(`Route ${code} (${from} → ${to}) added with ${grades.length} grade configurations.`, 'success');
+}
+// Close modal on overlay click
+document.getElementById('route-modal-overlay').addEventListener('click', function(e){
+  if (e.target === this) closeAddRouteModal();
+});
+
+// Initial render
+renderRouteTable();
+
+// Global override toggle feedback
+document.getElementById('global-override-toggle').addEventListener('change', function(){
+  Toast.show(this.checked ? 'Global rates enabled — will override unmatched grades.' : 'Global rates disabled.', this.checked?'success':'info');
+});
+
 // Auto-Approve Rules
 const autoRules = [
   { cat:'Travel (TA)', icon:'ri-road-map-line', col:'#00d4aa', auto:true,  desc:'Auto-approve if GPS path ≈ Odometer reading (±5%)', condition:'Path ≈ Odometer', threshold:'±5% variance' },
@@ -379,6 +812,7 @@ fraudRules.forEach(f => {
 
 function saveRules() { Toast.show('All rules saved successfully!', 'success'); }
 function resetRates() { Toast.show('Rates reset to policy defaults.', 'info'); }
+function resetRouteRates() { Toast.show('Route allowance rates reset to policy defaults.', 'info'); }
 </script>
 </body>
 </html>

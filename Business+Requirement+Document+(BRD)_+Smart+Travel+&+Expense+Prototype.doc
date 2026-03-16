@@ -1,0 +1,514 @@
+Date: Mon, 16 Mar 2026 07:11:47 +0000 (UTC)
+Message-ID: <388546234.27.1773645107551@b9e15d3acb44>
+Subject: Exported From Confluence
+MIME-Version: 1.0
+Content-Type: multipart/related; 
+	boundary="----=_Part_26_723157128.1773645107551"
+
+------=_Part_26_723157128.1773645107551
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Content-Location: file:///C:/exported.html
+
+<html xmlns:o=3D'urn:schemas-microsoft-com:office:office'
+      xmlns:w=3D'urn:schemas-microsoft-com:office:word'
+      xmlns:v=3D'urn:schemas-microsoft-com:vml'
+      xmlns=3D'urn:w3-org-ns:HTML'>
+<head>
+    <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8=
+">
+    <title>Business Requirement Document (BRD): Smart Travel &amp; Expense =
+Prototype</title>
+    <!--[if gte mso 9]>
+    <xml>
+        <o:OfficeDocumentSettings>
+            <o:TargetScreenSize>1024x640</o:TargetScreenSize>
+            <o:PixelsPerInch>72</o:PixelsPerInch>
+            <o:AllowPNG/>
+        </o:OfficeDocumentSettings>
+        <w:WordDocument>
+            <w:View>Print</w:View>
+            <w:Zoom>90</w:Zoom>
+            <w:DoNotOptimizeForBrowser/>
+        </w:WordDocument>
+    </xml>
+    <![endif]-->
+    <style>
+                <!--
+        @page Section1 {
+            size: 8.5in 11.0in;
+            margin: 1.0in;
+            mso-header-margin: .5in;
+            mso-footer-margin: .5in;
+            mso-paper-source: 0;
+        }
+
+        table {
+            border: solid 1px;
+            border-collapse: collapse;
+        }
+
+        table td, table th {
+            border: solid 1px;
+            padding: 5px;
+        }
+
+        td {
+            page-break-inside: avoid;
+        }
+
+        tr {
+            page-break-after: avoid;
+        }
+
+        div.Section1 {
+            page: Section1;
+        }
+
+        /* Confluence print stylesheet. Common to all themes for print medi=
+a */
+/* Full of !important until we improve batching for print CSS */
+
+@media print {
+    #main {
+        padding-bottom: 1em !important; /* The default padding of 6em is to=
+o much for printouts */
+    }
+
+    body {
+        font: var(--ds-font-body-small, Arial, Helvetica, FreeSans, sans-se=
+rif);
+    }
+
+    body, #full-height-container, #main, #page, #content, .has-personal-sid=
+ebar #content {
+        background: var(--ds-surface, #fff) !important;
+        color: var(--ds-text, #000) !important;
+        border: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+    }
+
+    a, a:link, a:visited, a:focus, a:hover, a:active {
+        color: var(--ds-text, #000);
+    }
+
+    #content h1,
+    #content h2,
+    #content h3,
+    #content h4,
+    #content h5,
+    #content h6 {
+        page-break-after: avoid;
+    }
+
+    pre {
+        font: var(--ds-font-code, Monaco, "Courier New", monospace);
+    }
+
+    #header,
+    .aui-header-inner,
+    #navigation,
+    #sidebar,
+    .sidebar,
+    #personal-info-sidebar,
+    .ia-fixed-sidebar,
+    .page-actions,
+    .navmenu,
+    .ajs-menu-bar,
+    .noprint,
+    .inline-control-link,
+    .inline-control-link a,
+    a.show-labels-editor,
+    .global-comment-actions,
+    .comment-actions,
+    .quick-comment-container,
+    #addcomment {
+        display: none !important;
+    }
+
+    /* CONF-28544 cannot print multiple pages in IE */
+    #splitter-content {
+        position: relative !important;
+    }
+
+    .comment .date::before {
+        content: none !important; /* remove middot for print view */
+    }
+
+    h1.pagetitle img {
+        height: auto;
+        width: auto;
+    }
+
+    .print-only {
+        display: block;
+    }
+
+    #footer {
+        position: relative !important; /* CONF-17506 Place the footer at en=
+d of the content */
+        margin: 0;
+        padding: 0;
+        background: none;
+        clear: both;
+    }
+
+    #poweredby {
+        border-top: none;
+        background: none;
+    }
+
+    #poweredby li.print-only {
+        display: list-item;
+        font-style: italic;
+    }
+
+    #poweredby li.noprint {
+        display: none;
+    }
+
+    /* no width controls in print */
+    .wiki-content .table-wrap,
+    .wiki-content p,
+    .panel .codeContent,
+    .panel .codeContent pre,
+    .image-wrap {
+        overflow: visible !important;
+    }
+
+    /* TODO - should this work? */
+    #children-section,
+    #comments-section .comment,
+    #comments-section .comment .comment-body,
+    #comments-section .comment .comment-content,
+    #comments-section .comment p {
+        page-break-inside: avoid;
+    }
+
+    #page-children a {
+        text-decoration: none;
+    }
+
+    /**
+     hide twixies
+
+     the specificity here is a hack because print styles
+     are getting loaded before the base styles. */
+    #comments-section.pageSection .section-header,
+    #comments-section.pageSection .section-title,
+    #children-section.pageSection .section-header,
+    #children-section.pageSection .section-title,
+    .children-show-hide {
+        padding-left: 0;
+        margin-left: 0;
+    }
+
+    .children-show-hide.icon {
+        display: none;
+    }
+
+    /* personal sidebar */
+    .has-personal-sidebar #content {
+        margin-right: 0px;
+    }
+
+    .has-personal-sidebar #content .pageSection {
+        margin-right: 0px;
+    }
+
+    .no-print, .no-print * {
+        display: none !important;
+    }
+}
+-->
+    </style>
+</head>
+<body>
+    <h1>Business Requirement Document (BRD): Smart Travel &amp; Expense Pro=
+totype</h1>
+    <div class=3D"Section1">
+        <h2 local-id=3D"b64e25dd3e04" id=3D"BusinessRequirementDocument(BRD=
+):SmartTravel&amp;ExpensePrototype-1.ProjectOverview">1. Project Overview</=
+h2>
+<p local-id=3D"c0a340d1d3aa">The objective is to build a high-fidelity prot=
+otype of an expense management system that uses <strong>GPS Breadcrumbs</st=
+rong> and <strong>Activity-Linked Proofs</strong> to automate the reimburse=
+ment lifecycle. The system aims to eliminate manual mileage entry and reduc=
+e the approval burden through automated rule validation.</p>
+<hr local-id=3D"533208b3-9c46-4b5c-a8b4-8ba67313fe64">
+<h2 local-id=3D"85ef3a978df2" id=3D"BusinessRequirementDocument(BRD):SmartT=
+ravel&amp;ExpensePrototype-2.UserRoles&amp;AccessControl">2. User Roles &am=
+p; Access Control</h2>
+<div class=3D"table-wrap">
+<table data-table-width=3D"760" data-layout=3D"default" data-local-id=3D"85=
+0d5c7a-8d02-45c8-8081-97c3566efca0" class=3D"confluenceTable">
+<tbody>
+<tr data-local-id=3D"d8e984b9-e11c-4301-a6aa-ade519423c67">
+<td data-local-id=3D"c67a4f36-9440-4586-ba97-b46a81a3bbcb" class=3D"conflue=
+nceTd">
+<p local-id=3D"c2589bb873c3"><strong>Role</strong></p></td>
+<td data-local-id=3D"f8d2fe1e-81ae-4dbf-8283-8eaf09ba9194" class=3D"conflue=
+nceTd">
+<p local-id=3D"76ca3b1ecaee"><strong>Platform</strong></p></td>
+<td data-local-id=3D"54d9a16b-50ff-4c61-a722-86fcb14e1701" class=3D"conflue=
+nceTd">
+<p local-id=3D"2af409828d87"><strong>Primary Function</strong></p></td>
+</tr>
+<tr data-local-id=3D"d6c0e47e-a6d8-4a29-b527-0b673296f30d">
+<td data-local-id=3D"9ae18eb5-bf7a-4bee-bba2-e3e9cddb6405" class=3D"conflue=
+nceTd">
+<p local-id=3D"a4cc29d59f3d"><strong>Field User</strong></p></td>
+<td data-local-id=3D"83f7c3e8-515a-4248-8283-edc77ba646a0" class=3D"conflue=
+nceTd">
+<p local-id=3D"8918a6457f44">Mobile App</p></td>
+<td data-local-id=3D"78ac3f43-4647-4af2-9df3-3b1505d63167" class=3D"conflue=
+nceTd">
+<p local-id=3D"1218b9f8fb01">Mark attendance, log activities, and capture g=
+eo-tagged expense proofs.</p></td>
+</tr>
+<tr data-local-id=3D"fe761684-496c-4a68-bf22-aa3ea6b11460">
+<td data-local-id=3D"3a40019f-c3b9-4ab5-b05d-8daa8d679846" class=3D"conflue=
+nceTd">
+<p local-id=3D"ead3e0a88f0a"><strong>Line Manager</strong></p></td>
+<td data-local-id=3D"7fb6922c-ad38-4645-b4c2-84115273827e" class=3D"conflue=
+nceTd">
+<p local-id=3D"256f647758f4">Web Portal</p></td>
+<td data-local-id=3D"3dfd6134-4827-49e6-922a-f0f2a8fb35d1" class=3D"conflue=
+nceTd">
+<p local-id=3D"f49ea3844049">Review "Pinned Journeys," approve flagged expe=
+nses, and monitor team spend.</p></td>
+</tr>
+<tr data-local-id=3D"77d8d287-18c8-40ed-92af-4b82aa188e71">
+<td data-local-id=3D"6206a41c-b8d2-48a6-8d1b-e6074770705f" class=3D"conflue=
+nceTd">
+<p local-id=3D"89fcd0225aea"><strong>Admin/Finance</strong></p></td>
+<td data-local-id=3D"ec9b9a78-97be-4eb9-b27b-45f2c0cc2d9a" class=3D"conflue=
+nceTd">
+<p local-id=3D"a65cf5178d6b">Web Portal</p></td>
+<td data-local-id=3D"e379e046-eae5-42e3-a55e-98066e9a97a9" class=3D"conflue=
+nceTd">
+<p local-id=3D"7b13aa442fc7">Configure grade-wise rates (TA/DA/internet and=
+ others), vehicle eligibility, and auto-approval rules.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr local-id=3D"b44dc072-dfb7-4636-815f-c1bd45e24630">
+<h2 local-id=3D"4c9fe1a70dcf" id=3D"BusinessRequirementDocument(BRD):SmartT=
+ravel&amp;ExpensePrototype-3.The&quot;PinnedJourney&quot;&amp;ProofFramewor=
+k">3. The "Pinned Journey" &amp; Proof Framework</h2>
+<p local-id=3D"de7a1ac600b0">The core innovation is the <strong>Daily Trave=
+l Timeline</strong>, where every claim is anchored to a physical location a=
+nd time.</p>
+<h3 local-id=3D"f4c7f2622b34" id=3D"BusinessRequirementDocument(BRD):SmartT=
+ravel&amp;ExpensePrototype-3.1GeospatialEvidence">3.1 Geospatial Evidence</=
+h3>
+<ul local-id=3D"42019ceb-061a-42a7-bc15-b0e1f98d5662">
+<li local-id=3D"0482ac01-6b30-4b4b-b57f-d61294e51909">
+<p local-id=3D"d73b50c12a44"><strong>Attendance Pin:</strong> The day start=
+s/ends with a geo-fenced clock-in.</p></li>
+<li local-id=3D"c95d66c5-6d23-422e-ad0c-46b38b8ef473">
+<p local-id=3D"ab8b2ffa60be"><strong>Breadcrumb Path:</strong> Background G=
+PS tracking captures the route taken between client meetings to calculate "=
+Travel Allowance" (TA) without manual input.</p></li>
+<li local-id=3D"8b226ed1-bb1f-46f4-af88-770ce26cfc74">
+<p local-id=3D"f8eb26af76ac"><strong>Expense Pin:</strong> When a bill (Foo=
+d/Misc) is submitted, the app captures the <strong>Current Geo-Location</st=
+rong> and pins it to the journey map.</p></li>
+</ul>
+<h3 local-id=3D"874d8b5d2c56" id=3D"BusinessRequirementDocument(BRD):SmartT=
+ravel&amp;ExpensePrototype-3.2ProofofActivity">3.2 Proof of Activity</h3>
+<ul local-id=3D"43bdae32-6595-4ac6-87ef-be3e02051aea">
+<li local-id=3D"19ac734b-68bc-489b-b535-31d16510405e">
+<p local-id=3D"994cadb0a8c4">Users must log a "Client Visit" or "Task" to j=
+ustify travel.</p></li>
+<li local-id=3D"a8a39fb1-7034-4537-9fbe-296a92094b9d">
+<p local-id=3D"3ca3c87b1911">The system cross-references the <strong>Expens=
+e Pin</strong> with the <strong>Activity Pin</strong>. If they are within a=
+ defined radius (e.g., 500m), the proof is considered valid.</p></li>
+</ul>
+<hr local-id=3D"6f561395-8b41-4987-aa24-c6711b88d6e8">
+<h2 local-id=3D"6bfb3a2d85c8" id=3D"BusinessRequirementDocument(BRD):SmartT=
+ravel&amp;ExpensePrototype-4.FunctionalRequirements(MobileApp)">4. Function=
+al Requirements (Mobile App)</h2>
+<h3 local-id=3D"9ed71b43f2a8" id=3D"BusinessRequirementDocument(BRD):SmartT=
+ravel&amp;ExpensePrototype-4.1Attendance&amp;TravelLogging">4.1 Attendance =
+&amp; Travel Logging</h3>
+<ul local-id=3D"3bdb3933-65e6-4cbb-9996-e7341c3b8da3">
+<li local-id=3D"936d6440-f097-4964-9d0b-b25c9768a194">
+<p local-id=3D"e2d6fd4ca4bb"><strong>Requirement:</strong> "Add Expense" is=
+ locked until the user marks attendance.</p></li>
+<li local-id=3D"70ef5cea-6a2a-42fe-bd43-09e7c7676fc8">
+<p local-id=3D"30984450cfda"><strong>Logic:</strong> Start Odometer (Photo)=
+ + Start GPS $\rightarrow$ End Odometer (Photo) + End GPS.</p></li>
+<li local-id=3D"da4d7072-2af4-43f2-818a-cd39b7919e5a">
+<p local-id=3D"4d5a79fec8b9"><strong>Output:</strong> The system calculates=
+ total distance based on the <strong>Pinned Path</strong>.</p></li>
+</ul>
+<h3 local-id=3D"b963789d69a3" id=3D"BusinessRequirementDocument(BRD):SmartT=
+ravel&amp;ExpensePrototype-4.2Multi-CategoryExpenseSubmission">4.2 Multi-Ca=
+tegory Expense Submission</h3>
+<ul local-id=3D"abb125f0-7d10-4af0-9ca5-45a085076127">
+<li local-id=3D"d151be42-9862-4db6-b9fd-c4ab298f6eaf">
+<p local-id=3D"1970e2c05104"><strong>Food/Misc Bills:</strong> Must be capt=
+ured via live camera (no gallery uploads).</p></li>
+<li local-id=3D"aa86922a-9fa3-4cf8-8a16-938169b3f5fc">
+<p local-id=3D"5fda8dd51dec"><strong>OCR Integration:</strong> System extra=
+cts Date, Amount, and Vendor from the bill photo.</p></li>
+<li local-id=3D"7d5396aa-d2b5-4d93-af8d-73c63d81dae6">
+<p local-id=3D"c9f6c2c1039b"><strong>Geo-Tagging:</strong> Every bill is au=
+tomatically tagged with the user's current GPS coordinates.</p></li>
+</ul>
+<hr local-id=3D"6f082054-875c-4033-9f48-5100fb8edd53">
+<h2 local-id=3D"a2f9ee8cea8e" id=3D"BusinessRequirementDocument(BRD):SmartT=
+ravel&amp;ExpensePrototype-5.FunctionalRequirements(ManagementPortal)">5. F=
+unctional Requirements (Management Portal)</h2>
+<h3 local-id=3D"e37b0be020e6" id=3D"BusinessRequirementDocument(BRD):SmartT=
+ravel&amp;ExpensePrototype-5.1TheRuleEngine(Configuration)">5.1 The Rule En=
+gine (Configuration)</h3>
+<ul local-id=3D"70c6f823-03f2-445d-a678-4c3a3a78d486">
+<li local-id=3D"5e67a001-b207-4df1-8b71-3f3e6ae17057">
+<p local-id=3D"f7bc41fbbbc0"><strong>Vehicle Matrix:</strong> Map vehicle t=
+ypes (2W/4W) to Employee Grades.</p></li>
+<li local-id=3D"c4980d0a-7fe7-41c1-a3fb-55018cf2f7f9">
+<p local-id=3D"740640a26b15"><strong>Allowance Matrix:</strong> Define DA (=
+Daily Allowance) and TA (Rate/KM) based on City Tiers (Tier 1/2/3). or from=
+ town1 to town2. Define some other rates too, like tenant, BYOD, and other =
+grade-wise. Grade-wise fuel charges.</p></li>
+<li local-id=3D"941b0ea3-9673-44d5-8473-6e1d9bbf5180">
+<p local-id=3D"0e59fd7946f6"><strong>Auto-Approve Toggle:</strong> Enable/D=
+isable auto-approval for specific categories (e.g., "Tolls" =3D Auto, "Clie=
+nt Meals" =3D Manual).</p></li>
+</ul>
+<h3 local-id=3D"509c45f8a6e2" id=3D"BusinessRequirementDocument(BRD):SmartT=
+ravel&amp;ExpensePrototype-5.2ThePinnedApprovalInterface">5.2 The Pinned Ap=
+proval Interface</h3>
+<ul local-id=3D"06a96d45-1640-4338-983f-e781d14c383d">
+<li local-id=3D"d062af47-a54c-41ad-9ecc-eb35feac5ab2">
+<p local-id=3D"8a3bac0475e8"><strong>Visual Audit:</strong> Managers see a =
+Google Maps view showing the day's "Breadcrumb Path" and "Expense Pins."</p=
+></li>
+<li local-id=3D"357b8594-3c6a-48f2-af0e-771baf00a4ce">
+<p local-id=3D"61919e39cc64"><strong>Status Indicators:</strong></p>
+<ul local-id=3D"1904c1a6-b186-4e60-bc3b-5eaa0d609447">
+<li local-id=3D"e8c76559-3964-430f-8511-78b73ea59d53">
+<p local-id=3D"7648812a028a"><strong>Green:</strong> All proofs (Location, =
+Date, Amount) match the journey and policy.</p></li>
+<li local-id=3D"4deff4f1-6e5e-4b6a-9757-a89714090cd1">
+<p local-id=3D"7bd1cfac6e18"><strong>Amber:</strong> Flagged for deviation =
+(e.g., Bill location is 5km away from any activity).</p></li>
+<li local-id=3D"caf105fd-86d3-4d69-816c-d0121873de94">
+<p local-id=3D"67cce56a306e"><strong>Red:</strong> Policy violation (e.g., =
+Exceeded daily meal limit).</p></li>
+</ul></li>
+</ul>
+<hr local-id=3D"fb5225ba-6add-4701-a615-93d3e6bddf68">
+<h2 local-id=3D"804603ab8b73" id=3D"BusinessRequirementDocument(BRD):SmartT=
+ravel&amp;ExpensePrototype-6.Calculation&amp;ApprovalLogic">6. Calculation =
+&amp; Approval Logic</h2>
+<div class=3D"table-wrap">
+<table data-table-width=3D"760" data-layout=3D"default" data-local-id=3D"60=
+0620c1-7238-4eab-92e4-935c3c6976ad" class=3D"confluenceTable">
+<tbody>
+<tr data-local-id=3D"fdac017f-30cd-4d29-8275-1570ae0daf19">
+<td data-local-id=3D"68934df6-11ad-4a33-a27d-6b1c49d32560" class=3D"conflue=
+nceTd">
+<p local-id=3D"79108a049378"><strong>Category</strong></p></td>
+<td data-local-id=3D"d0e3d54d-03f5-4a19-bb0e-96a74cbbc127" class=3D"conflue=
+nceTd">
+<p local-id=3D"1d592c6e07c8"><strong>Calculation Mode</strong></p></td>
+<td data-local-id=3D"e7efe401-03dc-4cb6-8c8a-00b5f9d3ba6a" class=3D"conflue=
+nceTd">
+<p local-id=3D"5c87445296f7"><strong>Approval Logic</strong></p></td>
+</tr>
+<tr data-local-id=3D"14825769-87dd-4834-b74b-d4dcf3a06362">
+<td data-local-id=3D"344cc82a-6d69-4084-999b-17389707c1f7" class=3D"conflue=
+nceTd">
+<p local-id=3D"b585a90d1a45"><strong>Travel (TA)</strong></p></td>
+<td data-local-id=3D"b819a0d0-ea0b-407b-ac0a-732c087c5cb2" class=3D"conflue=
+nceTd">
+<p local-id=3D"8fbfca6d8e31">Path Distance $\times$ Grade Rate</p></td>
+<td data-local-id=3D"112393b1-e0ad-4801-bae1-5ae195af5173" class=3D"conflue=
+nceTd">
+<p local-id=3D"7333b8dda148"><strong>Auto-Approve</strong> if Path $\approx=
+$ Odometer change.</p></td>
+</tr>
+<tr data-local-id=3D"cf136103-f3be-498b-8c91-55483bd297c0">
+<td data-local-id=3D"dcaaf4ba-35ab-4213-acc2-6b04d66423c3" class=3D"conflue=
+nceTd">
+<p local-id=3D"6fee5caa6cc2"><strong>Food/Meals</strong></p></td>
+<td data-local-id=3D"cc47f315-5ffe-41fd-80ea-4fb94e6b43b2" class=3D"conflue=
+nceTd">
+<p local-id=3D"33a62e6146b7">Actuals (per OCR)</p></td>
+<td data-local-id=3D"aaf0a126-c79a-4ed6-9df6-d17da8385ec7" class=3D"conflue=
+nceTd">
+<p local-id=3D"9098e4742f2c"><strong>Auto-Approve</strong> if Pin is near a=
+n Activity Pin and $\le$ Limit.</p></td>
+</tr>
+<tr data-local-id=3D"694a4b6b-45f9-48fb-a8da-2935ea4a8e47">
+<td data-local-id=3D"16170edb-f7e7-47e2-a52e-7404df8dbaf7" class=3D"conflue=
+nceTd">
+<p local-id=3D"a78f4b59ece6"><strong>Night Halt</strong></p></td>
+<td data-local-id=3D"c5d6cc84-73d1-48f3-851c-c0e30b7772bc" class=3D"conflue=
+nceTd">
+<p local-id=3D"1c0506d6ff2c">Fixed or Capped Actuals</p></td>
+<td data-local-id=3D"069a0c61-c9df-4d3a-9c77-c09a86de13c0" class=3D"conflue=
+nceTd">
+<p local-id=3D"3cc261571b91"><strong>Auto-Approve</strong> if a midnight GP=
+S ping confirms location &gt; 100km from home.</p></td>
+</tr>
+<tr data-local-id=3D"78889f2e-7cc0-4798-bcfa-9d993179a198">
+<td data-local-id=3D"57b2c3a7-93af-4544-9142-67840ea2cda9" class=3D"conflue=
+nceTd">
+<p local-id=3D"7ca74b3181aa"><strong>Other (Tolls/Misc)</strong></p></td>
+<td data-local-id=3D"be0088c9-8d56-4b59-a9f6-cd2061b71c77" class=3D"conflue=
+nceTd">
+<p local-id=3D"0d53486fc30f">Actuals (per OCR)</p></td>
+<td data-local-id=3D"1e0fcccc-0be9-490b-96f0-c248c2003afd" class=3D"conflue=
+nceTd">
+<p local-id=3D"90d21e8533ab"><strong>Manual Review</strong> if no correspon=
+ding activity is found at that location.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr local-id=3D"25d6f9f0-beb3-4068-afe7-e263b7716ce3">
+<h2 local-id=3D"578b085fd62e" id=3D"BusinessRequirementDocument(BRD):SmartT=
+ravel&amp;ExpensePrototype-7.BusinessRulesforPrototype">7. Business Rules f=
+or Prototype</h2>
+<ol start=3D"1" local-id=3D"8d5966ea-0046-42cd-91f5-11aa1738fe82">
+<li local-id=3D"1c9d45e7-3aec-498d-8e05-557bba278516">
+<p local-id=3D"eab3d9a6893e"><strong>Anti-Fraud Rule:</strong> If the "Expe=
+nse Pin" is created at a location where the "Breadcrumb Path" never went, t=
+he expense is auto-rejected. --(not to be considered)</p></li>
+<li local-id=3D"106fa305-147a-40a8-8932-6b8c8f421e1c">
+<p local-id=3D"7c35f0ba4108"><strong>Attendance Rule:</strong> No expense c=
+an be filed for a date where the user is marked "Absent."</p></li>
+<li local-id=3D"336e18ca-45b3-4a5a-a970-e35b60e333ae">
+<p local-id=3D"b787a3bea779"><strong>Role Access:</strong> A user cannot se=
+lect a vehicle type higher than what is defined in the Portal for their Gra=
+de.</p></li>
+</ol>
+<hr local-id=3D"27b931da-8012-43d7-a299-d2730fcb8607">
+<h2 local-id=3D"1b717d6f8799" id=3D"BusinessRequirementDocument(BRD):SmartT=
+ravel&amp;ExpensePrototype-8.SuccessMetrics">8. Success Metrics</h2>
+<ul local-id=3D"c716ade4-54bf-4651-92cb-b12004bef406">
+<li local-id=3D"48a46adf-7f1d-43eb-9a42-87ffa5ca58b5">
+<p local-id=3D"2e9821fd8069"><strong>Submission Time:</strong> Reduced to &=
+lt; 2 minutes (due to OCR and Auto-distance).</p></li>
+<li local-id=3D"d99b2141-312f-42ad-949b-ec43782206eb">
+<p local-id=3D"ea5b10eb79ee"><strong>Approval Speed:</strong> 70% of routin=
+e expenses (TA/DA) to be "System Approved."</p></li>
+<li local-id=3D"360addbe-93d9-4ca1-873d-4610cded03fc">
+<p local-id=3D"ac76eb35b0c5"><strong>Data Integrity:</strong> 100% of claim=
+s backed by Geo-location and Time-stamp pins.</p></li>
+</ul>
+    </div>
+</body>
+</html>
+------=_Part_26_723157128.1773645107551--
