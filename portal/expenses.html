@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expense Claims Review — Smart T&amp;E</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/shared.css">
+<style>
+/* ── Page Layout ── */
+.page-content {
+  padding: 24px;
+  overflow-y: auto;
+  height: calc(100vh - var(--header-h));
+}
+
+/* ── Summary Cards ── */
+.summary-row {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px;
+}
+.summary-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 18px;
+  position: relative; overflow: hidden; transition: border-color 0.2s;
+}
+.summary-card:hover { border-color: var(--accent); }
+.summary-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.sc-total::before    { background: var(--accent); }
+.sc-pending::before  { background: #f59e0b; }
+.sc-approved::before { background: #00d4aa; }
+.sc-rejected::before { background: #ef4444; }
+.sc-amount::before   { background: #3b82f6; }
+.sc-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+.sc-num   { font-size: 26px; font-weight: 800; line-height: 1; }
+.sc-sub   { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+/* ── Filter Bar ── */
+.filter-bar {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.filter-bar .form-control {
+  background: var(--bg); border: 1px solid var(--border); color: var(--text);
+  border-radius: var(--radius-sm); padding: 6px 10px; font-size: 12px; height: 32px;
+  transition: border-color 0.15s;
+}
+.filter-bar .form-control:focus { outline: none; border-color: var(--accent); }
+.search-wrap { position: relative; flex: 1; min-width: 160px; }
+.search-wrap i { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; pointer-events: none; }
+.search-wrap input { padding-left: 28px !important; width: 100%; }
+.filter-divider { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+.filter-label { font-size: 11px; color: var(--text-muted); white-space: nowrap; font-weight: 600; }
+
+/* ── Bulk Action Bar ── */
+.bulk-bar {
+  display: none; position: sticky; top: 0; z-index: 200;
+  background: rgba(17,24,39,0.96); border: 1px solid var(--accent);
+  border-radius: var(--radius); padding: 10px 16px;
+  align-items: center; gap: 12px; margin-bottom: 14px;
+  box-shadow: 0 4px 24px rgba(0,212,170,0.18);
+  backdrop-filter: blur(8px);
+}
+.bulk-bar.active { display: flex; }
+.bulk-sel-count {
+  font-size: 13px; font-weight: 700; color: var(--accent);
+  display: flex; align-items: center; gap: 6px; margin-right: 4px;
+}
+.bulk-sel-count i { font-size: 16px; }
+.bulk-divider { width: 1px; height: 22px; background: var(--border); }
+.bulk-deselect {
+  margin-left: auto; background: transparent; border: 1px solid var(--border);
+  color: var(--text-muted); padding: 5px 12px; border-radius: 8px;
+  font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+}
+.bulk-deselect:hover { border-color: var(--text); color: var(--text); }
+
+/* ── Category Group ── */
+.expense-group {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); margin-bottom: 14px; overflow: hidden;
+}
+.group-header {
+  padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--border); user-select: none;
+}
+.group-header-left { display: flex; align-items: center; gap: 10px; }
+.group-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; flex-shrink: 0;
+}
+.group-name { font-size: 14px; font-weight: 700; }
+.group-count { font-size: 11px; color: var(--text-muted); margin-left: 2px; }
+.group-pills { display: flex; gap: 5px; margin-left: 6px; align-items: center; }
+.group-pill {
+  font-size: 10px; font-weight: 700; padding: 2px 7px;
+  border-radius: 20px; white-space: nowrap;
+}
+.pill-valid   { background: rgba(0,212,170,0.15); color: #00d4aa; }
+.pill-flagged { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.pill-violation{ background: rgba(239,68,68,0.15); color: #ef4444; }
+.group-header-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.group-amount { font-size: 14px; font-weight: 800; color: var(--accent); margin-right: 8px; }
+.group-complete-badge {
+  font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
+  background: rgba(0,212,170,0.12); color: #00d4aa; border: 1px solid rgba(0,212,170,0.3);
+}
+.group-chevron {
+  background: transparent; border: none; color: var(--text-muted); cursor: pointer;
+  padding: 4px; border-radius: 6px; display: flex; transition: transform 0.2s;
+}
+.group-chevron.collapsed { transform: rotate(-90deg); }
+.group-select-all {
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 6px; cursor: pointer;
+}
+.group-select-all input { cursor: pointer; }
+
+/* ── Expense Table ── */
+.exp-table-wrap { overflow-x: auto; }
+.exp-table { width: 100%; border-collapse: collapse; table-layout: auto; }
+.exp-table th {
+  font-size: 10px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 10px 12px; background: var(--bg);
+  border-bottom: 1px solid var(--border); white-space: nowrap; text-align: left;
+}
+.exp-table th.th-amt { text-align: right; }
+.exp-table td {
+  padding: 11px 12px; border-bottom: 1px solid var(--border);
+  font-size: 13px; vertical-align: middle; white-space: nowrap;
+}
+.exp-table tr:last-child td { border-bottom: none; }
+.exp-table tbody tr { transition: background 0.1s; }
+.exp-table tbody tr:hover td { background: rgba(255,255,255,0.025); }
+/* Decided rows */
+.row-approved td:first-child { border-left: 3px solid #00d4aa; }
+.row-rejected td:first-child { border-left: 3px solid #ef4444; }
+.row-flagged  td:first-child { border-left: 3px solid #f59e0b; }
+.row-decided { opacity: 0.72; }
+
+/* Employee cell */
+.emp-cell { display: flex; align-items: center; gap: 8px; }
+.emp-av {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 800; color: #fff;
+}
+.emp-name-text { font-weight: 600; }
+.emp-grade {
+  font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px;
+  background: var(--accent-glow); color: var(--accent); margin-left: 4px;
+}
+
+/* Amount cell */
+.td-amt { text-align: right; font-weight: 700; font-size: 13px; }
+.amt-valid     { color: var(--text); }
+.amt-flagged   { color: #f59e0b; }
+.amt-violation { color: #ef4444; }
+
+/* Note cell */
+.td-note { color: var(--text-muted); font-size: 12px; max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
+.td-note.note-warn   { color: #f59e0b; }
+.td-note.note-danger { color: #ef4444; }
+
+/* Invoice */
+.td-inv { font-size: 11px; color: var(--text-muted); }
+.inv-link { color: #3b82f6; display: flex; align-items: center; gap: 3px; font-size: 11px; }
+.inv-na { color: var(--text-muted); font-style: italic; }
+
+/* Row action buttons */
+.row-acts { display: flex; gap: 4px; }
+.ra-btn {
+  padding: 4px 10px; border: none; border-radius: 6px;
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  white-space: nowrap; transition: all 0.15s; font-family: inherit;
+}
+.ra-approve { background: rgba(0,212,170,0.12); color: #00d4aa; }
+.ra-approve:hover { background: #00d4aa; color: #000; }
+.ra-reject  { background: rgba(239,68,68,0.12); color: #ef4444; }
+.ra-reject:hover  { background: #ef4444; color: #fff; }
+.ra-flag    { background: rgba(245,158,11,0.12); color: #f59e0b; }
+.ra-flag:hover    { background: #d97706; color: #fff; }
+
+/* Decision chip */
+.dec-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700; padding: 3px 9px;
+  border-radius: 20px; white-space: nowrap;
+}
+.dec-approved { background: rgba(0,212,170,0.15); color: #00d4aa; }
+.dec-rejected { background: rgba(239,68,68,0.15);  color: #ef4444; }
+.dec-flagged  { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.dec-pending  { background: rgba(139,156,195,0.1); color: #8b9dc3; }
+
+/* Checkbox */
+input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+
+/* Remarks modal */
+.rm-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65); z-index: 3000;
+  align-items: center; justify-content: center;
+}
+.rm-overlay.open { display: flex; }
+.rm-card {
+  background: var(--sidebar); border: 1px solid var(--border);
+  border-radius: 16px; padding: 24px; width: 480px; max-width: 95vw;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+}
+.rm-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.rm-title  { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.rm-context {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px; margin-bottom: 14px; font-size: 12px; color: var(--text-muted); line-height: 1.6;
+}
+.rm-context strong { color: var(--text); font-size: 13px; }
+.rm-field-label { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block; }
+textarea.rm-input {
+  width: 100%; min-height: 88px; resize: vertical; box-sizing: border-box;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-size: 13px; font-family: inherit; padding: 10px 12px;
+  line-height: 1.5; transition: border-color 0.2s;
+}
+textarea.rm-input:focus { outline: none; border-color: var(--accent); }
+.rm-error {
+  display: none; margin-top: 8px; padding: 6px 10px;
+  background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 6px; font-size: 12px; color: #ef4444;
+}
+.rm-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+.empty-state i { font-size: 40px; display: block; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; }
+
+/* Group body (collapsible) */
+.group-body { transition: none; }
+.group-body.collapsed { display: none; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">T&amp;E</div>
+      <div class="logo-text">Smart <span>T&amp;E</span></div>
+      <button class="sidebar-toggle" id="sidebar-toggle"><i class="ri-menu-fold-line"></i></button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Overview</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon"><i class="ri-home-4-line"></i></span><span>Dashboard</span></a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Approvals</div>
+      <a class="nav-item active" href="expenses.html"><span class="nav-icon"><i class="ri-file-list-3-line"></i></span><span>Expense Claims</span><span class="nav-dot"></span></a>
+      <a class="nav-item" href="approval.html"><span class="nav-icon"><i class="ri-map-pin-2-line"></i></span><span>Pinned Journeys</span></a>
+      <a class="nav-item" href="analytics.html"><span class="nav-icon"><i class="ri-bar-chart-grouped-line"></i></span><span>Analytics</span></a>
+    </div>
+    <div class="sidebar-section sidebar-section-admin">
+      <div class="sidebar-section-label">Admin</div>
+      <a class="nav-item nav-admin-only" href="rules.html"><span class="nav-icon"><i class="ri-settings-3-line"></i></span><span>Rule Engine</span></a>
+      <a class="nav-item nav-admin-only" href="users.html"><span class="nav-icon"><i class="ri-team-line"></i></span><span>Users &amp; Grades</span></a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="sidebar-avatar">PM</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-user-name">Priya Mehta</div>
+          <div class="user-role" id="sidebar-user-role">Line Manager</div>
+          <div id="sidebar-role-chip"></div>
+        </div>
+      </div>
+      <button class="logout-btn"><span class="nav-icon"><i class="ri-logout-box-r-line"></i></span><span>Logout</span></button>
+    </div>
+  </aside>
+
+  <div class="main-wrap">
+    <!-- ── Top Header ── -->
+    <header class="top-header">
+      <div class="page-title">
+        <i class="ri-file-list-3-line" style="color:var(--accent);margin-right:8px;"></i>Expense Claims Review
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="date" class="form-control" id="date-from" value="2026-03-01" style="width:138px;font-size:12px;">
+        <span style="font-size:12px;color:var(--text-muted);">to</span>
+        <input type="date" class="form-control" id="date-to"   value="2026-03-17" style="width:138px;font-size:12px;">
+        <button class="btn btn-sm" style="background:var(--bg);border:1px solid var(--border);color:var(--text);gap:6px;" onclick="Toast.show('Export coming soon!','info')">
+          <i class="ri-download-2-line"></i> Export
+        </button>
+        <button class="btn btn-primary btn-sm" id="send-payment-btn" onclick="sendForPayment()" style="display:none;">
+          <i class="ri-send-plane-line"></i> Send for Payment
+        </button>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="theme-toggle"><i class="ri-moon-line"></i></button>
+        <button class="icon-btn"><i class="ri-notification-3-line"></i><span class="badge"></span></button>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <!-- ── Summary Cards ── -->
+      <div class="summary-row">
+        <div class="summary-card sc-total">
+          <div class="sc-label">Total Claims</div>
+          <div class="sc-num" id="sc-total">0</div>
+          <div class="sc-sub" id="sc-total-sub">Loading…</div>
+        </div>
+        <div class="summary-card sc-pending">
+          <div class="sc-label">Pending Review</div>
+          <div class="sc-num" id="sc-pending" style="color:#f59e0b;">0</div>
+          <div class="sc-sub" id="sc-pending-sub">awaiting decision</div>
+        </div>
+        <div class="summary-card sc-approved">
+          <div class="sc-label">Approved</div>
+          <div class="sc-num" id="sc-approved" style="color:#00d4aa;">0</div>
+          <div class="sc-sub" id="sc-approved-amt">₹0</div>
+        </div>
+        <div class="summary-card sc-rejected">
+          <div class="sc-label">Rejected / Flagged</div>
+          <div class="sc-num" id="sc-rejected" style="color:#ef4444;">0</div>
+          <div class="sc-sub" id="sc-rejected-sub">0 violations</div>
+        </div>
+        <div class="summary-card sc-amount">
+          <div class="sc-label">Total Claim Amount</div>
+          <div class="sc-num" id="sc-amount" style="color:#3b82f6;font-size:20px;">₹0</div>
+          <div class="sc-sub" id="sc-amount-sub">across all categories</div>
+        </div>
+      </div>
+
+      <!-- ── Filter Bar ── -->
+      <div class="filter-bar">
+        <span class="filter-label"><i class="ri-filter-3-line"></i> Filter</span>
+        <div class="filter-divider"></div>
+
+        <select class="form-control" id="f-emp" onchange="applyFilters()" style="width:160px;">
+          <option value="all">All Employees</option>
+          <option value="Rahul Sharma">Rahul Sharma</option>
+          <option value="Anjali Singh">Anjali Singh</option>
+          <option value="Vikram Patel">Vikram Patel</option>
+          <option value="Sneha Nair">Sneha Nair</option>
+        </select>
+
+        <select class="form-control" id="f-category" onchange="applyFilters()" style="width:170px;">
+          <option value="all">All Categories</option>
+          <option value="Travel (TA)">Travel (TA)</option>
+          <option value="Food/Meals">Food / Meals</option>
+          <option value="Fuel">Fuel</option>
+          <option value="Night Halt">Night Halt</option>
+          <option value="Toll">Toll</option>
+          <option value="Daily Allowance">Daily Allowance</option>
+          <option value="BYOD">BYOD</option>
+          <option value="Client Entertainment">Client Entertainment</option>
+          <option value="Parking">Parking</option>
+          <option value="Misc/Others">Misc / Others</option>
+        </select>
+
+        <select class="form-control" id="f-status" onchange="applyFilters()" style="width:150px;">
+          <option value="all">All Statuses</option>
+          <option value="pending">Pending Review</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+          <option value="flagged">Flagged</option>
+          <option value="valid">Valid (unreviewed)</option>
+          <option value="violation">Violations</option>
+        </select>
+
+        <div class="filter-divider"></div>
+        <div class="search-wrap">
+          <i class="ri-search-line"></i>
+          <input type="text" class="form-control" id="f-search" placeholder="Search employee, ID, note…" oninput="applyFilters()" style="width:220px;">
+        </div>
+        <button class="btn btn-sm" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:5px 12px;font-size:12px;" onclick="clearFilters()">
+          <i class="ri-close-line"></i> Clear
+        </button>
+        <div style="margin-left:auto;font-size:11px;color:var(--text-muted);" id="filter-count-label"></div>
+      </div>
+
+      <!-- ── Bulk Action Bar ── -->
+      <div class="bulk-bar" id="bulk-bar">
+        <div class="bulk-sel-count">
+          <i class="ri-checkbox-multiple-line"></i>
+          <span id="bulk-count-label">0 selected</span>
+        </div>
+        <div class="bulk-divider"></div>
+        <button class="btn btn-sm ra-approve" onclick="bulkAction('approve')" style="padding:6px 14px;">
+          <i class="ri-check-double-line"></i> Approve Selected
+        </button>
+        <button class="btn btn-sm ra-reject" onclick="bulkAction('reject')" style="padding:6px 14px;">
+          <i class="ri-close-circle-line"></i> Reject Selected
+        </button>
+        <button class="btn btn-sm ra-flag" onclick="bulkAction('flag')" style="padding:6px 14px;">
+          <i class="ri-flag-line"></i> Flag Selected
+        </button>
+        <button class="bulk-deselect" onclick="clearSelection()">
+          <i class="ri-close-line"></i> Clear Selection
+        </button>
+      </div>
+
+      <!-- ── Expense Groups ── -->
+      <div id="expense-groups"></div>
+
+    </div><!-- /page-content -->
+  </div><!-- /main-wrap -->
+</div><!-- /app-shell -->
+
+<!-- ── Remarks Modal ── -->
+<div class="rm-overlay" id="rm-overlay" onclick="if(event.target===this)closeRemarksModal()">
+  <div class="rm-card">
+    <div class="rm-header">
+      <div class="rm-title" id="rm-title">
+        <i class="ri-close-circle-line" style="color:#ef4444;font-size:20px;"></i>
+        Reject Expense(s)
+      </div>
+      <button class="icon-btn" onclick="closeRemarksModal()"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="rm-context" id="rm-context"></div>
+    <label class="rm-field-label">Remarks / Reason <span style="color:#ef4444;">*</span></label>
+    <textarea class="rm-input" id="rm-input" placeholder="Enter reason for this decision…"></textarea>
+    <div class="rm-error" id="rm-error">
+      <i class="ri-error-warning-line"></i> Remarks are required to proceed.
+    </div>
+    <div class="rm-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeRemarksModal()"><i class="ri-close-line"></i> Cancel</button>
+      <button class="btn btn-sm" id="rm-confirm-btn" onclick="confirmRemarks()"
+        style="background:#ef4444;color:#fff;border:none;padding:7px 18px;">
+        <i class="ri-check-line"></i> Confirm
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/shared.js"></script>
+<script>
+// ── RBAC ──
+const _portalUser = Auth.requirePortal();
+if (!_portalUser) throw new Error('redirect');
+
+// ── Category metadata ──
+const CAT_META = {
+  'Travel (TA)':          { icon: 'ri-car-line',             color: '#3b82f6', bg: 'rgba(59,130,246,0.12)'   },
+  'Food/Meals':           { icon: 'ri-restaurant-line',      color: '#f97316', bg: 'rgba(249,115,22,0.12)'   },
+  'Fuel':                 { icon: 'ri-gas-station-line',     color: '#eab308', bg: 'rgba(234,179,8,0.12)'    },
+  'Night Halt':           { icon: 'ri-hotel-line',           color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)'   },
+  'Toll':                 { icon: 'ri-road-map-line',        color: '#00d4aa', bg: 'rgba(0,212,170,0.12)'    },
+  'Daily Allowance':      { icon: 'ri-wallet-3-line',        color: '#10b981', bg: 'rgba(16,185,129,0.12)'   },
+  'BYOD':                 { icon: 'ri-smartphone-line',      color: '#ec4899', bg: 'rgba(236,72,153,0.12)'   },
+  'Client Entertainment': { icon: 'ri-goblet-line',          color: '#6366f1', bg: 'rgba(99,102,241,0.12)'   },
+  'Parking':              { icon: 'ri-parking-box-line',     color: '#64748b', bg: 'rgba(100,116,139,0.12)'  },
+  'Misc/Others':          { icon: 'ri-more-2-line',          color: '#9ca3af', bg: 'rgba(156,163,175,0.12)'  },
+};
+
+// ── Employee avatars ──
+const EMP_COLORS = {
+  'Rahul Sharma':  'linear-gradient(135deg,#00d4aa,#3b82f6)',
+  'Anjali Singh':  'linear-gradient(135deg,#ec4899,#8b5cf6)',
+  'Vikram Patel':  'linear-gradient(135deg,#f97316,#eab308)',
+  'Sneha Nair':    'linear-gradient(135deg,#10b981,#6366f1)',
+};
+function empInitials(name) {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase();
+}
+
+// ── Master data ──
+const allExpenses = [
+  // Travel (TA)
+  { id:'EXP-001', emp:'Rahul Sharma',  grade:'G3', dept:'Sales', date:'2026-03-15', category:'Travel (TA)',          amount:420,  pin:'valid',     note:'48.2 km × ₹8.7/km — Mumbai–Thane client route.',             invoice:'IMG_20260315_TA.jpg',  decision:'pending', remarks:'' },
+  { id:'EXP-002', emp:'Anjali Singh',  grade:'G2', dept:'Sales', date:'2026-03-14', category:'Travel (TA)',          amount:280,  pin:'valid',     note:'35.0 km × ₹8.0/km — Pune city client visits.',               invoice:'IMG_20260314_TA1.jpg', decision:'pending', remarks:'' },
+  { id:'EXP-003', emp:'Vikram Patel',  grade:'G4', dept:'BD',    date:'2026-03-14', category:'Travel (TA)',          amount:850,  pin:'valid',     note:'95.5 km × ₹8.9/km — Hyderabad full-day tour.',               invoice:'IMG_20260314_TA2.jpg', decision:'pending', remarks:'' },
+  { id:'EXP-004', emp:'Sneha Nair',    grade:'G3', dept:'Sales', date:'2026-03-13', category:'Travel (TA)',          amount:510,  pin:'valid',     note:'58.6 km × ₹8.7/km — Cochin client visits.',                  invoice:'IMG_20260313_TA.jpg',  decision:'pending', remarks:'' },
+  { id:'EXP-005', emp:'Rahul Sharma',  grade:'G3', dept:'Sales', date:'2026-03-13', category:'Travel (TA)',          amount:620,  pin:'amber',    note:'⚠️ 71.3 km claimed but GPS track shows only 38.2 km.',         invoice:'IMG_20260313_TA2.jpg', decision:'pending', remarks:'' },
+  // Food / Meals
+  { id:'EXP-006', emp:'Rahul Sharma',  grade:'G3', dept:'Sales', date:'2026-03-15', category:'Food/Meals',          amount:280,  pin:'valid',     note:'Lunch at Zomato HQ visit — within 500m activity pin.',        invoice:'IMG_20260315_F1.jpg',  decision:'pending', remarks:'' },
+  { id:'EXP-007', emp:'Anjali Singh',  grade:'G2', dept:'Sales', date:'2026-03-14', category:'Food/Meals',          amount:220,  pin:'valid',     note:'Lunch — Pune client visit. Bill OCR verified.',               invoice:'IMG_20260314_F1.jpg',  decision:'pending', remarks:'' },
+  { id:'EXP-008', emp:'Vikram Patel',  grade:'G4', dept:'BD',    date:'2026-03-14', category:'Food/Meals',          amount:950,  pin:'amber',    note:'⚠️ Bill location 5.2 km from nearest activity pin.',           invoice:'IMG_20260314_F2.jpg',  decision:'pending', remarks:'' },
+  { id:'EXP-009', emp:'Sneha Nair',    grade:'G3', dept:'Sales', date:'2026-03-13', category:'Food/Meals',          amount:1800, pin:'red',       note:'🚫 ₹1800 exceeds ₹500 daily meal cap (Grade G3).',             invoice:'IMG_20260313_F1.jpg',  decision:'pending', remarks:'' },
+  { id:'EXP-010', emp:'Rahul Sharma',  grade:'G3', dept:'Sales', date:'2026-03-15', category:'Food/Meals',          amount:350,  pin:'valid',     note:'Dinner — near Nykaa Thane client location.',                  invoice:'IMG_20260315_F2.jpg',  decision:'pending', remarks:'' },
+  { id:'EXP-011', emp:'Anjali Singh',  grade:'G2', dept:'Sales', date:'2026-03-13', category:'Food/Meals',          amount:180,  pin:'valid',     note:'Breakfast claimed on outstation day.',                        invoice:'IMG_20260313_F2.jpg',  decision:'approved',remarks:'Auto-approved — within policy.' },
+  // Fuel
+  { id:'EXP-012', emp:'Vikram Patel',  grade:'G4', dept:'BD',    date:'2026-03-14', category:'Fuel',                amount:1200, pin:'valid',     note:'30 L @ ₹40/L — within monthly cap ₹3000.',                   invoice:'IMG_20260314_FU1.jpg', decision:'pending', remarks:'' },
+  { id:'EXP-013', emp:'Rahul Sharma',  grade:'G3', dept:'Sales', date:'2026-03-13', category:'Fuel',                amount:980,  pin:'valid',     note:'24.5 L @ ₹40/L — within monthly cap ₹2000.',                 invoice:'IMG_20260313_FU1.jpg', decision:'pending', remarks:'' },
+  { id:'EXP-014', emp:'Anjali Singh',  grade:'G2', dept:'Sales', date:'2026-03-14', category:'Fuel',                amount:2400, pin:'red',       note:'🚫 60 L claimed — exceeds max tank capacity (45 L) for vehicle.',invoice:'IMG_20260314_FU2.jpg',decision:'pending', remarks:'' },
+  { id:'EXP-015', emp:'Sneha Nair',    grade:'G3', dept:'Sales', date:'2026-03-15', category:'Fuel',                amount:760,  pin:'valid',     note:'19 L @ ₹40/L — bill matches pump receipt.',                  invoice:'IMG_20260315_FU1.jpg', decision:'pending', remarks:'' },
+  { id:'EXP-016', emp:'Vikram Patel',  grade:'G4', dept:'BD',    date:'2026-03-12', category:'Fuel',                amount:1600, pin:'amber',    note:'⚠️ Petrol station not on any claimed route segment.',           invoice:'IMG_20260312_FU1.jpg', decision:'pending', remarks:'' },
+  // Night Halt
+  { id:'EXP-017', emp:'Vikram Patel',  grade:'G4', dept:'BD',    date:'2026-03-13', category:'Night Halt',          amount:2500, pin:'valid',     note:'Hotel Marriott — Hyderabad. GPS confirms location.',          invoice:'HOTEL_VPatel_0313.pdf',decision:'pending', remarks:'' },
+  { id:'EXP-018', emp:'Anjali Singh',  grade:'G2', dept:'Sales', date:'2026-03-13', category:'Night Halt',          amount:1000, pin:'valid',     note:'Hotel Citrus — Pune outstation, within ₹1000 cap (G2).',      invoice:'HOTEL_ASingh_0313.pdf',decision:'pending', remarks:'' },
+  { id:'EXP-019', emp:'Rahul Sharma',  grade:'G3', dept:'Sales', date:'2026-03-14', category:'Night Halt',          amount:3500, pin:'amber',    note:'⚠️ GPS shows home location at midnight — NH eligibility doubtful.',invoice:'HOTEL_RSharma_0314.pdf',decision:'pending', remarks:'' },
+  // Toll
+  { id:'EXP-020', emp:'Rahul Sharma',  grade:'G3', dept:'Sales', date:'2026-03-15', category:'Toll',                amount:60,   pin:'valid',     note:'Verified toll booth on Andheri–Thane route.',                 invoice:'IMG_20260315_TL1.jpg', decision:'approved',remarks:'Auto-approved — location verified.' },
+  { id:'EXP-021', emp:'Vikram Patel',  grade:'G4', dept:'BD',    date:'2026-03-14', category:'Toll',                amount:120,  pin:'valid',     note:'Highway toll — Hyderabad-Vijayawada NH-65.',                  invoice:'IMG_20260314_TL1.jpg', decision:'pending', remarks:'' },
+  { id:'EXP-022', emp:'Sneha Nair',    grade:'G3', dept:'Sales', date:'2026-03-13', category:'Toll',                amount:80,   pin:'valid',     note:'Toll booth verified on Cochin bypass.',                       invoice:'IMG_20260313_TL1.jpg', decision:'pending', remarks:'' },
+  { id:'EXP-023', emp:'Anjali Singh',  grade:'G2', dept:'Sales', date:'2026-03-14', category:'Toll',                amount:40,   pin:'valid',     note:'Expressway toll — Pune-Mumbai route.',                        invoice:'IMG_20260314_TL2.jpg', decision:'approved',remarks:'Auto-approved — location verified.' },
+  // Daily Allowance
+  { id:'EXP-024', emp:'Vikram Patel',  grade:'G4', dept:'BD',    date:'2026-03-13', category:'Daily Allowance',     amount:800,  pin:'valid',     note:'Full day outstation — Hyderabad (Tier 1). ₹800 cap for G4.',  invoice:null,                   decision:'pending', remarks:'' },
+  { id:'EXP-025', emp:'Anjali Singh',  grade:'G2', dept:'Sales', date:'2026-03-13', category:'Daily Allowance',     amount:380,  pin:'valid',     note:'Full day outstation — Pune (Tier 2). ₹380 cap for G2.',       invoice:null,                   decision:'pending', remarks:'' },
+  { id:'EXP-026', emp:'Sneha Nair',    grade:'G3', dept:'Sales', date:'2026-03-15', category:'Daily Allowance',     amount:280,  pin:'amber',    note:'⚠️ Half-day claimed (₹280) but attendance shows full check-in.',invoice:null,                   decision:'pending', remarks:'' },
+  { id:'EXP-027', emp:'Rahul Sharma',  grade:'G3', dept:'Sales', date:'2026-03-13', category:'Daily Allowance',     amount:550,  pin:'valid',     note:'Full day outstation — Mumbai Tier 1. ₹550 for G3.',           invoice:null,                   decision:'pending', remarks:'' },
+  // BYOD
+  { id:'EXP-028', emp:'Rahul Sharma',  grade:'G3', dept:'Sales', date:'2026-03-01', category:'BYOD',                amount:500,  pin:'valid',     note:'Monthly mobile data — March 2026. Cap ₹500 for G3.',          invoice:'BYOD_RS_Mar26.pdf',    decision:'pending', remarks:'' },
+  { id:'EXP-029', emp:'Anjali Singh',  grade:'G2', dept:'Sales', date:'2026-03-01', category:'BYOD',                amount:300,  pin:'valid',     note:'Monthly mobile data — March 2026. Cap ₹300 for G2.',          invoice:'BYOD_AS_Mar26.pdf',    decision:'approved',remarks:'Auto-approved — within monthly limit.' },
+  { id:'EXP-030', emp:'Vikram Patel',  grade:'G4', dept:'BD',    date:'2026-03-01', category:'BYOD',                amount:700,  pin:'valid',     note:'Monthly mobile data — March 2026. Cap ₹700 for G4.',          invoice:'BYOD_VP_Mar26.pdf',    decision:'pending', remarks:'' },
+  // Client Entertainment
+  { id:'EXP-031', emp:'Vikram Patel',  grade:'G4', dept:'BD',    date:'2026-03-12', category:'Client Entertainment',amount:4500, pin:'valid',     note:'Business lunch — 3 clients from HDFC Bank Hyderabad.',        invoice:'IMG_20260312_CE1.jpg', decision:'pending', remarks:'' },
+  { id:'EXP-032', emp:'Rahul Sharma',  grade:'G3', dept:'Sales', date:'2026-03-10', category:'Client Entertainment',amount:2200, pin:'valid',     note:'Client dinner — Zomato key account team (5 pax).',            invoice:'IMG_20260310_CE1.jpg', decision:'pending', remarks:'' },
+  { id:'EXP-033', emp:'Vikram Patel',  grade:'G4', dept:'BD',    date:'2026-03-08', category:'Client Entertainment',amount:6800, pin:'amber',    note:'⚠️ Amount ₹6800 exceeds per-person limit of ₹1200 (4 clients).',invoice:'IMG_20260308_CE1.jpg', decision:'pending', remarks:'' },
+  // Parking
+  { id:'EXP-034', emp:'Rahul Sharma',  grade:'G3', dept:'Sales', date:'2026-03-15', category:'Parking',             amount:80,   pin:'valid',     note:'Parking — Andheri East commercial complex.',                  invoice:'IMG_20260315_PK1.jpg', decision:'pending', remarks:'' },
+  { id:'EXP-035', emp:'Vikram Patel',  grade:'G4', dept:'BD',    date:'2026-03-14', category:'Parking',             amount:150,  pin:'valid',     note:'Airport parking — Rajiv Gandhi Intl, Hyderabad.',             invoice:'IMG_20260314_PK1.jpg', decision:'approved',remarks:'Auto-approved — verified receipt.' },
+  // Misc/Others
+  { id:'EXP-036', emp:'Sneha Nair',    grade:'G3', dept:'Sales', date:'2026-03-13', category:'Misc/Others',         amount:200,  pin:'amber',    note:'⚠️ No activity recorded at claimed location — needs justification.',invoice:'IMG_20260313_MI1.jpg',decision:'pending', remarks:'' },
+  { id:'EXP-037', emp:'Anjali Singh',  grade:'G2', dept:'Sales', date:'2026-03-14', category:'Misc/Others',         amount:450,  pin:'red',       note:'🚫 Submitted 8 days after expense date — exceeds 7-day policy.', invoice:'IMG_20260314_MI1.jpg', decision:'rejected',remarks:'Late submission — outside 7-day policy window.' },
+];
+
+// ── State ──
+let filtered     = [...allExpenses];
+let selectedIds  = new Set();
+let collapsed    = new Set();
+let _pendingAction  = null;  // 'approve' | 'reject' | 'flag'
+let _pendingTargets = [];    // array of expense IDs
+
+// ── Filter ──
+function applyFilters() {
+  const fEmp  = document.getElementById('f-emp').value;
+  const fCat  = document.getElementById('f-category').value;
+  const fStat = document.getElementById('f-status').value;
+  const fSrc  = document.getElementById('f-search').value.toLowerCase().trim();
+
+  filtered = allExpenses.filter(e => {
+    if (fEmp !== 'all' && e.emp !== fEmp) return false;
+    if (fCat !== 'all' && e.category !== fCat) return false;
+    if (fStat !== 'all') {
+      if (fStat === 'pending'   && e.decision !== 'pending')  return false;
+      if (fStat === 'approved'  && e.decision !== 'approved') return false;
+      if (fStat === 'rejected'  && e.decision !== 'rejected') return false;
+      if (fStat === 'flagged'   && e.decision !== 'flagged')  return false;
+      if (fStat === 'valid'     && !(e.pin === 'valid'  && e.decision === 'pending')) return false;
+      if (fStat === 'violation' && e.pin !== 'red')  return false;
+    }
+    if (fSrc) {
+      const haystack = `${e.emp} ${e.id} ${e.note} ${e.category}`.toLowerCase();
+      if (!haystack.includes(fSrc)) return false;
+    }
+    return true;
+  });
+
+  // Clear any selections that are now hidden
+  const visIds = new Set(filtered.map(e => e.id));
+  for (const id of [...selectedIds]) {
+    if (!visIds.has(id)) selectedIds.delete(id);
+  }
+
+  const total = filtered.length;
+  const lbl = document.getElementById('filter-count-label');
+  if (lbl) lbl.textContent = total < allExpenses.length ? `${total} of ${allExpenses.length} shown` : '';
+
+  renderGroups();
+  updateBulkBar();
+  updateSummary();
+}
+
+function clearFilters() {
+  document.getElementById('f-emp').value      = 'all';
+  document.getElementById('f-category').value = 'all';
+  document.getElementById('f-status').value   = 'all';
+  document.getElementById('f-search').value   = '';
+  applyFilters();
+}
+
+// ── Group by category ──
+function groupByCategory(expenses) {
+  const order = Object.keys(CAT_META);
+  const map = {};
+  for (const exp of expenses) {
+    if (!map[exp.category]) map[exp.category] = [];
+    map[exp.category].push(exp);
+  }
+  // Sort groups by defined order
+  const sorted = {};
+  for (const cat of order) { if (map[cat]) sorted[cat] = map[cat]; }
+  for (const cat of Object.keys(map)) { if (!sorted[cat]) sorted[cat] = map[cat]; }
+  return sorted;
+}
+
+// ── Render all groups ──
+function renderGroups() {
+  const container = document.getElementById('expense-groups');
+  const grouped   = groupByCategory(filtered);
+  const cats      = Object.keys(grouped);
+
+  if (cats.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <i class="ri-file-search-line"></i>
+      <p>No expenses match the current filters.</p>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = cats.map(cat => renderGroup(cat, grouped[cat])).join('');
+}
+
+function renderGroup(cat, expenses) {
+  const meta     = CAT_META[cat] || { icon:'ri-file-line', color:'#8b9dc3', bg:'rgba(139,156,195,0.12)' };
+  const total    = expenses.reduce((s, e) => s + e.amount, 0);
+  const pending  = expenses.filter(e => e.decision === 'pending');
+  const nValid   = expenses.filter(e => e.pin === 'valid').length;
+  const nFlagged = expenses.filter(e => e.pin === 'amber').length;
+  const nViol    = expenses.filter(e => e.pin === 'red').length;
+  const nApproved= expenses.filter(e => e.decision === 'approved').length;
+  const nRejected= expenses.filter(e => e.decision !== 'pending' && e.decision !== 'approved').length;
+  const allDone  = pending.length === 0;
+
+  // Group-level select-all checkbox state
+  const pendingIds = pending.map(e => e.id);
+  const selCount   = pendingIds.filter(id => selectedIds.has(id)).length;
+  const allSel     = pendingIds.length > 0 && selCount === pendingIds.length;
+  const someSel    = selCount > 0 && !allSel;
+
+  const isCollapsed = collapsed.has(cat);
+  const catKey = encodeURIComponent(cat);
+
+  const pills = [
+    nValid   > 0 ? `<span class="group-pill pill-valid"><i class="ri-check-line"></i> ${nValid} Valid</span>` : '',
+    nFlagged > 0 ? `<span class="group-pill pill-flagged"><i class="ri-alert-line"></i> ${nFlagged} Flagged</span>` : '',
+    nViol    > 0 ? `<span class="group-pill pill-violation"><i class="ri-close-circle-line"></i> ${nViol} Violation</span>` : '',
+  ].filter(Boolean).join('');
+
+  const headerRight = `
+    <span class="group-amount">${Fmt.currency(total)}</span>
+    ${allDone ? `<span class="group-complete-badge"><i class="ri-check-double-line"></i> Complete</span>` : ''}
+    ${pending.length > 0 ? `
+      <button class="btn btn-sm" style="background:rgba(0,212,170,0.1);color:#00d4aa;border:1px solid rgba(0,212,170,0.3);font-size:11px;padding:5px 12px;"
+        onclick="event.stopPropagation();categoryApproveValid('${catKey}')">
+        <i class="ri-check-double-line"></i> Approve Valid
+      </button>
+      <button class="btn btn-sm" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);font-size:11px;padding:5px 12px;"
+        onclick="event.stopPropagation();categoryRejectAll('${catKey}')">
+        <i class="ri-close-circle-line"></i> Reject All
+      </button>
+    ` : ''}
+    <button class="group-chevron ${isCollapsed ? 'collapsed' : ''}" onclick="event.stopPropagation();toggleCollapse('${catKey}')">
+      <i class="ri-arrow-down-s-line" style="font-size:20px;"></i>
+    </button>`;
+
+  const rows = expenses.map(exp => renderRow(exp)).join('');
+
+  return `
+  <div class="expense-group" id="grp-${catKey}">
+    <div class="group-header" onclick="toggleCollapse('${catKey}')">
+      <div class="group-header-left">
+        <label class="group-select-all" onclick="event.stopPropagation()">
+          <input type="checkbox" id="chk-grp-${catKey}"
+            ${allSel ? 'checked' : ''} ${someSel ? 'data-indeterminate="true"' : ''}
+            ${pendingIds.length === 0 ? 'disabled' : ''}
+            onchange="toggleGroupSelect('${catKey}', this.checked)">
+        </label>
+        <div class="group-icon" style="background:${meta.bg};color:${meta.color};">
+          <i class="${meta.icon}"></i>
+        </div>
+        <div>
+          <div class="group-name">${cat}</div>
+          <div class="group-count">${expenses.length} expense${expenses.length !== 1 ? 's' : ''} · ${nApproved} approved · ${nRejected} rejected</div>
+        </div>
+        <div class="group-pills">${pills}</div>
+      </div>
+      <div class="group-header-right">${headerRight}</div>
+    </div>
+    <div class="group-body ${isCollapsed ? 'collapsed' : ''}" id="body-${catKey}">
+      <div class="exp-table-wrap">
+        <table class="exp-table">
+          <thead>
+            <tr>
+              <th style="width:32px;"></th>
+              <th>Employee</th>
+              <th>Date</th>
+              <th class="th-amt">Amount</th>
+              <th>Status</th>
+              <th>Notes</th>
+              <th>Invoice</th>
+              <th>Decision</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderRow(exp) {
+  const isPending = exp.decision === 'pending';
+  const rowClass  = isPending ? '' : `row-decided row-${exp.decision}`;
+  const pinColors = { valid:'#00d4aa', amber:'#f59e0b', red:'#ef4444' };
+  const pinLabels = {
+    valid: `<span class="badge badge-green" style="font-size:10px;"><i class="ri-check-line"></i> Valid</span>`,
+    amber: `<span class="badge badge-amber" style="font-size:10px;"><i class="ri-alert-line"></i> Flagged</span>`,
+    red:   `<span class="badge badge-red"   style="font-size:10px;"><i class="ri-close-circle-line"></i> Violation</span>`,
+  };
+  const noteClass = exp.pin === 'red' ? 'td-note note-danger' : exp.pin === 'amber' ? 'td-note note-warn' : 'td-note';
+  const amtClass  = exp.pin === 'red' ? 'amt-violation' : exp.pin === 'amber' ? 'amt-flagged' : 'amt-valid';
+
+  // Decision chip
+  let decHtml = '';
+  if (exp.decision === 'pending') {
+    decHtml = `<span class="dec-chip dec-pending"><i class="ri-time-line"></i> Pending</span>`;
+  } else if (exp.decision === 'approved') {
+    decHtml = `<span class="dec-chip dec-approved"><i class="ri-check-line"></i> Approved</span>`;
+  } else if (exp.decision === 'rejected') {
+    const rem = exp.remarks ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;max-width:120px;white-space:normal;line-height:1.3;">${exp.remarks.slice(0,50)}${exp.remarks.length>50?'…':''}</div>` : '';
+    decHtml = `<span class="dec-chip dec-rejected"><i class="ri-close-line"></i> Rejected</span>${rem}`;
+  } else if (exp.decision === 'flagged') {
+    decHtml = `<span class="dec-chip dec-flagged"><i class="ri-flag-line"></i> Flagged</span>`;
+  }
+
+  // Action buttons
+  const actHtml = isPending
+    ? `<div class="row-acts">
+        <button class="ra-btn ra-approve" title="Approve" onclick="actionOne('approve','${exp.id}')"><i class="ri-check-line"></i></button>
+        <button class="ra-btn ra-reject"  title="Reject"  onclick="actionOne('reject','${exp.id}')"><i class="ri-close-line"></i></button>
+        <button class="ra-btn ra-flag"    title="Flag"    onclick="actionOne('flag','${exp.id}')"><i class="ri-flag-line"></i></button>
+       </div>`
+    : `<span style="font-size:11px;color:var(--text-muted);">—</span>`;
+
+  // Invoice
+  const invHtml = exp.invoice
+    ? `<span class="inv-link"><i class="ri-attachment-line"></i>${exp.invoice.slice(0,14)}${exp.invoice.length>14?'…':''}</span>`
+    : `<span class="inv-na">No invoice</span>`;
+
+  const av = empInitials(exp.emp);
+  const avBg = EMP_COLORS[exp.emp] || 'linear-gradient(135deg,var(--accent),#3b82f6)';
+
+  return `<tr class="${rowClass}" id="row-${exp.id}">
+    <td>
+      ${isPending ? `<input type="checkbox" id="chk-${exp.id}" ${selectedIds.has(exp.id)?'checked':''} onchange="toggleSelect('${exp.id}',this.checked)">` : ''}
+    </td>
+    <td>
+      <div class="emp-cell">
+        <div class="emp-av" style="background:${avBg};">${av}</div>
+        <div>
+          <div class="emp-name-text">${exp.emp}</div>
+          <span class="emp-grade">${exp.grade}</span>
+          <span style="font-size:10px;color:var(--text-muted);margin-left:4px;">${exp.dept}</span>
+        </div>
+      </div>
+    </td>
+    <td style="color:var(--text-muted);font-size:12px;">${exp.date}</td>
+    <td class="td-amt ${amtClass}">${Fmt.currency(exp.amount)}</td>
+    <td>${pinLabels[exp.pin]}</td>
+    <td class="${noteClass}" title="${exp.note}">${exp.note.slice(0,52)}${exp.note.length>52?'…':''}</td>
+    <td class="td-inv">${invHtml}</td>
+    <td style="white-space:normal;">${decHtml}</td>
+    <td>${actHtml}</td>
+  </tr>`;
+}
+
+// ── Toggle collapse ──
+function toggleCollapse(catKey) {
+  const cat = decodeURIComponent(catKey);
+  if (collapsed.has(cat)) collapsed.delete(cat); else collapsed.add(cat);
+  const body = document.getElementById(`body-${catKey}`);
+  const chevron = document.querySelector(`#grp-${catKey} .group-chevron`);
+  if (body)   body.classList.toggle('collapsed');
+  if (chevron) chevron.classList.toggle('collapsed');
+}
+
+// ── Selection ──
+function toggleSelect(id, checked) {
+  if (checked) selectedIds.add(id); else selectedIds.delete(id);
+  updateBulkBar();
+  updateGroupCheckbox(id);
+}
+
+function toggleGroupSelect(catKey, checked) {
+  const cat = decodeURIComponent(catKey);
+  const group = filtered.filter(e => e.category === cat && e.decision === 'pending');
+  group.forEach(e => {
+    if (checked) selectedIds.add(e.id); else selectedIds.delete(e.id);
+    const chk = document.getElementById(`chk-${e.id}`);
+    if (chk) chk.checked = checked;
+  });
+  updateBulkBar();
+}
+
+function updateGroupCheckbox(id) {
+  const exp = allExpenses.find(e => e.id === id);
+  if (!exp) return;
+  const catKey = encodeURIComponent(exp.category);
+  const groupPending = filtered.filter(e => e.category === exp.category && e.decision === 'pending');
+  const selCount = groupPending.filter(e => selectedIds.has(e.id)).length;
+  const chk = document.getElementById(`chk-grp-${catKey}`);
+  if (!chk) return;
+  chk.checked = selCount === groupPending.length && groupPending.length > 0;
+  chk.indeterminate = selCount > 0 && selCount < groupPending.length;
+}
+
+function clearSelection() {
+  selectedIds.clear();
+  document.querySelectorAll('input[type="checkbox"]').forEach(c => { c.checked = false; c.indeterminate = false; });
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  const bar = document.getElementById('bulk-bar');
+  const lbl = document.getElementById('bulk-count-label');
+  const n = selectedIds.size;
+  if (n > 0) { bar.classList.add('active'); lbl.textContent = `${n} item${n>1?'s':''} selected`; }
+  else { bar.classList.remove('active'); }
+}
+
+// ── Individual row action ──
+function actionOne(action, id) {
+  if (action === 'approve') {
+    applyDecision([id], 'approved', '');
+    Toast.show(`✓ Expense ${id} approved.`, 'success');
+  } else {
+    openRemarksModal(action, [id]);
+  }
+}
+
+// ── Bulk action ──
+function bulkAction(action) {
+  const ids = [...selectedIds];
+  if (ids.length === 0) { Toast.show('Select at least one expense.', 'warning'); return; }
+  if (action === 'approve') {
+    applyDecision(ids, 'approved', '');
+    clearSelection();
+    Toast.show(`✓ ${ids.length} expense(s) approved.`, 'success');
+  } else {
+    openRemarksModal(action, ids);
+  }
+}
+
+// ── Category-level actions ──
+function categoryApproveValid(catKey) {
+  const cat = decodeURIComponent(catKey);
+  const ids = filtered.filter(e => e.category === cat && e.pin === 'valid' && e.decision === 'pending').map(e => e.id);
+  if (!ids.length) { Toast.show('No pending valid expenses in this category.', 'warning'); return; }
+  applyDecision(ids, 'approved', '');
+  Toast.show(`✓ ${ids.length} valid ${cat} claim(s) approved.`, 'success');
+}
+
+function categoryRejectAll(catKey) {
+  const cat = decodeURIComponent(catKey);
+  const ids = filtered.filter(e => e.category === cat && e.decision === 'pending').map(e => e.id);
+  if (!ids.length) { Toast.show('No pending expenses in this category.', 'warning'); return; }
+  openRemarksModal('reject', ids, `Rejecting all ${ids.length} pending ${cat} claim(s)`);
+}
+
+// ── Apply decision ──
+function applyDecision(ids, decision, remarks) {
+  ids.forEach(id => {
+    const exp = allExpenses.find(e => e.id === id);
+    if (exp && exp.decision === 'pending') {
+      exp.decision = decision;
+      exp.remarks  = remarks;
+    }
+  });
+  ids.forEach(id => selectedIds.delete(id));
+  applyFilters(); // re-filter + re-render
+}
+
+// ── Remarks modal ──
+function openRemarksModal(action, ids, contextOverride) {
+  _pendingAction  = action;
+  _pendingTargets = ids;
+
+  const isReject = action === 'reject';
+  const overlay  = document.getElementById('rm-overlay');
+  const titleEl  = document.getElementById('rm-title');
+  const ctxEl    = document.getElementById('rm-context');
+  const inputEl  = document.getElementById('rm-input');
+  const errEl    = document.getElementById('rm-error');
+  const confirmBtn = document.getElementById('rm-confirm-btn');
+
+  titleEl.innerHTML = isReject
+    ? `<i class="ri-close-circle-line" style="color:#ef4444;font-size:20px;"></i> Reject Expense${ids.length>1?'s':''}`
+    : `<i class="ri-flag-line" style="color:#d97706;font-size:20px;"></i> Flag &amp; Review`;
+
+  // Build context summary
+  let ctxHtml = '';
+  if (contextOverride) {
+    ctxHtml = `<strong>${contextOverride}</strong>`;
+  } else if (ids.length === 1) {
+    const exp = allExpenses.find(e => e.id === ids[0]);
+    if (exp) ctxHtml = `<strong>${exp.emp}</strong> &nbsp;·&nbsp; ${exp.category} &nbsp;·&nbsp; ${Fmt.currency(exp.amount)} &nbsp;·&nbsp; ${exp.date}<br><span>${exp.note}</span>`;
+  } else {
+    const total = ids.reduce((s, id) => { const e = allExpenses.find(x => x.id === id); return s + (e ? e.amount : 0); }, 0);
+    const cats  = [...new Set(ids.map(id => { const e = allExpenses.find(x => x.id === id); return e?.category; }).filter(Boolean))];
+    ctxHtml = `<strong>${ids.length} expenses selected</strong> &nbsp;·&nbsp; ${Fmt.currency(total)} total<br>Categories: ${cats.join(', ')}`;
+  }
+  ctxEl.innerHTML = ctxHtml;
+
+  confirmBtn.style.background = isReject ? '#ef4444' : '#d97706';
+  inputEl.value        = '';
+  errEl.style.display  = 'none';
+  overlay.classList.add('open');
+  setTimeout(() => inputEl.focus(), 60);
+}
+
+function closeRemarksModal() {
+  document.getElementById('rm-overlay').classList.remove('open');
+  _pendingAction  = null;
+  _pendingTargets = [];
+}
+
+function confirmRemarks() {
+  const inputEl = document.getElementById('rm-input');
+  const errEl   = document.getElementById('rm-error');
+  const remarks = inputEl.value.trim();
+  if (!remarks) { errEl.style.display = 'block'; inputEl.focus(); return; }
+  errEl.style.display = 'none';
+
+  const decision = _pendingAction === 'reject' ? 'rejected' : 'flagged';
+  const ids = [..._pendingTargets];
+  const n   = ids.length;
+  closeRemarksModal();
+  clearSelection();
+  applyDecision(ids, decision, remarks);
+  const label = decision === 'rejected' ? 'Rejected' : 'Flagged';
+  Toast.show(`${label}: ${n} expense${n>1?'s':''}.`, decision === 'rejected' ? 'error' : 'warning');
+}
+
+// ── Summary cards ──
+function updateSummary() {
+  const expenses = allExpenses; // always from full dataset
+  const total    = expenses.length;
+  const pending  = expenses.filter(e => e.decision === 'pending').length;
+  const approved = expenses.filter(e => e.decision === 'approved');
+  const rejected = expenses.filter(e => e.decision === 'rejected' || e.decision === 'flagged').length;
+  const violations = expenses.filter(e => e.pin === 'red').length;
+  const totalAmt   = expenses.reduce((s, e) => s + e.amount, 0);
+  const approvedAmt = approved.reduce((s, e) => s + e.amount, 0);
+
+  const cats = new Set(expenses.map(e => e.category)).size;
+
+  document.getElementById('sc-total').textContent      = total;
+  document.getElementById('sc-total-sub').textContent  = `across ${cats} categories`;
+  document.getElementById('sc-pending').textContent    = pending;
+  document.getElementById('sc-pending-sub').textContent= `awaiting decision`;
+  document.getElementById('sc-approved').textContent   = approved.length;
+  document.getElementById('sc-approved-amt').textContent = Fmt.currency(approvedAmt);
+  document.getElementById('sc-rejected').textContent   = rejected;
+  document.getElementById('sc-rejected-sub').textContent = `${violations} violation${violations!==1?'s':''}`;
+  document.getElementById('sc-amount').textContent     = Fmt.currency(totalAmt);
+  document.getElementById('sc-amount-sub').textContent = `${allExpenses.filter(e=>e.decision==='approved').length} approved, ${pending} pending`;
+
+  // Show "Send for Payment" if any approved
+  const payBtn = document.getElementById('send-payment-btn');
+  if (payBtn) payBtn.style.display = approved.length > 0 ? '' : 'none';
+}
+
+// ── Send for payment ──
+function sendForPayment() {
+  const n = allExpenses.filter(e => e.decision === 'approved').length;
+  Toast.show(`${n} approved claim${n!==1?'s':''} sent for payment processing.`, 'success');
+}
+
+// ── Keyboard shortcuts ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('rm-overlay').classList.contains('open')) closeRemarksModal();
+  }
+});
+
+// ── Indeterminate checkbox fix (re-apply after each render) ──
+function fixIndeterminate() {
+  document.querySelectorAll('[data-indeterminate="true"]').forEach(el => {
+    el.indeterminate = true;
+  });
+}
+
+// ── Boot ──
+document.addEventListener('DOMContentLoaded', () => {
+  applyFilters();
+  // Re-apply indeterminate checkboxes after render
+  setTimeout(fixIndeterminate, 50);
+});
+</script>
+</body>
+</html>

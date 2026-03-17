@@ -82,7 +82,10 @@ input, select, textarea { font-family: inherit; }
   transition: width var(--transition);
   overflow: hidden;
 }
-.sidebar.collapsed { width: 60px; }
+.sidebar.collapsed {
+  width: 60px;
+  overflow: visible; /* allow toggle button to peek out at the edge */
+}
 
 .sidebar-logo {
   display: flex;
@@ -115,11 +118,36 @@ input, select, textarea { font-family: inherit; }
   padding: 4px; border-radius: 6px;
   font-size: 18px;
   flex-shrink: 0;
+  cursor: pointer;
 }
 .sidebar-toggle:hover { background: var(--border); color: var(--text); }
 
+/* When collapsed, hide logo text and float the toggle to the right edge */
+.sidebar.collapsed .logo-text { display: none; }
+.sidebar.collapsed .sidebar-logo {
+  justify-content: center;
+  padding: 16px 0;
+  position: relative;
+  overflow: visible;
+}
+.sidebar.collapsed .sidebar-toggle {
+  position: absolute;
+  right: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--sidebar);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  margin-left: 0;
+  z-index: 200;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+}
+
 .sidebar-section {
   padding: 16px 12px 4px;
+  overflow: hidden; /* clip nav text when sidebar is collapsed */
 }
 .sidebar-section-label {
   font-size: 10px; font-weight: 600;
@@ -161,6 +189,7 @@ input, select, textarea { font-family: inherit; }
   margin-top: auto;
   padding: 12px;
   border-top: 1px solid var(--border);
+  overflow: hidden; /* clip user info when sidebar is collapsed */
 }
 .user-card {
   display: flex; align-items: center; gap: 10px;

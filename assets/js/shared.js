@@ -115,15 +115,27 @@ const Sidebar = {
     const mainWrap = document.querySelector('.main-wrap');
     if (!sidebar) return;
 
+    const _updateToggleIcon = () => {
+      if (!toggle) return;
+      const isCollapsed = sidebar.classList.contains('collapsed');
+      toggle.innerHTML = isCollapsed
+        ? '<i class="ri-menu-unfold-line"></i>'
+        : '<i class="ri-menu-fold-line"></i>';
+      toggle.title = isCollapsed ? 'Expand sidebar' : 'Collapse sidebar';
+    };
+
     const collapsed = localStorage.getItem('sidebar-collapsed') === 'true';
     if (collapsed) {
       sidebar.classList.add('collapsed');
       mainWrap?.classList.add('sidebar-collapsed');
     }
+    _updateToggleIcon();
+
     toggle?.addEventListener('click', () => {
       sidebar.classList.toggle('collapsed');
       mainWrap?.classList.toggle('sidebar-collapsed');
       localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+      _updateToggleIcon();
     });
 
     // Logout

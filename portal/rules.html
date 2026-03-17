@@ -93,6 +93,7 @@
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-label">Approvals</div>
+      <a class="nav-item" href="expenses.html"><span class="nav-icon"><i class="ri-file-list-3-line"></i></span><span>Expense Claims</span></a>
       <a class="nav-item" href="approval.html"><span class="nav-icon"><i class="ri-map-pin-2-line"></i></span><span>Pinned Journeys</span></a>
       <a class="nav-item" href="analytics.html"><span class="nav-icon"><i class="ri-bar-chart-grouped-line"></i></span><span>Analytics</span></a>
     </div>
@@ -122,57 +123,31 @@
     <div class="page-content">
       <div data-tabs>
         <div class="tabs">
-          <button class="tab-btn active" data-tab="tab-vehicle">🚗 Vehicle Matrix</button>
+          <button class="tab-btn active" data-tab="tab-vehicle">🚗 Vehicle Allocation</button>
           <button class="tab-btn" data-tab="tab-allowance">💰 Allowance Rates</button>
           <button class="tab-btn" data-tab="tab-autoapprove">🤖 Auto-Approve Rules</button>
           <button class="tab-btn" data-tab="tab-geofence">📍 Geo-Fence Settings</button>
         </div>
 
-        <!-- Vehicle Matrix -->
+        <!-- Vehicle Allocation -->
         <div class="tab-pane active" id="tab-vehicle">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-            <div class="card">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">Grade → Vehicle Eligibility</div>
-                  <div class="card-subtitle">Click to toggle vehicle type per grade</div>
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <button class="btn btn-primary btn-sm" onclick="addVehicleRow()"><i class="ri-add-line"></i> Add Grade</button>
-                  <button class="btn btn-outline btn-sm" onclick="resetVehicleMatrix()"><i class="ri-refresh-line"></i> Reset</button>
-                </div>
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Grade → Vehicle Allocation</div>
+                <div class="card-subtitle">Define which vehicle types each grade is eligible to use. Click a pill to toggle.</div>
               </div>
-              <table class="matrix-table w-full">
-                <thead><tr>
-                  <th>Grade</th><th>Role</th><th>2-Wheeler</th><th>4-Wheeler</th><th>Taxi/Cab</th><th></th>
-                </tr></thead>
-                <tbody id="vehicle-matrix-body"></tbody>
-              </table>
-            </div>
-            <div class="card">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">Grade → City Tier Assignment</div>
-                  <div class="card-subtitle">Determines DA/TA rates</div>
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <button class="btn btn-primary btn-sm" onclick="addTierRow()"><i class="ri-add-line"></i> Add Grade</button>
-                  <button class="btn btn-outline btn-sm" onclick="resetTierMatrix()"><i class="ri-refresh-line"></i> Reset</button>
-                </div>
-              </div>
-              <table class="matrix-table w-full">
-                <thead><tr><th>Grade</th><th>Role</th><th>City Tier</th><th>TA Rate/km</th><th></th></tr></thead>
-                <tbody id="tier-matrix-body"></tbody>
-              </table>
-              <div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:var(--radius-sm);">
-                <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">TIER REFERENCE</div>
-                <div class="tier-grid">
-                  <div class="tier-card"><div class="tier-label" style="color:var(--accent);">Tier 1</div><div class="tier-examples">Mumbai, Delhi, Bangalore, Chennai, Hyderabad, Kolkata</div></div>
-                  <div class="tier-card"><div class="tier-label" style="color:var(--amber);">Tier 2</div><div class="tier-examples">Pune, Ahmedabad, Jaipur, Surat, Lucknow</div></div>
-                  <div class="tier-card"><div class="tier-label" style="color:var(--text-muted);">Tier 3</div><div class="tier-examples">All other cities and towns</div></div>
-                </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <button class="btn btn-primary btn-sm" onclick="addVehicleRow()"><i class="ri-add-line"></i> Add Grade</button>
+                <button class="btn btn-outline btn-sm" onclick="resetVehicleMatrix()"><i class="ri-refresh-line"></i> Reset</button>
               </div>
             </div>
+            <table class="matrix-table w-full">
+              <thead><tr>
+                <th>Grade</th><th>Role</th><th>2-Wheeler</th><th>4-Wheeler</th><th>Taxi/Cab</th><th></th>
+              </tr></thead>
+              <tbody id="vehicle-matrix-body"></tbody>
+            </table>
           </div>
 
           <!-- Vehicle Matrix Modal -->
@@ -225,9 +200,9 @@
                   <input class="form-control" id="tm-role" placeholder="e.g. Deputy Manager">
                 </div>
               </div>
-              <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;">
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;">
                 <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:12px;"><i class="ri-map-pin-line"></i> CITY TIER ASSIGNMENT</div>
-                <div class="form-group" style="margin-bottom:12px;">
+                <div class="form-group" style="margin:0;">
                   <label class="form-label">City Tier <span style="color:var(--red);">*</span></label>
                   <select class="form-control" id="tm-tier" style="width:100%;">
                     <option value="">-- Select Tier --</option>
@@ -236,9 +211,23 @@
                     <option value="3">Tier 3 (Other cities)</option>
                   </select>
                 </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
                 <div class="form-group" style="margin:0;">
-                  <label class="form-label">TA Rate/km <span style="color:var(--red);">*</span></label>
-                  <input type="number" class="form-control" id="tm-ta-rate" placeholder="e.g. 5.5" step="0.5">
+                  <label class="form-label">TA Rate <small style="color:var(--text-muted);">₹/km</small></label>
+                  <input type="number" class="form-control" id="tm-ta-rate" placeholder="e.g. 5.0" step="0.5">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">DA Rate <small style="color:var(--text-muted);">₹/day</small></label>
+                  <input type="number" class="form-control" id="tm-da-rate" placeholder="e.g. 400">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Meal Limit <small style="color:var(--text-muted);">₹/day</small></label>
+                  <input type="number" class="form-control" id="tm-meal" placeholder="e.g. 300">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Night Halt <small style="color:var(--text-muted);">₹/night</small></label>
+                  <input type="number" class="form-control" id="tm-nh" placeholder="e.g. 1200">
                 </div>
               </div>
               <div id="tm-error" style="display:none;padding:8px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:12px;color:var(--red);margin-bottom:14px;"></div>
@@ -280,6 +269,41 @@
                 </tr></thead>
                 <tbody id="allowance-matrix-body"></tbody>
               </table>
+            </div>
+          </div>
+
+          <!-- Matrix 1b: Grade → City Tier Assignment -->
+          <div class="card mb-24">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i class="ri-building-4-line" style="color:var(--accent);margin-right:6px;"></i>Grade → City Tier Assignment</div>
+                <div class="card-subtitle">Maps each grade to a city tier, determining which DA/TA column applies when the employee visits a city of that tier.</div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <button class="btn btn-primary btn-sm" onclick="addTierRow()"><i class="ri-add-line"></i> Add Row</button>
+                <button class="btn btn-outline btn-sm" onclick="resetTierMatrix()"><i class="ri-refresh-line"></i> Reset</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="matrix-table w-full">
+                <thead><tr>
+                  <th>Grade</th>
+                  <th>Role / Label</th>
+                  <th>City Tier</th>
+                  <th>TA Rate<br><small style="color:var(--text-dim);font-weight:400;">₹/km</small></th>
+                  <th>DA Rate<br><small style="color:var(--text-dim);font-weight:400;">₹/day</small></th>
+                  <th>Meal Limit<br><small style="color:var(--text-dim);font-weight:400;">₹/day</small></th>
+                  <th>Night Halt<br><small style="color:var(--text-dim);font-weight:400;">₹/night</small></th>
+                  <th></th>
+                </tr></thead>
+                <tbody id="tier-matrix-body"></tbody>
+              </table>
+            </div>
+            <div style="margin-top:10px;padding:10px 14px;background:var(--bg);border-radius:var(--radius-sm);font-size:12px;color:var(--text-muted);">
+              <i class="ri-information-line"></i>
+              <strong>Tier 1</strong> = Metro cities (Mumbai, Delhi, Bengaluru, Chennai, Hyderabad, Kolkata, Pune) &nbsp;·&nbsp;
+              <strong>Tier 2</strong> = Tier-2 cities (Nashik, Surat, Jaipur, Lucknow, Nagpur, Chandigarh) &nbsp;·&nbsp;
+              <strong>Tier 3</strong> = Small towns &amp; rural
             </div>
           </div>
 
@@ -1072,27 +1096,39 @@ function resetVehicleMatrix() {
 renderVehicleMatrix();
 
 // City Tier Assignment Data
+// daRate/meal/nh pulled from allowanceData where grade matches, else fallback to grade defaults
+const _tierDefaults = {
+  G1:{ taRate:3.0,  daRate:250,  meal:200,  nh:700  },
+  G2:{ taRate:4.0,  daRate:380,  meal:300,  nh:1000 },
+  G3:{ taRate:5.0,  daRate:550,  meal:450,  nh:1500 },
+  G4:{ taRate:7.0,  daRate:800,  meal:700,  nh:2500 },
+  G5:{ taRate:10.0, daRate:1200, meal:1000, nh:4000 },
+};
 let tierData = grades.map(g => {
-  return { grade:g.grade, label:g.label, tier:g.tier, taRate:g.taRate };
+  const d = _tierDefaults[g.grade] || { taRate:g.taRate, daRate:g.daRate, meal:g.mealLimit, nh:700 };
+  return { grade:g.grade, label:g.label, tier:g.tier, taRate:d.taRate, daRate:d.daRate, meal:d.meal, nh:d.nh };
 });
 
 function renderTierMatrix() {
   const tierBody = document.getElementById('tier-matrix-body');
+  if (!tierBody) return; // element may not be in current view
   let html = '';
   tierData.forEach((t, idx) => {
-    const tierLabel = t.tier === 1 ? 'Tier 1' : t.tier === 2 ? 'Tier 2' : 'Tier 3';
     html += `<tr>
       <td><span class="badge badge-blue">${t.grade}</span></td>
-      <td>${t.label}</td>
+      <td style="white-space:nowrap;">${t.label}</td>
       <td>
-        <select class="form-control" style="width:80px;"
+        <select class="form-control" style="width:90px;"
           onchange="tierData[${idx}].tier=parseInt(this.value)">
           <option value="1" ${t.tier===1?'selected':''}>Tier 1</option>
           <option value="2" ${t.tier===2?'selected':''}>Tier 2</option>
           <option value="3" ${t.tier===3?'selected':''}>Tier 3</option>
         </select>
       </td>
-      <td><input class="rate-input" value="${t.taRate}" onchange="tierData[${idx}].taRate=parseFloat(this.value)"></td>
+      <td><input class="rate-input" value="${t.taRate}"  onchange="tierData[${idx}].taRate=parseFloat(this.value)||0"  style="width:68px;"></td>
+      <td><input class="rate-input" value="${t.daRate}"  onchange="tierData[${idx}].daRate=parseFloat(this.value)||0"  style="width:68px;"></td>
+      <td><input class="rate-input" value="${t.meal}"    onchange="tierData[${idx}].meal=parseFloat(this.value)||0"    style="width:68px;"></td>
+      <td><input class="rate-input" value="${t.nh}"      onchange="tierData[${idx}].nh=parseFloat(this.value)||0"      style="width:68px;"></td>
       <td>
         <button class="icon-btn" style="color:var(--red);font-size:15px;" title="Remove row"
           onclick="deleteTierRow(${idx})"><i class="ri-delete-bin-line"></i></button>
@@ -1103,10 +1139,13 @@ function renderTierMatrix() {
 }
 
 function addTierRow() {
-  document.getElementById('tm-grade').value = '';
-  document.getElementById('tm-role').value = '';
-  document.getElementById('tm-tier').value = '';
+  document.getElementById('tm-grade').value   = '';
+  document.getElementById('tm-role').value    = '';
+  document.getElementById('tm-tier').value    = '';
   document.getElementById('tm-ta-rate').value = '';
+  document.getElementById('tm-da-rate').value = '';
+  document.getElementById('tm-meal').value    = '';
+  document.getElementById('tm-nh').value      = '';
   document.getElementById('tm-error').style.display = 'none';
   document.getElementById('tier-modal-overlay').style.display = 'flex';
   setTimeout(() => document.getElementById('tm-grade').focus(), 50);
@@ -1117,16 +1156,18 @@ function closeTierModal() {
 }
 
 function confirmAddTierRow() {
-  const grade = document.getElementById('tm-grade').value.trim().toUpperCase();
-  const label = document.getElementById('tm-role').value.trim();
-  const tier = parseInt(document.getElementById('tm-tier').value) || 0;
+  const grade  = document.getElementById('tm-grade').value.trim().toUpperCase();
+  const label  = document.getElementById('tm-role').value.trim();
+  const tier   = parseInt(document.getElementById('tm-tier').value) || 0;
   const taRate = parseFloat(document.getElementById('tm-ta-rate').value) || 0;
+  const daRate = parseFloat(document.getElementById('tm-da-rate').value) || 0;
+  const meal   = parseFloat(document.getElementById('tm-meal').value)    || 0;
+  const nh     = parseFloat(document.getElementById('tm-nh').value)      || 0;
 
   const errs = [];
   if (!grade) errs.push('Grade is required');
   if (!label) errs.push('Role / Designation is required');
-  if (!tier) errs.push('City Tier is required');
-  if (taRate <= 0) errs.push('TA Rate/km must be > 0');
+  if (!tier)  errs.push('City Tier is required');
 
   const errEl = document.getElementById('tm-error');
   if (errs.length) {
@@ -1136,7 +1177,7 @@ function confirmAddTierRow() {
   }
   errEl.style.display = 'none';
 
-  tierData.push({ grade, label, tier, taRate });
+  tierData.push({ grade, label, tier, taRate, daRate, meal, nh });
   renderTierMatrix();
   closeTierModal();
   Toast.show(`Grade "${grade}" added successfully.`, 'success');
@@ -1155,7 +1196,8 @@ function deleteTierRow(idx) {
 
 function resetTierMatrix() {
   tierData = grades.map(g => {
-    return { grade:g.grade, label:g.label, tier:g.tier, taRate:g.taRate };
+    const d = _tierDefaults[g.grade] || { taRate:g.taRate, daRate:g.daRate, meal:g.mealLimit, nh:700 };
+    return { grade:g.grade, label:g.label, tier:g.tier, taRate:d.taRate, daRate:d.daRate, meal:d.meal, nh:d.nh };
   });
   renderTierMatrix();
   Toast.show('City Tier matrix reset to defaults.', 'info');
@@ -1166,11 +1208,15 @@ renderTierMatrix();
 // Allowance Matrix
 const allowBody = document.getElementById('allowance-matrix-body');
 let allowanceData = [
-  { grade:'G1', role:'Junior Exec', da:[200,150,100], ta:[2.5,2.0,1.5], meal:150, halt:500 },
-  { grade:'G2', role:'Executive',   da:[300,220,150], ta:[3.0,2.5,2.0], meal:200, halt:700 },
-  { grade:'G3', role:'Sr Executive',da:[450,350,250], ta:[4.0,3.5,2.5], meal:350, halt:1000 },
-  { grade:'G4', role:'Manager',     da:[700,550,400], ta:[6.0,5.0,4.0], meal:600, halt:1500 },
-  { grade:'G5', role:'Sr Manager',  da:[1000,800,600],ta:[8.0,7.0,6.0], meal:800, halt:2500 },
+  // Tier 1 = Metros (Mumbai, Delhi, Bengaluru, Chennai, Hyderabad, Pune, Kolkata)
+  // Tier 2 = Tier-2 Cities (Nashik, Surat, Jaipur, Lucknow, Nagpur, Chandigarh)
+  // Tier 3 = Tier-3 / Small Towns & Rural
+  { grade:'G1', role:'Junior Executive',  da:[250, 180, 120], ta:[3.0, 2.5, 2.0], meal:200,  halt:700  },
+  { grade:'G2', role:'Executive',         da:[380, 280, 190], ta:[4.0, 3.0, 2.5], meal:300,  halt:1000 },
+  { grade:'G3', role:'Senior Executive',  da:[550, 420, 300], ta:[5.0, 4.0, 3.5], meal:450,  halt:1500 },
+  { grade:'G4', role:'Area Manager',      da:[800, 620, 450], ta:[7.0, 6.0, 5.0], meal:700,  halt:2500 },
+  { grade:'G5', role:'Regional Manager',  da:[1200,950, 750], ta:[10.0,8.0, 7.0], meal:1000, halt:4000 },
+  { grade:'G6', role:'Zonal Head',        da:[1800,1400,1000],ta:[14.0,12.0,10.0],meal:1500, halt:6000 },
 ];
 
 function renderAllowanceMatrix() {
@@ -1282,40 +1328,61 @@ const gradeDefaults = {
 };
 // routeConfigData: array of { code, from, to, dist, grades:[{grade,role,ta,da,nh}] }
 let routeConfigData = [
-  { code:'RT001', from:'Mumbai', to:'Pune',      dist:148, grades:[
-    {grade:'G1',role:'Junior Exec',  ta:2.5, da:200, nh:600 },
-    {grade:'G2',role:'Executive',    ta:3.0, da:280, nh:800 },
-    {grade:'G3',role:'Sr Executive', ta:4.0, da:400, nh:1200},
-    {grade:'G4',role:'Manager',      ta:6.0, da:650, nh:2000},
-    {grade:'G5',role:'Sr Manager',   ta:8.0, da:900, nh:3000},
+  { code:'RT001', from:'Mumbai', to:'Pune', dist:148, grades:[
+    {grade:'G1',role:'Junior Executive', ta:3.0, da:250, nh:700 },
+    {grade:'G2',role:'Executive',        ta:4.0, da:380, nh:1000},
+    {grade:'G3',role:'Senior Executive', ta:5.0, da:550, nh:1500},
+    {grade:'G4',role:'Area Manager',     ta:7.0, da:800, nh:2500},
+    {grade:'G5',role:'Regional Manager', ta:10.0,da:1200,nh:4000},
+    {grade:'G6',role:'Zonal Head',       ta:14.0,da:1800,nh:6000},
   ]},
-  { code:'RT002', from:'Mumbai', to:'Nashik',    dist:165, grades:[
-    {grade:'G1',role:'Junior Exec',  ta:2.5, da:200, nh:600 },
-    {grade:'G2',role:'Executive',    ta:3.0, da:280, nh:800 },
-    {grade:'G3',role:'Sr Executive', ta:4.0, da:400, nh:1200},
-    {grade:'G4',role:'Manager',      ta:6.0, da:650, nh:2000},
-    {grade:'G5',role:'Sr Manager',   ta:8.0, da:900, nh:3000},
+  { code:'RT002', from:'Mumbai', to:'Nashik', dist:165, grades:[
+    {grade:'G1',role:'Junior Executive', ta:3.0, da:250, nh:700 },
+    {grade:'G2',role:'Executive',        ta:4.0, da:380, nh:1000},
+    {grade:'G3',role:'Senior Executive', ta:5.0, da:550, nh:1500},
+    {grade:'G4',role:'Area Manager',     ta:7.0, da:800, nh:2500},
+    {grade:'G5',role:'Regional Manager', ta:10.0,da:1200,nh:4000},
   ]},
-  { code:'RT003', from:'Pune',   to:'Nagpur',    dist:710, grades:[
-    {grade:'G1',role:'Junior Exec',  ta:2.8, da:220, nh:650 },
-    {grade:'G2',role:'Executive',    ta:3.2, da:300, nh:850 },
-    {grade:'G3',role:'Sr Executive', ta:4.5, da:450, nh:1300},
-    {grade:'G4',role:'Manager',      ta:7.0, da:700, nh:2200},
-    {grade:'G5',role:'Sr Manager',   ta:9.0, da:950, nh:3200},
+  { code:'RT003', from:'Pune', to:'Nagpur', dist:710, grades:[
+    {grade:'G1',role:'Junior Executive', ta:3.0, da:250, nh:700 },
+    {grade:'G2',role:'Executive',        ta:4.0, da:380, nh:1000},
+    {grade:'G3',role:'Senior Executive', ta:5.0, da:550, nh:1500},
+    {grade:'G4',role:'Area Manager',     ta:7.0, da:800, nh:2500},
+    {grade:'G5',role:'Regional Manager', ta:10.0,da:1200,nh:4000},
   ]},
-  { code:'RT004', from:'Delhi',  to:'Agra',      dist:206, grades:[
-    {grade:'G1',role:'Junior Exec',  ta:2.5, da:200, nh:600 },
-    {grade:'G2',role:'Executive',    ta:3.0, da:280, nh:800 },
-    {grade:'G3',role:'Sr Executive', ta:4.0, da:400, nh:1200},
-    {grade:'G4',role:'Manager',      ta:6.0, da:650, nh:2000},
-    {grade:'G5',role:'Sr Manager',   ta:8.0, da:900, nh:3000},
+  { code:'RT004', from:'Delhi', to:'Agra', dist:206, grades:[
+    {grade:'G1',role:'Junior Executive', ta:3.0, da:250, nh:700 },
+    {grade:'G2',role:'Executive',        ta:4.0, da:380, nh:1000},
+    {grade:'G3',role:'Senior Executive', ta:5.0, da:550, nh:1500},
+    {grade:'G4',role:'Area Manager',     ta:7.0, da:800, nh:2500},
+    {grade:'G5',role:'Regional Manager', ta:10.0,da:1200,nh:4000},
   ]},
   { code:'RT005', from:'Bangalore', to:'Mysore', dist:144, grades:[
-    {grade:'G1',role:'Junior Exec',  ta:2.5, da:200, nh:600 },
-    {grade:'G2',role:'Executive',    ta:3.0, da:280, nh:800 },
-    {grade:'G3',role:'Sr Executive', ta:4.0, da:400, nh:1200},
-    {grade:'G4',role:'Manager',      ta:6.0, da:650, nh:2000},
-    {grade:'G5',role:'Sr Manager',   ta:8.0, da:900, nh:3000},
+    {grade:'G1',role:'Junior Executive', ta:3.0, da:250, nh:700 },
+    {grade:'G2',role:'Executive',        ta:4.0, da:380, nh:1000},
+    {grade:'G3',role:'Senior Executive', ta:5.0, da:550, nh:1500},
+    {grade:'G4',role:'Area Manager',     ta:7.0, da:800, nh:2500},
+    {grade:'G5',role:'Regional Manager', ta:10.0,da:1200,nh:4000},
+  ]},
+  { code:'RT006', from:'Hyderabad', to:'Vijayawada', dist:275, grades:[
+    {grade:'G1',role:'Junior Executive', ta:3.0, da:250, nh:700 },
+    {grade:'G2',role:'Executive',        ta:4.0, da:380, nh:1000},
+    {grade:'G3',role:'Senior Executive', ta:5.0, da:550, nh:1500},
+    {grade:'G4',role:'Area Manager',     ta:7.0, da:800, nh:2500},
+    {grade:'G5',role:'Regional Manager', ta:10.0,da:1200,nh:4000},
+  ]},
+  { code:'RT007', from:'Chennai', to:'Coimbatore', dist:494, grades:[
+    {grade:'G1',role:'Junior Executive', ta:3.0, da:250, nh:700 },
+    {grade:'G2',role:'Executive',        ta:4.0, da:380, nh:1000},
+    {grade:'G3',role:'Senior Executive', ta:5.0, da:550, nh:1500},
+    {grade:'G4',role:'Area Manager',     ta:7.0, da:800, nh:2500},
+  ]},
+  { code:'RT008', from:'Delhi', to:'Jaipur', dist:282, grades:[
+    {grade:'G1',role:'Junior Executive', ta:3.0, da:250, nh:700 },
+    {grade:'G2',role:'Executive',        ta:4.0, da:380, nh:1000},
+    {grade:'G3',role:'Senior Executive', ta:5.0, da:550, nh:1500},
+    {grade:'G4',role:'Area Manager',     ta:7.0, da:800, nh:2500},
+    {grade:'G5',role:'Regional Manager', ta:10.0,da:1200,nh:4000},
   ]},
 ];
 
@@ -1482,14 +1549,20 @@ document.getElementById('global-override-toggle').addEventListener('change', fun
 
 // Auto-Approve Rules
 let autoRules = [
-  { cat:'Travel (TA)', icon:'ri-road-map-line', col:'#00d4aa', auto:true,  desc:'Auto-approve if GPS path ≈ Odometer reading (±5%)', condition:'Path ≈ Odometer', threshold:'±5% variance' },
-  { cat:'Daily Allowance (DA)', icon:'ri-calendar-check-line', col:'#3b82f6', auto:true, desc:'Auto-approve full DA if attendance marked for the day', condition:'Attendance = Present', threshold:'Full day' },
-  { cat:'Food / Meals', icon:'ri-restaurant-line', col:'#f59e0b', auto:true,  desc:'Auto-approve if pin within 500m of activity and ≤ meal limit', condition:'Pin ≤ 500m from activity + ≤ limit', threshold:'Grade-wise limit' },
-  { cat:'Night Halt', icon:'ri-moon-line', col:'#8b5cf6', auto:true,  desc:'Auto-approve if midnight GPS confirms location > 100km from home', condition:'Midnight GPS > 100km', threshold:'Grade-wise cap' },
-  { cat:'Toll / Highway', icon:'ri-road-line', col:'#00d4aa', auto:true,  desc:'Auto-approve with valid OCR receipt if on recorded route', condition:'On route + OCR valid', threshold:'Actuals' },
-  { cat:'Client Meals', icon:'ri-group-2-line', col:'#f59e0b', auto:false, desc:'Manual review required — high-value entertainment category', condition:'Manual Review', threshold:'₹2,000/event' },
-  { cat:'Misc / Others', icon:'ri-more-2-line', col:'#6b7280', auto:false, desc:'Manual review required if no corresponding activity found', condition:'Activity pin required', threshold:'Actuals, capped' },
-  { cat:'BYOD Internet', icon:'ri-wifi-line', col:'#3b82f6', auto:true,  desc:'Auto-approve monthly flat allowance per grade', condition:'Monthly flat', threshold:'₹500/month' },
+  { cat:'Travel Allowance (TA)',   icon:'ri-road-map-line',       col:'#00d4aa', auto:true,  desc:'Auto-approve if GPS breadcrumb path matches odometer reading within tolerance. Deviation beyond threshold triggers manual review.', condition:'GPS Path ≈ Odometer (±5%)', threshold:'±5% variance' },
+  { cat:'Daily Allowance (DA)',    icon:'ri-calendar-check-line', col:'#3b82f6', auto:true,  desc:'Auto-approve full DA for the day if morning attendance is marked "Present" and at least one customer activity is logged.', condition:'Attendance = Present + 1 Activity', threshold:'100% DA (grade-wise)' },
+  { cat:'Half-Day DA',             icon:'ri-time-line',           col:'#3b82f6', auto:true,  desc:'Auto-approve 50% DA if attendance is marked half-day or if only a morning session with < 3 activities is recorded.', condition:'Half-day attendance or < 3 activities', threshold:'50% DA (grade-wise)' },
+  { cat:'Food / Meals',            icon:'ri-restaurant-line',     col:'#f59e0b', auto:true,  desc:'Auto-approve meal expense if location pin is within 500m of a logged customer activity and amount is within the grade meal limit.', condition:'Pin ≤ 500m of activity + ≤ meal limit', threshold:'Grade-wise meal cap' },
+  { cat:'Night Halt',              icon:'ri-moon-line',           col:'#8b5cf6', auto:true,  desc:'Auto-approve night halt allowance if midnight GPS ping confirms location is 100+ km from employee home base and a next-day activity exists in the destination city.', condition:'Midnight GPS > 100km + next-day activity', threshold:'Grade-wise NH cap' },
+  { cat:'Fuel Reimbursement',      icon:'ri-gas-station-line',    col:'#00d4aa', auto:true,  desc:'Auto-approve fuel bill if quantity × vehicle mileage ≈ GPS distance traveled for the day. Bill OCR must match pump name and amount.', condition:'Fuel qty × mileage ≈ GPS km (±8%)', threshold:'Grade/vehicle fuel rate' },
+  { cat:'Toll / Highway',          icon:'ri-road-line',           col:'#00d4aa', auto:true,  desc:'Auto-approve toll if expense is tagged to an active outstation route and a valid FASTag or photo receipt is submitted via OCR.', condition:'On recorded route + receipt OCR valid', threshold:'Actuals (no cap)' },
+  { cat:'Parking',                 icon:'ri-parking-box-line',    col:'#f59e0b', auto:true,  desc:'Auto-approve parking charges when submitted with a valid receipt and GPS confirms the vehicle was stationary at a commercial or hospital location.', condition:'Receipt + GPS stationary at activity', threshold:'≤ ₹200/day' },
+  { cat:'Local Conveyance',        icon:'ri-taxi-line',           col:'#6b7280', auto:true,  desc:'Auto-approve auto/cab claims within the base city if distance is < 30km and a ride receipt (Ola/Uber) is attached via OCR.', condition:'Within city + ride receipt OCR', threshold:'≤ ₹400/day' },
+  { cat:'BYOD Internet',           icon:'ri-wifi-line',           col:'#3b82f6', auto:true,  desc:'Auto-approve monthly BYOD data allowance once per calendar month per employee based on grade-wise flat rate.', condition:'Monthly flat (1× per month)', threshold:'₹300–₹700/month (grade)' },
+  { cat:'Client Entertainment',    icon:'ri-group-2-line',        col:'#f59e0b', auto:false, desc:'Always requires manual manager approval. Must include client name, company, number of attendees, and business purpose. High-value category with strict audit trail.', condition:'Manager approval required', threshold:'≤ ₹2,500/event' },
+  { cat:'Conference / Training',   icon:'ri-presentation-line',   col:'#8b5cf6', auto:false, desc:'Manual approval by HR + Finance required. Advance booking only. Includes registration fees, travel, accommodation. Invoices must be attached.', condition:'HR + Finance pre-approval', threshold:'As per sanction letter' },
+  { cat:'Medical / Emergency',     icon:'ri-heart-pulse-line',    col:'#ef4444', auto:false, desc:'Flagged for HR review. Employee must submit declaration + receipts. Reimbursable only for on-road emergencies during official duty hours.', condition:'HR review + declaration', threshold:'Actuals (capped ₹5,000)' },
+  { cat:'Misc / Others',           icon:'ri-more-2-line',         col:'#6b7280', auto:false, desc:'Manual review required. Must be tagged to a specific activity or purpose. No corresponding activity pin means automatic hold for manager clarification.', condition:'Activity pin + justification required', threshold:'Actuals (manager-capped)' },
 ];
 
 function renderAutoRules() {
@@ -1627,14 +1700,20 @@ function deleteAutoRule(idx) {
 
 function resetAutoRules() {
   autoRules = [
-    { cat:'Travel (TA)', icon:'ri-road-map-line', col:'#00d4aa', auto:true,  desc:'Auto-approve if GPS path ≈ Odometer reading (±5%)', condition:'Path ≈ Odometer', threshold:'±5% variance' },
-    { cat:'Daily Allowance (DA)', icon:'ri-calendar-check-line', col:'#3b82f6', auto:true, desc:'Auto-approve full DA if attendance marked for the day', condition:'Attendance = Present', threshold:'Full day' },
-    { cat:'Food / Meals', icon:'ri-restaurant-line', col:'#f59e0b', auto:true,  desc:'Auto-approve if pin within 500m of activity and ≤ meal limit', condition:'Pin ≤ 500m from activity + ≤ limit', threshold:'Grade-wise limit' },
-    { cat:'Night Halt', icon:'ri-moon-line', col:'#8b5cf6', auto:true,  desc:'Auto-approve if midnight GPS confirms location > 100km from home', condition:'Midnight GPS > 100km', threshold:'Grade-wise cap' },
-    { cat:'Toll / Highway', icon:'ri-road-line', col:'#00d4aa', auto:true,  desc:'Auto-approve with valid OCR receipt if on recorded route', condition:'On route + OCR valid', threshold:'Actuals' },
-    { cat:'Client Meals', icon:'ri-group-2-line', col:'#f59e0b', auto:false, desc:'Manual review required — high-value entertainment category', condition:'Manual Review', threshold:'₹2,000/event' },
-    { cat:'Misc / Others', icon:'ri-more-2-line', col:'#6b7280', auto:false, desc:'Manual review required if no corresponding activity found', condition:'Activity pin required', threshold:'Actuals, capped' },
-    { cat:'BYOD Internet', icon:'ri-wifi-line', col:'#3b82f6', auto:true,  desc:'Auto-approve monthly flat allowance per grade', condition:'Monthly flat', threshold:'₹500/month' },
+    { cat:'Travel Allowance (TA)',  icon:'ri-road-map-line',       col:'#00d4aa', auto:true,  desc:'Auto-approve if GPS breadcrumb path matches odometer reading within tolerance.', condition:'GPS Path ≈ Odometer (±5%)', threshold:'±5% variance' },
+    { cat:'Daily Allowance (DA)',   icon:'ri-calendar-check-line', col:'#3b82f6', auto:true,  desc:'Auto-approve full DA if attendance is "Present" and at least one activity is logged.', condition:'Attendance = Present + 1 Activity', threshold:'100% DA (grade-wise)' },
+    { cat:'Half-Day DA',            icon:'ri-time-line',           col:'#3b82f6', auto:true,  desc:'Auto-approve 50% DA for half-day attendance or fewer than 3 activities.', condition:'Half-day attendance or < 3 activities', threshold:'50% DA (grade-wise)' },
+    { cat:'Food / Meals',           icon:'ri-restaurant-line',     col:'#f59e0b', auto:true,  desc:'Auto-approve meal expense if pin is within 500m of activity and within grade meal limit.', condition:'Pin ≤ 500m of activity + ≤ meal limit', threshold:'Grade-wise meal cap' },
+    { cat:'Night Halt',             icon:'ri-moon-line',           col:'#8b5cf6', auto:true,  desc:'Auto-approve if midnight GPS confirms location > 100km from home and next-day activity exists.', condition:'Midnight GPS > 100km + next-day activity', threshold:'Grade-wise NH cap' },
+    { cat:'Fuel Reimbursement',     icon:'ri-gas-station-line',    col:'#00d4aa', auto:true,  desc:'Auto-approve fuel bill if quantity × mileage ≈ GPS distance. OCR must match pump name.', condition:'Fuel qty × mileage ≈ GPS km (±8%)', threshold:'Grade/vehicle fuel rate' },
+    { cat:'Toll / Highway',         icon:'ri-road-line',           col:'#00d4aa', auto:true,  desc:'Auto-approve toll on active outstation route with valid FASTag or photo receipt OCR.', condition:'On recorded route + receipt OCR valid', threshold:'Actuals (no cap)' },
+    { cat:'Parking',                icon:'ri-parking-box-line',    col:'#f59e0b', auto:true,  desc:'Auto-approve with receipt and GPS confirming vehicle stationary at commercial/hospital.', condition:'Receipt + GPS stationary at activity', threshold:'≤ ₹200/day' },
+    { cat:'Local Conveyance',       icon:'ri-taxi-line',           col:'#6b7280', auto:true,  desc:'Auto-approve city cab/auto claims < 30km with Ola/Uber ride receipt OCR.', condition:'Within city + ride receipt OCR', threshold:'≤ ₹400/day' },
+    { cat:'BYOD Internet',          icon:'ri-wifi-line',           col:'#3b82f6', auto:true,  desc:'Auto-approve monthly flat BYOD allowance once per month per employee.', condition:'Monthly flat (1× per month)', threshold:'₹300–₹700/month (grade)' },
+    { cat:'Client Entertainment',   icon:'ri-group-2-line',        col:'#f59e0b', auto:false, desc:'Manual approval required. Must include client name, company, attendees and business purpose.', condition:'Manager approval required', threshold:'≤ ₹2,500/event' },
+    { cat:'Conference / Training',  icon:'ri-presentation-line',   col:'#8b5cf6', auto:false, desc:'HR + Finance pre-approval required. Advance booking. Invoices mandatory.', condition:'HR + Finance pre-approval', threshold:'As per sanction letter' },
+    { cat:'Medical / Emergency',    icon:'ri-heart-pulse-line',    col:'#ef4444', auto:false, desc:'Flagged for HR review. Declaration + receipts required. On-road emergencies only.', condition:'HR review + declaration', threshold:'Actuals (capped ₹5,000)' },
+    { cat:'Misc / Others',          icon:'ri-more-2-line',         col:'#6b7280', auto:false, desc:'Manual review required. Must tag to activity or purpose. No pin = hold for manager.', condition:'Activity pin + justification required', threshold:'Actuals (manager-capped)' },
   ];
   renderAutoRules();
   Toast.show('Auto-Approval Rules reset to defaults.', 'info');
@@ -1644,11 +1723,19 @@ renderAutoRules();
 
 // Fraud Rules
 let fraudRules = [
-  { label:'Flag if Expense Pin > radius from any Activity', enabled: true },
-  { label:'Auto-reject if Breadcrumb path never passed expense location', enabled: false },
-  { label:'Flag duplicate submissions (same vendor+date+amount)', enabled: true },
-  { label:'Alert if total daily expense exceeds 200% of grade limit', enabled: true },
-  { label:'Flag if bill timestamp and GPS timestamp differ by > 2 hours', enabled: true },
+  { label:'Flag if Expense Pin is outside the configured activity proof radius (default 500m)', enabled: true },
+  { label:'Auto-reject if GPS breadcrumb path never passed through the expense pin location', enabled: true },
+  { label:'Flag duplicate submissions — same vendor name + date + amount by same employee', enabled: true },
+  { label:'Alert if total daily expense claim exceeds 200% of grade-wise daily limit', enabled: true },
+  { label:'Flag if bill timestamp and GPS timestamp differ by more than 2 hours', enabled: true },
+  { label:'Hold if 3 or more expense claims are submitted for the same date on separate days (backdating pattern)', enabled: true },
+  { label:'Flag if Night Halt claimed but midnight GPS shows employee within 50km of home base', enabled: true },
+  { label:'Alert if fuel bill quantity exceeds vehicle tank capacity (suspected inflated bill)', enabled: true },
+  { label:'Flag if same fuel pump billed more than twice in a single week', enabled: false },
+  { label:'Hold meals expense if location pin is at a residential address (not commercial/hotel)', enabled: true },
+  { label:'Auto-reject toll claims on routes not listed in the approved route configuration', enabled: false },
+  { label:'Flag if expense submitted on a Sunday/public holiday without prior field visit approval', enabled: true },
+  { label:'Alert manager if employee claims Night Halt for more than 20 consecutive days in a month', enabled: true },
 ];
 
 function renderFraudRules() {
@@ -1707,11 +1794,19 @@ function deleteFraudRule(idx) {
 
 function resetFraudRules() {
   fraudRules = [
-    { label:'Flag if Expense Pin > radius from any Activity', enabled: true },
-    { label:'Auto-reject if Breadcrumb path never passed expense location', enabled: false },
-    { label:'Flag duplicate submissions (same vendor+date+amount)', enabled: true },
-    { label:'Alert if total daily expense exceeds 200% of grade limit', enabled: true },
-    { label:'Flag if bill timestamp and GPS timestamp differ by > 2 hours', enabled: true },
+    { label:'Flag if Expense Pin is outside the configured activity proof radius (default 500m)', enabled: true },
+    { label:'Auto-reject if GPS breadcrumb path never passed through the expense pin location', enabled: true },
+    { label:'Flag duplicate submissions — same vendor name + date + amount by same employee', enabled: true },
+    { label:'Alert if total daily expense claim exceeds 200% of grade-wise daily limit', enabled: true },
+    { label:'Flag if bill timestamp and GPS timestamp differ by more than 2 hours', enabled: true },
+    { label:'Hold if 3 or more expense claims are submitted for the same date on separate days (backdating pattern)', enabled: true },
+    { label:'Flag if Night Halt claimed but midnight GPS shows employee within 50km of home base', enabled: true },
+    { label:'Alert if fuel bill quantity exceeds vehicle tank capacity (suspected inflated bill)', enabled: true },
+    { label:'Flag if same fuel pump billed more than twice in a single week', enabled: false },
+    { label:'Hold meals expense if location pin is at a residential address (not commercial/hotel)', enabled: true },
+    { label:'Auto-reject toll claims on routes not listed in the approved route configuration', enabled: false },
+    { label:'Flag if expense submitted on a Sunday/public holiday without prior field visit approval', enabled: true },
+    { label:'Alert manager if employee claims Night Halt for more than 20 consecutive days in a month', enabled: true },
   ];
   renderFraudRules();
   Toast.show('Anti-Fraud Rules reset to defaults.', 'info');
@@ -1721,8 +1816,11 @@ renderFraudRules();
 
 // BYOD Internet Allowance
 let byodData = [
-  { category:'BYOD Data Allowance', desc:'Monthly flat rate for personal device usage', grade:'All', amount:500, unit:'month' },
-  { category:'Tenant Accommodation', desc:'City-based rent assistance cap', grade:'All', amount:8000, unit:'month' },
+  { category:'BYOD Data Allowance – G1/G2', desc:'Monthly mobile data reimbursement for junior field staff using personal device', grade:'G1', amount:300, unit:'month' },
+  { category:'BYOD Data Allowance – G3',    desc:'Monthly mobile data reimbursement for senior executives on field', grade:'G3', amount:500, unit:'month' },
+  { category:'BYOD Data Allowance – G4/G5', desc:'Enhanced data allowance for area & regional managers managing larger territories', grade:'G4', amount:700, unit:'month' },
+  { category:'Mobile Handset Replacement',  desc:'One-time reimbursement for field staff replacing official-use personal device (once in 2 years)', grade:'All', amount:8000, unit:'year' },
+  { category:'Hotspot / Dongle Charges',    desc:'Portable WiFi or dongle charges when working from remote/rural areas with no mobile data', grade:'All', amount:500, unit:'month' },
 ];
 
 function renderByodRules() {
@@ -1799,8 +1897,11 @@ function deleteByodEntry(idx) {
 
 function resetByodRules() {
   byodData = [
-    { category:'BYOD Data Allowance', desc:'Monthly flat rate for personal device usage', grade:'All', amount:500, unit:'month' },
-    { category:'Tenant Accommodation', desc:'City-based rent assistance cap', grade:'All', amount:8000, unit:'month' },
+    { category:'BYOD Data Allowance – G1/G2', desc:'Monthly mobile data reimbursement for junior field staff using personal device', grade:'G1', amount:300, unit:'month' },
+    { category:'BYOD Data Allowance – G3',    desc:'Monthly mobile data reimbursement for senior executives on field', grade:'G3', amount:500, unit:'month' },
+    { category:'BYOD Data Allowance – G4/G5', desc:'Enhanced data allowance for area & regional managers', grade:'G4', amount:700, unit:'month' },
+    { category:'Mobile Handset Replacement',  desc:'One-time reimbursement for field staff replacing personal device (once in 2 years)', grade:'All', amount:8000, unit:'year' },
+    { category:'Hotspot / Dongle Charges',    desc:'Portable WiFi charges in remote/rural areas with no mobile data coverage', grade:'All', amount:500, unit:'month' },
   ];
   renderByodRules();
   Toast.show('BYOD rules reset to defaults.', 'info');
@@ -1810,9 +1911,13 @@ renderByodRules();
 
 // Grade-wise Fuel Charges
 let fuelData = [
-  { gradeRange:'G1-G2', rate2w:90, rate4w:0, limit:2000 },
-  { gradeRange:'G3', rate2w:95, rate4w:100, limit:4000 },
-  { gradeRange:'G4-G5', rate2w:0, rate4w:105, limit:8000 },
+  // rate2w: ₹/litre for 2-wheeler | rate4w: ₹/litre for 4-wheeler | limit: monthly cap ₹
+  { gradeRange:'G1',    rate2w:95,  rate4w:0,   limit:2000 },
+  { gradeRange:'G2',    rate2w:95,  rate4w:0,   limit:2500 },
+  { gradeRange:'G3',    rate2w:100, rate4w:105, limit:4500 },
+  { gradeRange:'G4',    rate2w:0,   rate4w:108, limit:8000 },
+  { gradeRange:'G5',    rate2w:0,   rate4w:110, limit:12000},
+  { gradeRange:'G6',    rate2w:0,   rate4w:112, limit:18000},
 ];
 
 function renderFuelMatrix() {
@@ -1885,9 +1990,12 @@ function deleteFuelRow(idx) {
 
 function resetFuelMatrix() {
   fuelData = [
-    { gradeRange:'G1-G2', rate2w:90, rate4w:0, limit:2000 },
-    { gradeRange:'G3', rate2w:95, rate4w:100, limit:4000 },
-    { gradeRange:'G4-G5', rate2w:0, rate4w:105, limit:8000 },
+    { gradeRange:'G1',  rate2w:95,  rate4w:0,   limit:2000 },
+    { gradeRange:'G2',  rate2w:95,  rate4w:0,   limit:2500 },
+    { gradeRange:'G3',  rate2w:100, rate4w:105, limit:4500 },
+    { gradeRange:'G4',  rate2w:0,   rate4w:108, limit:8000 },
+    { gradeRange:'G5',  rate2w:0,   rate4w:110, limit:12000},
+    { gradeRange:'G6',  rate2w:0,   rate4w:112, limit:18000},
   ];
   renderFuelMatrix();
   Toast.show('Fuel charges reset to defaults.', 'info');
@@ -1898,11 +2006,12 @@ renderFuelMatrix();
 function saveRules() { Toast.show('All rules saved successfully!', 'success'); }
 function resetRates() {
   allowanceData = [
-    { grade:'G1', role:'Junior Exec', da:[200,150,100], ta:[2.5,2.0,1.5], meal:150, halt:500 },
-    { grade:'G2', role:'Executive',   da:[300,220,150], ta:[3.0,2.5,2.0], meal:200, halt:700 },
-    { grade:'G3', role:'Sr Executive',da:[450,350,250], ta:[4.0,3.5,2.5], meal:350, halt:1000 },
-    { grade:'G4', role:'Manager',     da:[700,550,400], ta:[6.0,5.0,4.0], meal:600, halt:1500 },
-    { grade:'G5', role:'Sr Manager',  da:[1000,800,600],ta:[8.0,7.0,6.0], meal:800, halt:2500 },
+    { grade:'G1', role:'Junior Executive', da:[250,180,120],  ta:[3.0,2.5,2.0],  meal:200,  halt:700  },
+    { grade:'G2', role:'Executive',        da:[380,280,190],  ta:[4.0,3.0,2.5],  meal:300,  halt:1000 },
+    { grade:'G3', role:'Senior Executive', da:[550,420,300],  ta:[5.0,4.0,3.5],  meal:450,  halt:1500 },
+    { grade:'G4', role:'Area Manager',     da:[800,620,450],  ta:[7.0,6.0,5.0],  meal:700,  halt:2500 },
+    { grade:'G5', role:'Regional Manager', da:[1200,950,750], ta:[10.0,8.0,7.0], meal:1000, halt:4000 },
+    { grade:'G6', role:'Zonal Head',       da:[1800,1400,1000],ta:[14.0,12.0,10.0],meal:1500,halt:6000},
   ];
   renderAllowanceMatrix();
   Toast.show('DA/TA rates reset to policy defaults.', 'info');

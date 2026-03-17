@@ -61,13 +61,14 @@
   #journey-map { width: 100%; height: 100%; }
   .map-legend {
     position: absolute; bottom: 16px; left: 16px; z-index: 1000;
-    background: rgba(17,24,39,0.92); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 12px 16px;
-    display: flex; flex-direction: column; gap: 8px;
+    background: rgba(10,15,28,0.91); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 14px 18px;
+    display: flex; flex-direction: column; gap: 9px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35); backdrop-filter: blur(6px);
   }
-  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #fff; }
-  .legend-line { width: 24px; height: 3px; border-radius: 2px; }
-  .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .legend-item { display: flex; align-items: center; gap: 10px; font-size: 12px; color: rgba(255,255,255,0.88); }
+  .legend-line { width: 26px; height: 4px; border-radius: 3px; }
+  .legend-dot  { width: 13px; height: 13px; border-radius: 50%; border: 2px solid #fff; flex-shrink: 0; }
   .map-controls {
     position: absolute; top: 16px; right: 16px; z-index: 1000;
     display: flex; flex-direction: column; gap: 8px;
@@ -84,12 +85,14 @@
 
   .detail-panel {
     position: absolute; bottom: 0; left: 0; right: 0;
-    background: var(--card); border-top: 1px solid var(--border);
+    background: var(--card); border-top: 2px solid var(--accent);
     padding: 16px 20px;
     display: none;
+    z-index: 1500;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.45);
   }
   .detail-panel.visible { display: flex; align-items: center; gap: 16px; }
-  .detail-actions { display: flex; gap: 8px; margin-left: auto; }
+  .detail-actions { display: flex; gap: 8px; margin-left: auto; flex-shrink: 0; }
 
   /* Approval counters */
   .approval-stats {
@@ -99,6 +102,83 @@
   .approval-stat { text-align: center; }
   .approval-stat-num { font-size: 18px; font-weight: 700; }
   .approval-stat-lbl { font-size: 10px; color: var(--text-muted); }
+
+  /* Decision states on claim items */
+  .claim-item.decided { opacity: 0.7; }
+  .claim-item.decided-approved { border-left: 3px solid #00d4aa !important; }
+  .claim-item.decided-rejected { border-left: 3px solid #ef4444 !important; }
+  .claim-item.decided-flagged  { border-left: 3px solid #f59e0b !important; }
+  .decision-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 700; padding: 2px 8px;
+    border-radius: 20px; letter-spacing: .3px; margin-top: 2px;
+  }
+  .decision-chip.approved { background: rgba(0,212,170,0.15); color: #00d4aa; }
+  .decision-chip.rejected { background: rgba(239,68,68,0.15);  color: #ef4444; }
+  .decision-chip.flagged  { background: rgba(245,158,11,0.15); color: #f59e0b; }
+
+  /* Remarks modal */
+  .remarks-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.65); z-index: 2000;
+    align-items: center; justify-content: center;
+  }
+  .remarks-overlay.open { display: flex; }
+  .remarks-card {
+    background: var(--sidebar); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px; width: 460px;
+    max-width: 95vw; box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+  }
+  .remarks-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .remarks-title { font-size: 16px; font-weight: 700; }
+  .remarks-context {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px; margin-bottom: 16px;
+    font-size: 12px; color: var(--text-muted); line-height: 1.6;
+  }
+  .remarks-context strong { color: var(--text); }
+  textarea.remarks-input {
+    width: 100%; min-height: 90px; resize: vertical;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-size: 13px; font-family: inherit; padding: 10px 12px;
+    box-sizing: border-box; line-height: 1.5;
+    transition: border-color 0.2s;
+  }
+  textarea.remarks-input:focus { outline: none; border-color: var(--accent); }
+  .remarks-error {
+    display: none; margin-top: 8px; padding: 6px 10px;
+    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 6px; font-size: 12px; color: var(--red);
+  }
+
+  /* ── Teardrop pin hover effect ── */
+  .tp-pin {
+    cursor: pointer;
+    transition: transform 0.18s cubic-bezier(.34,1.56,.64,1), filter 0.18s ease;
+    transform-origin: center bottom;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .tp-pin:hover {
+    transform: scale(1.4) translateY(-5px) !important;
+    filter: drop-shadow(0 8px 18px rgba(0,0,0,0.32));
+  }
+  .tp-pin .pin-circle {
+    border-radius: 50%; border: 3px solid #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; color: #fff; transition: box-shadow 0.18s;
+  }
+  .tp-pin:hover .pin-circle {
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.35), 0 6px 20px rgba(0,0,0,0.3) !important;
+  }
+  .tp-pin .pin-tail {
+    width: 0; height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+  }
 </style>
 </head>
 <body>
@@ -116,6 +196,7 @@
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-label">Approvals</div>
+      <a class="nav-item" href="expenses.html"><span class="nav-icon"><i class="ri-file-list-3-line"></i></span><span>Expense Claims</span></a>
       <a class="nav-item active" href="approval.html"><span class="nav-icon"><i class="ri-map-pin-2-line"></i></span><span>Pinned Journeys</span><span class="nav-dot"></span></a>
       <a class="nav-item" href="analytics.html"><span class="nav-icon"><i class="ri-bar-chart-grouped-line"></i></span><span>Analytics</span></a>
     </div>
@@ -161,20 +242,20 @@
       <div class="approval-sidebar">
         <div class="approval-stats">
           <div class="approval-stat">
-            <div class="approval-stat-num" style="color:var(--text);">7</div>
+            <div class="approval-stat-num" id="stat-total" style="color:var(--text);">7</div>
             <div class="approval-stat-lbl">Total</div>
           </div>
           <div class="approval-stat">
-            <div class="approval-stat-num" style="color:var(--green);">4</div>
-            <div class="approval-stat-lbl">Valid</div>
+            <div class="approval-stat-num" id="stat-approved" style="color:var(--green);">0</div>
+            <div class="approval-stat-lbl">Approved</div>
           </div>
           <div class="approval-stat">
-            <div class="approval-stat-num" style="color:var(--amber);">2</div>
-            <div class="approval-stat-lbl">Flagged</div>
+            <div class="approval-stat-num" id="stat-pending" style="color:var(--amber);">7</div>
+            <div class="approval-stat-lbl">Pending</div>
           </div>
           <div class="approval-stat">
-            <div class="approval-stat-num" style="color:var(--red);">1</div>
-            <div class="approval-stat-lbl">Violation</div>
+            <div class="approval-stat-num" id="stat-rejected" style="color:var(--red);">0</div>
+            <div class="approval-stat-lbl">Rejected</div>
           </div>
         </div>
         <div class="approval-sidebar-header">
@@ -227,11 +308,45 @@
 
         <!-- Detail Panel (slides up on click) -->
         <div class="detail-panel" id="detail-panel">
-          <div id="detail-content" style="flex:1;"></div>
+          <div id="detail-content" style="flex:1;min-width:0;"></div>
           <div class="detail-actions">
-            <button class="btn btn-danger btn-sm" onclick="rejectSelected()"><i class="ri-close-line"></i> Reject</button>
-            <button class="btn btn-ghost btn-sm" onclick="flagSelected()"><i class="ri-flag-line"></i> Flag</button>
+            <button class="btn btn-sm" id="detail-close-btn"
+              style="background:transparent;border:1px solid var(--border);color:var(--text-muted);"
+              onclick="hideDetailPanel()"><i class="ri-close-line"></i></button>
+            <button class="btn btn-danger btn-sm" onclick="rejectSelected()"><i class="ri-close-circle-line"></i> Reject</button>
+            <button class="btn btn-ghost btn-sm" onclick="flagSelected()"><i class="ri-flag-line"></i> Flag &amp; Review</button>
             <button class="btn btn-primary btn-sm" onclick="approveSelected()"><i class="ri-check-line"></i> Approve</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Remarks Modal -->
+      <div class="remarks-overlay" id="remarks-overlay" onclick="if(event.target===this)closeRemarksModal()">
+        <div class="remarks-card">
+          <div class="remarks-header">
+            <div class="remarks-title" id="remarks-title">
+              <i class="ri-close-circle-line" style="color:var(--red);margin-right:8px;"></i>Reject Expense
+            </div>
+            <button class="icon-btn" onclick="closeRemarksModal()"><i class="ri-close-line"></i></button>
+          </div>
+          <div class="remarks-context" id="remarks-context"></div>
+          <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px;">
+            Remarks / Reason <span style="color:var(--red);">*</span>
+          </label>
+          <textarea class="remarks-input" id="remarks-input"
+            placeholder="Enter reason for rejection or additional notes for the employee..."></textarea>
+          <div class="remarks-error" id="remarks-error">
+            <i class="ri-error-warning-line"></i> Remarks are required before submitting this decision.
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+            <button class="btn btn-outline btn-sm" onclick="closeRemarksModal()">
+              <i class="ri-close-line"></i> Cancel
+            </button>
+            <button class="btn btn-sm" id="remarks-confirm-btn"
+              style="background:var(--red);color:#fff;border:none;"
+              onclick="confirmDecisionWithRemarks()">
+              <i class="ri-check-line"></i> Confirm
+            </button>
           </div>
         </div>
       </div>
@@ -247,7 +362,7 @@
 const _portalUser = Auth.requirePortal();
 if (!_portalUser) throw new Error('redirect');
 
-// --- Journey Data (simulated for Mumbai) ---
+// ── Journey Data ──
 const journey = {
   employee: 'Rahul Sharma',
   date: '2026-03-15',
@@ -259,93 +374,141 @@ const journey = {
     [19.1900, 72.9600], [19.2050, 72.9700], [19.2183, 72.9781]
   ],
   activities: [
-    { lat: 19.1300, lng: 72.8850, label: 'Client Visit: Zomato HQ', time: '10:30 AM', color: '#3b82f6' },
-    { lat: 19.1700, lng: 72.9350, label: 'Client Visit: Meesho Office', time: '2:00 PM', color: '#3b82f6' },
-    { lat: 19.2000, lng: 72.9650, label: 'Client Visit: Nykaa, Thane', time: '4:30 PM', color: '#3b82f6' },
+    { lat: 19.1300, lng: 72.8850, label: 'Client Visit: Zomato HQ', time: '10:30 AM' },
+    { lat: 19.1700, lng: 72.9350, label: 'Client Visit: Meesho Office', time: '2:00 PM' },
+    { lat: 19.2000, lng: 72.9650, label: 'Client Visit: Nykaa, Thane', time: '4:30 PM' },
   ],
   expenses: [
-    { id:'EXP-001', lat:19.1310, lng:72.8860, category:'Travel (TA)', amount:420, status:'valid', pin:'valid', time:'12:00 PM', note:'48.2 km × ₹8.7/km. Auto-approved.', invoice:'IMG_20260315_1.jpg' },
-    { id:'EXP-002', lat:19.1290, lng:72.8830, category:'Food/Meals', amount:280, status:'valid', pin:'valid', time:'1:15 PM', note:'Within 500m of activity pin. Bill matches OCR.', invoice:'IMG_20260315_2.jpg' },
-    { id:'EXP-003', lat:19.1800, lng:72.9600, category:'Toll', amount:60, status:'valid', pin:'valid', time:'3:20 PM', note:'Verified toll booth location.', invoice:'IMG_20260315_3.jpg' },
-    { id:'EXP-004', lat:19.2100, lng:72.9720, category:'Food/Meals', amount:350, status:'valid', pin:'valid', time:'5:00 PM', note:'Within 500m of Nykaa client visit.', invoice:'IMG_20260315_4.jpg' },
-    { id:'EXP-005', lat:19.2450, lng:73.0100, category:'Food/Meals', amount:950, status:'flagged', pin:'amber', time:'7:30 PM', note:'⚠️ Bill location 5.2km from nearest activity. Requires justification.', invoice:'IMG_20260315_5.jpg' },
-    { id:'EXP-006', lat:19.1050, lng:72.8550, category:'Misc/Others', amount:200, status:'flagged', pin:'amber', time:'8:00 AM', note:'⚠️ No recorded activity at this location.', invoice:'IMG_20260315_6.jpg' },
-    { id:'EXP-007', lat:19.3200, lng:73.0500, category:'Food/Meals', amount:1800, status:'violation', pin:'red', time:'9:00 PM', note:'🚫 Policy violation: ₹1800 exceeds ₹500 daily meal limit for Grade G3.', invoice:'IMG_20260315_7.jpg' },
+    { id:'EXP-001', lat:19.1310, lng:72.8860, category:'Travel (TA)',  amount:420,  pin:'valid', time:'12:00 PM', note:'48.2 km × ₹8.7/km. Auto-approved.',                                    invoice:'IMG_20260315_1.jpg', decision:'pending', remarks:'' },
+    { id:'EXP-002', lat:19.1290, lng:72.8830, category:'Food/Meals',   amount:280,  pin:'valid', time:'1:15 PM',  note:'Within 500m of activity pin. Bill matches OCR.',                      invoice:'IMG_20260315_2.jpg', decision:'pending', remarks:'' },
+    { id:'EXP-003', lat:19.1800, lng:72.9600, category:'Toll',         amount:60,   pin:'valid', time:'3:20 PM',  note:'Verified toll booth location.',                                       invoice:'IMG_20260315_3.jpg', decision:'pending', remarks:'' },
+    { id:'EXP-004', lat:19.2100, lng:72.9720, category:'Food/Meals',   amount:350,  pin:'valid', time:'5:00 PM',  note:'Within 500m of Nykaa client visit.',                                  invoice:'IMG_20260315_4.jpg', decision:'pending', remarks:'' },
+    { id:'EXP-005', lat:19.2450, lng:73.0100, category:'Food/Meals',   amount:950,  pin:'amber', time:'7:30 PM',  note:'⚠️ Bill location 5.2km from nearest activity. Requires justification.',invoice:'IMG_20260315_5.jpg', decision:'pending', remarks:'' },
+    { id:'EXP-006', lat:19.1050, lng:72.8550, category:'Misc/Others',  amount:200,  pin:'amber', time:'8:00 AM',  note:'⚠️ No recorded activity at this location.',                            invoice:'IMG_20260315_6.jpg', decision:'pending', remarks:'' },
+    { id:'EXP-007', lat:19.3200, lng:73.0500, category:'Food/Meals',   amount:1800, pin:'red',   time:'9:00 PM',  note:'🚫 Policy violation: ₹1800 exceeds ₹500 daily meal limit for Grade G3.',invoice:'IMG_20260315_7.jpg', decision:'pending', remarks:'' },
   ]
 };
 
 let selectedExpense = null;
-let map, markers = [], pathLayer;
+let map, markers = [], pathLayerGlow = null, pathLayerMain = null, pathLayerShadow = null;
+let _pendingAction = null; // 'reject' | 'flag'
 
+// ── Map Init ──
 function initMap() {
   map = L.map('journey-map', { zoomControl: false }).setView([19.165, 72.935], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors', maxZoom: 19
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors, © CARTO', maxZoom: 19
   }).addTo(map);
   L.control.zoom({ position: 'bottomright' }).addTo(map);
-  loadJourney();
+  drawJourney();
 }
 
-function loadJourney() {
-  // Clear existing
+// ── Draw full journey ──
+function drawJourney() {
   markers.forEach(m => map.removeLayer(m));
   markers = [];
-  if (pathLayer) map.removeLayer(pathLayer);
+  if (pathLayerShadow) { map.removeLayer(pathLayerShadow); pathLayerShadow = null; }
+  if (pathLayerGlow)   { map.removeLayer(pathLayerGlow);   pathLayerGlow   = null; }
+  if (pathLayerMain)   { map.removeLayer(pathLayerMain);   pathLayerMain   = null; }
 
-  // Draw breadcrumb path
-  pathLayer = L.polyline(journey.path, {
-    color: '#00d4aa', weight: 4, opacity: 0.8, dashArray: null,
-    className: 'breadcrumb-path'
+  // ── Triple-layer path: dark outline → white halo → teal (crisp on light tiles) ──
+  pathLayerShadow = L.polyline(journey.path, {
+    color: '#0f172a', weight: 20, opacity: 0.18, lineJoin:'round', lineCap:'round'
+  }).addTo(map);
+  pathLayerGlow = L.polyline(journey.path, {
+    color: '#ffffff', weight: 14, opacity: 0.85, lineJoin:'round', lineCap:'round'
+  }).addTo(map);
+  pathLayerMain = L.polyline(journey.path, {
+    color: '#00d4aa', weight: 9, opacity: 1.0, lineJoin:'round', lineCap:'round'
   }).addTo(map);
 
-  // Attendance Start Pin (purple)
-  const startIcon = L.divIcon({ className:'', html:`
-    <div style="background:#8b5cf6;border:3px solid #fff;width:20px;height:20px;border-radius:50%;
-    box-shadow:0 0 12px rgba(139,92,246,0.6);display:flex;align-items:center;justify-content:center;">
-      <span style="color:#fff;font-size:9px;font-weight:700;">S</span></div>`, iconSize:[20,20], iconAnchor:[10,10] });
-  const sm = L.marker([journey.attendanceStart.lat, journey.attendanceStart.lng], {icon:startIcon})
-    .bindPopup(`<b>${journey.attendanceStart.label}</b><br>${journey.attendanceStart.time}`).addTo(map);
-  markers.push(sm);
+  // ── Attendance Start Pin — large teardrop with S ──
+  const _attPin = (label, letter) => L.divIcon({ className:'', html:`
+    <div class="tp-pin" style="width:40px;height:52px;">
+      <div class="pin-circle" style="width:40px;height:40px;background:#8b5cf6;
+        box-shadow:0 6px 18px rgba(139,92,246,0.55);font-size:16px;">
+        ${letter}
+      </div>
+      <div class="pin-tail" style="border-top:12px solid #8b5cf6;"></div>
+    </div>`, iconSize:[40,52], iconAnchor:[20,52] });
 
-  // Attendance End Pin
-  const endIcon = L.divIcon({ className:'', html:`
-    <div style="background:#8b5cf6;border:3px solid #fff;width:20px;height:20px;border-radius:50%;
-    box-shadow:0 0 12px rgba(139,92,246,0.6);display:flex;align-items:center;justify-content:center;">
-      <span style="color:#fff;font-size:9px;font-weight:700;">E</span></div>`, iconSize:[20,20], iconAnchor:[10,10] });
-  const em = L.marker([journey.attendanceEnd.lat, journey.attendanceEnd.lng], {icon:endIcon})
-    .bindPopup(`<b>${journey.attendanceEnd.label}</b><br>${journey.attendanceEnd.time}`).addTo(map);
-  markers.push(em);
+  markers.push(L.marker([journey.attendanceStart.lat, journey.attendanceStart.lng], {icon:_attPin('Start','S')})
+    .bindPopup(`<b>${journey.attendanceStart.label}</b><br>${journey.attendanceStart.time}`).addTo(map));
+  markers.push(L.marker([journey.attendanceEnd.lat, journey.attendanceEnd.lng], {icon:_attPin('End','E')})
+    .bindPopup(`<b>${journey.attendanceEnd.label}</b><br>${journey.attendanceEnd.time}`).addTo(map));
 
-  // Activity pins (blue)
+  // ── Activity pins — medium teardrop (blue briefcase) ──
   journey.activities.forEach(a => {
     const icon = L.divIcon({ className:'', html:`
-      <div style="background:#3b82f6;border:3px solid #fff;width:16px;height:16px;border-radius:50%;
-      box-shadow:0 0 8px rgba(59,130,246,0.5);"></div>`, iconSize:[16,16], iconAnchor:[8,8] });
-    const m = L.marker([a.lat, a.lng], {icon}).bindPopup(`<b>${a.label}</b><br>${a.time}`).addTo(map);
-    markers.push(m);
+      <div class="tp-pin" style="width:30px;height:40px;">
+        <div class="pin-circle" style="width:30px;height:30px;background:#3b82f6;
+          box-shadow:0 4px 12px rgba(59,130,246,0.5);font-size:13px;">
+          <i class="ri-briefcase-4-line"></i>
+        </div>
+        <div class="pin-tail" style="border-top:10px solid #3b82f6;border-left:6px solid transparent;border-right:6px solid transparent;"></div>
+      </div>`, iconSize:[30,40], iconAnchor:[15,40] });
+    markers.push(L.marker([a.lat, a.lng], {icon}).bindPopup(`<b>${a.label}</b><br>${a.time}`).addTo(map));
   });
 
-  // Expense pins
-  const colorMap = { valid:'#00d4aa', amber:'#f59e0b', red:'#ef4444' };
-  journey.expenses.forEach((exp, i) => {
-    const c = colorMap[exp.pin];
-    const icon = L.divIcon({ className:'', html:`
-      <div style="background:${c};border:3px solid #fff;width:18px;height:18px;border-radius:50%;
-      box-shadow:0 0 10px ${c}88;cursor:pointer;display:flex;align-items:center;justify-content:center;">
-        <span style="color:#fff;font-size:8px;font-weight:700;">${i+1}</span></div>`, iconSize:[18,18], iconAnchor:[9,9] });
-    const m = L.marker([exp.lat, exp.lng], {icon})
-      .bindPopup(`<b>${exp.category}</b><br>₹${exp.amount}<br>${exp.time}<br><span style="color:${c}">${exp.pin==='valid'?'✓ Valid':exp.pin==='amber'?'⚠ Flagged':'🚫 Violation'}</span>`)
-      .addTo(map)
-      .on('click', () => selectExpense(exp));
-    markers.push(m);
-  });
-
-  map.fitBounds(pathLayer.getBounds(), {padding:[40,40]});
+  refreshMapPins();
+  map.fitBounds(pathLayerMain.getBounds(), { padding:[40,40] });
+  populateClaimList();
+  updateStats();
 }
 
-// Populate claim list
+// ── Refresh expense pins with decision-aware styling ──
+function refreshMapPins() {
+  // Remove only expense pins (flagged with _isExpensePin)
+  markers = markers.filter(m => {
+    if (m._isExpensePin) { map.removeLayer(m); return false; }
+    return true;
+  });
+
+  const colorMap    = { valid:'#00d4aa', amber:'#f59e0b', red:'#ef4444' };
+  const decisionColor = { approved:'#00d4aa', rejected:'#ef4444', flagged:'#f59e0b' };
+
+  journey.expenses.forEach((exp, i) => {
+    const baseColor = colorMap[exp.pin];
+    const isDone    = exp.decision !== 'pending';
+    const alphaVal  = isDone ? '0.45' : '1';
+
+    // Number label (pending) or decision symbol (decided)
+    let innerLabel;
+    if (!isDone) {
+      innerLabel = `<span style="font-size:13px;font-weight:800;color:#fff;">${i + 1}</span>`;
+    } else {
+      const sym = exp.decision === 'approved' ? '✓' : exp.decision === 'rejected' ? '✕' : '⚑';
+      innerLabel = `<span style="font-size:14px;font-weight:900;color:#fff;">${sym}</span>`;
+    }
+
+    // Teardrop pin: circle + triangle tail, with hover via .tp-pin class
+    const icon = L.divIcon({ className:'', html:`
+      <div class="tp-pin" style="width:36px;height:48px;opacity:${alphaVal};">
+        <div class="pin-circle" style="width:36px;height:36px;background:${baseColor};
+          box-shadow:0 5px 16px ${baseColor}88;">
+          ${innerLabel}
+        </div>
+        <div class="pin-tail" style="border-top:12px solid ${baseColor};"></div>
+      </div>`, iconSize:[36,48], iconAnchor:[18,48] });
+
+    const dc = isDone ? decisionColor[exp.decision] : baseColor;
+    const decLabel = isDone
+      ? `<b style="color:${dc};">${exp.decision.toUpperCase()}</b>${exp.remarks ? ' — ' + exp.remarks : ''}`
+      : `<span style="color:${baseColor}">${exp.pin==='valid'?'✓ Valid':exp.pin==='amber'?'⚠ Flagged':'🚫 Violation'}</span>`;
+
+    const m = L.marker([exp.lat, exp.lng], {icon})
+      .bindPopup(`<b>${exp.category}</b><br>₹${exp.amount}<br>${exp.time}<br>${decLabel}`)
+      .addTo(map)
+      .on('click', () => selectExpense(exp));
+    m._isExpensePin = true;
+    markers.push(m);
+  });
+}
+
+// ── Claim list ──
 function populateClaimList() {
   const list = document.getElementById('claim-list');
+  if (!list) return;
   list.innerHTML = '';
   const pinColors = { valid:'#00d4aa', amber:'#f59e0b', red:'#ef4444' };
   const statusLabels = {
@@ -353,10 +516,21 @@ function populateClaimList() {
     amber: '<span class="badge badge-amber"><i class="ri-alert-line"></i> Flagged</span>',
     red:   '<span class="badge badge-red"><i class="ri-close-circle-line"></i> Violation</span>',
   };
-  journey.expenses.forEach((exp, i) => {
+
+  journey.expenses.forEach((exp) => {
     const item = document.createElement('div');
-    item.className = 'claim-item';
+    item.className = 'claim-item' + (exp.decision !== 'pending' ? ` decided decided-${exp.decision}` : '');
     item.id = `claim-${exp.id}`;
+
+    let chipHtml = '';
+    if (exp.decision === 'approved') chipHtml = '<span class="decision-chip approved"><i class="ri-check-line"></i> Approved</span>';
+    else if (exp.decision === 'rejected') chipHtml = '<span class="decision-chip rejected"><i class="ri-close-line"></i> Rejected</span>';
+    else if (exp.decision === 'flagged')  chipHtml = '<span class="decision-chip flagged"><i class="ri-flag-line"></i> Flagged for Review</span>';
+
+    const remarksSnippet = exp.remarks
+      ? `<span style="font-size:10px;color:var(--text-muted);margin-left:6px;">${exp.remarks.slice(0,40)}${exp.remarks.length>40?'…':''}</span>`
+      : '';
+
     item.innerHTML = `
       <div class="claim-item-header">
         <div class="claim-type"><i class="ri-receipt-line" style="margin-right:4px;color:var(--accent);"></i>${exp.category}</div>
@@ -368,94 +542,207 @@ function populateClaimList() {
       </div>
       <div class="pin-indicator" style="color:${pinColors[exp.pin]};font-size:11px;">
         <div class="pin-dot ${exp.pin}"></div> ${exp.note.slice(0,60)}${exp.note.length>60?'…':''}
-      </div>`;
+      </div>
+      ${chipHtml ? `<div style="margin-top:2px;">${chipHtml}${remarksSnippet}</div>` : ''}`;
+
     item.addEventListener('click', () => selectExpense(exp));
     list.appendChild(item);
   });
 }
 
+// ── Stats ──
+function updateStats() {
+  const total    = journey.expenses.length;
+  const approved = journey.expenses.filter(e => e.decision === 'approved').length;
+  const rejected = journey.expenses.filter(e => e.decision === 'rejected').length;
+  const pending  = journey.expenses.filter(e => e.decision === 'pending').length;
+  const elT = document.getElementById('stat-total');
+  const elA = document.getElementById('stat-approved');
+  const elP = document.getElementById('stat-pending');
+  const elR = document.getElementById('stat-rejected');
+  if (elT) elT.textContent = total;
+  if (elA) elA.textContent = approved;
+  if (elP) elP.textContent = pending;
+  if (elR) elR.textContent = rejected;
+}
+
+// ── Select expense ──
 function selectExpense(exp) {
   selectedExpense = exp;
-  // Highlight in list
   document.querySelectorAll('.claim-item').forEach(el => el.classList.remove('selected'));
   const el = document.getElementById(`claim-${exp.id}`);
-  if (el) { el.classList.add('selected'); el.scrollIntoView({behavior:'smooth',block:'nearest'}); }
-  // Pan map
+  if (el) { el.classList.add('selected'); el.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
   map.panTo([exp.lat, exp.lng]);
-  // Show detail panel
+
   const panel = document.getElementById('detail-panel');
   panel.classList.add('visible');
   const pinBadge = { valid:'badge-green', amber:'badge-amber', red:'badge-red' }[exp.pin];
+
+  // Decision banner if already decided
+  let decisionNote = '';
+  if (exp.decision !== 'pending') {
+    const dc = exp.decision === 'approved' ? '#00d4aa' : exp.decision === 'rejected' ? '#ef4444' : '#f59e0b';
+    decisionNote = `<div style="margin-top:8px;padding:6px 12px;border-radius:8px;background:${dc}22;
+      border:1px solid ${dc}55;font-size:12px;color:${dc};font-weight:600;">
+      Decision: ${exp.decision.toUpperCase()}${exp.remarks
+        ? ` — <span style="color:var(--text-muted);font-weight:400;">${exp.remarks}</span>` : ''}
+    </div>`;
+  }
+
   document.getElementById('detail-content').innerHTML = `
     <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-      <div>
-        <div style="font-size:11px;color:var(--text-muted);">Category</div>
-        <div style="font-size:14px;font-weight:700;">${exp.category}</div>
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--text-muted);">Amount</div>
-        <div style="font-size:14px;font-weight:700;color:var(--accent);">${Fmt.currency(exp.amount)}</div>
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--text-muted);">Time</div>
-        <div style="font-size:13px;font-weight:600;">${exp.time}</div>
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--text-muted);">Invoice</div>
-        <div style="font-size:12px;color:var(--blue);">${exp.invoice}</div>
-      </div>
-      <div style="flex:1;">
-        <span class="badge ${pinBadge}" style="font-size:12px;">${exp.note}</span>
-      </div>
-    </div>`;
+      <div><div style="font-size:11px;color:var(--text-muted);">Category</div>
+           <div style="font-size:14px;font-weight:700;">${exp.category}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted);">Amount</div>
+           <div style="font-size:14px;font-weight:700;color:var(--accent);">${Fmt.currency(exp.amount)}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted);">Time</div>
+           <div style="font-size:13px;font-weight:600;">${exp.time}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted);">Invoice</div>
+           <div style="font-size:12px;color:var(--blue);">${exp.invoice}</div></div>
+      <div style="flex:1;"><span class="badge ${pinBadge}" style="font-size:12px;">${exp.note}</span></div>
+    </div>${decisionNote}`;
+
+  // Hide action buttons if already decided
+  const actBtns = document.querySelectorAll('#detail-panel .detail-actions .btn');
+  actBtns.forEach(b => {
+    if (b.id === 'detail-close-btn') return; // always show close
+    b.style.display = exp.decision === 'pending' ? '' : 'none';
+  });
 }
 
+function hideDetailPanel() {
+  document.getElementById('detail-panel').classList.remove('visible');
+  document.querySelectorAll('.claim-item').forEach(el => el.classList.remove('selected'));
+  selectedExpense = null;
+}
+
+// ── Decision actions ──
 function approveSelected() {
-  if (!selectedExpense) return;
-  Toast.show(`✓ ${selectedExpense.category} ${Fmt.currency(selectedExpense.amount)} approved!`, 'success');
-  document.getElementById('detail-panel').classList.remove('visible');
-}
-function rejectSelected() {
-  if (!selectedExpense) return;
-  Toast.show(`${selectedExpense.category} rejected.`, 'error');
-  document.getElementById('detail-panel').classList.remove('visible');
-}
-function flagSelected() {
-  if (!selectedExpense) return;
-  Toast.show(`${selectedExpense.category} sent for manual review.`, 'warning');
-  document.getElementById('detail-panel').classList.remove('visible');
-}
-function approveAll() {
-  Toast.show('All valid claims (4) approved successfully!', 'success');
+  if (!selectedExpense || selectedExpense.decision !== 'pending') return;
+  selectedExpense.decision = 'approved';
+  selectedExpense.remarks  = '';
+  const exp = selectedExpense;
+  _afterDecision();
+  Toast.show(`✓ ${exp.category} ${Fmt.currency(exp.amount)} approved!`, 'success');
 }
 
+function rejectSelected() {
+  if (!selectedExpense || selectedExpense.decision !== 'pending') return;
+  _pendingAction = 'reject';
+  openRemarksModal();
+}
+
+function flagSelected() {
+  if (!selectedExpense || selectedExpense.decision !== 'pending') return;
+  _pendingAction = 'flag';
+  openRemarksModal();
+}
+
+function _afterDecision() {
+  populateClaimList();
+  refreshMapPins();
+  updateStats();
+  hideDetailPanel();
+}
+
+// ── Approve All Valid ──
+function approveAll() {
+  const validPending = journey.expenses.filter(e => e.pin === 'valid' && e.decision === 'pending');
+  if (!validPending.length) {
+    Toast.show('No pending valid expenses to approve.', 'warning');
+    return;
+  }
+  validPending.forEach(e => { e.decision = 'approved'; e.remarks = ''; });
+  populateClaimList();
+  refreshMapPins();
+  updateStats();
+  hideDetailPanel();
+  Toast.show(`✓ ${validPending.length} valid expense(s) approved!`, 'success');
+}
+
+// ── Remarks modal ──
+function openRemarksModal() {
+  const isReject   = _pendingAction === 'reject';
+  const overlay    = document.getElementById('remarks-overlay');
+  const titleEl    = document.getElementById('remarks-title');
+  const ctxEl      = document.getElementById('remarks-context');
+  const inputEl    = document.getElementById('remarks-input');
+  const errEl      = document.getElementById('remarks-error');
+  const confirmBtn = document.getElementById('remarks-confirm-btn');
+
+  titleEl.innerHTML = isReject
+    ? '<i class="ri-close-circle-line" style="color:var(--red);margin-right:8px;"></i>Reject Expense'
+    : '<i class="ri-flag-line" style="color:#d97706;margin-right:8px;"></i>Flag &amp; Review';
+
+  ctxEl.innerHTML = selectedExpense
+    ? `<strong>${selectedExpense.category}</strong> &nbsp;·&nbsp; ${Fmt.currency(selectedExpense.amount)} &nbsp;·&nbsp; ${selectedExpense.time}<br>
+       <span>${selectedExpense.note}</span>`
+    : '';
+
+  confirmBtn.style.background = isReject ? 'var(--red)' : '#d97706';
+  inputEl.value = '';
+  errEl.style.display = 'none';
+  overlay.classList.add('open');
+  setTimeout(() => inputEl.focus(), 50);
+}
+
+function closeRemarksModal() {
+  document.getElementById('remarks-overlay').classList.remove('open');
+  _pendingAction = null;
+}
+
+function confirmDecisionWithRemarks() {
+  const inputEl = document.getElementById('remarks-input');
+  const errEl   = document.getElementById('remarks-error');
+  const remarks = inputEl.value.trim();
+  if (!remarks) { errEl.style.display = 'block'; inputEl.focus(); return; }
+  errEl.style.display = 'none';
+  selectedExpense.decision = _pendingAction === 'reject' ? 'rejected' : 'flagged';
+  selectedExpense.remarks  = remarks;
+  closeRemarksModal();
+  const exp = selectedExpense;
+  _afterDecision();
+  const label = exp.decision === 'rejected' ? 'Rejected' : 'Flagged for review';
+  Toast.show(`${label}: ${exp.category}`, exp.decision === 'rejected' ? 'error' : 'warning');
+}
+
+// ── Filter map ──
 function filterMap(type, btn) {
   document.querySelectorAll('.map-ctrl-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  const expMarkers = markers.filter(m => m._isExpensePin);
+  expMarkers.forEach((m, idx) => {
+    const exp = journey.expenses[idx];
+    if (!exp) return;
+    if (type === 'all') {
+      map.addLayer(m);
+    } else if (type === 'flagged') {
+      if (exp.pin !== 'valid') map.addLayer(m); else map.removeLayer(m);
+    } else if (type === 'path') {
+      map.removeLayer(m);
+    }
+  });
 }
 
-function loadJourney() { initMapIfNeeded(); populateClaimList(); }
-let mapInited = false;
-function initMapIfNeeded() {
-  if (!mapInited) { mapInited = true; initMap(); }
-  else {
-    markers.forEach(m => map.removeLayer(m));
-    markers = [];
-    if (pathLayer) map.removeLayer(pathLayer);
-    // reload
-    const colorMap = { valid:'#00d4aa', amber:'#f59e0b', red:'#ef4444' };
-    pathLayer = L.polyline(journey.path, {color:'#00d4aa',weight:4,opacity:0.8}).addTo(map);
-    journey.expenses.forEach((exp,i) => {
-      const c = colorMap[exp.pin];
-      const icon = L.divIcon({className:'',html:`<div style="background:${c};border:3px solid #fff;width:18px;height:18px;border-radius:50%;box-shadow:0 0 10px ${c}88;cursor:pointer;display:flex;align-items:center;justify-content:center;"><span style="color:#fff;font-size:8px;font-weight:700;">${i+1}</span></div>`,iconSize:[18,18],iconAnchor:[9,9]});
-      const m = L.marker([exp.lat,exp.lng],{icon}).addTo(map).on('click',()=>selectExpense(exp));
-      markers.push(m);
-    });
-    populateClaimList();
+// ── Re-load journey on header button ──
+function loadJourney() {
+  if (!map) return;
+  drawJourney();
+}
+
+// ── Keyboard shortcuts ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('remarks-overlay').classList.contains('open')) {
+      closeRemarksModal();
+    } else {
+      hideDetailPanel();
+    }
   }
-}
+});
 
-document.addEventListener('DOMContentLoaded', () => { initMap(); populateClaimList(); });
+// ── Boot ──
+document.addEventListener('DOMContentLoaded', () => { initMap(); });
 </script>
 </body>
 </html>
