@@ -1,4 +1,6 @@
 import React, { useEffect, useRef } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import MobileShell from '../../components/layout/MobileShell.jsx';
 
 const PATH = [
@@ -19,8 +21,6 @@ export default function TripPage() {
 
   useEffect(() => {
     if (mapInst.current || !mapRef.current) return;
-    const L = window.L;
-    if (!L) return;
 
     const map = L.map(mapRef.current, { zoomControl: false });
     mapInst.current = map;

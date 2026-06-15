@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import AppShell from '../../components/layout/AppShell.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
 import { journey, CAT_META } from '../../utils/sampleData.js';
@@ -34,8 +36,6 @@ export default function ApprovalPage() {
   /* ── Map initialisation (runs once) ─────────────────────────── */
   useEffect(() => {
     if (mapInstance.current || !mapRef.current) return;
-    const L = window.L;
-    if (!L) { console.error('Leaflet not loaded'); return; }
 
     const map = L.map(mapRef.current, { zoomControl: true, attributionControl: true });
     mapInstance.current = map;
@@ -76,7 +76,6 @@ export default function ApprovalPage() {
 
   /* ── Refresh expense pins ────────────────────────────────────── */
   const refreshPins = useCallback((expenses) => {
-    const L = window.L;
     const map = mapInstance.current;
     if (!L || !map) return;
 

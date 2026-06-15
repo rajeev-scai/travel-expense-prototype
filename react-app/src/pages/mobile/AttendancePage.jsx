@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import MobileShell from '../../components/layout/MobileShell.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
 
@@ -16,8 +18,7 @@ export default function AttendancePage() {
 
   useEffect(() => {
     if (mapInst.current || !mapRef.current) return;
-    const L = window.L;
-    if (!L) return;
+
 
     const map = L.map(mapRef.current, { zoomControl: false });
     mapInst.current = map;
