@@ -9,7 +9,7 @@ const CAT_ICONS = { 'Travel (TA)': 'ri-car-line', 'Food/Meals': 'ri-restaurant-l
 export default function MobileExpensePage() {
   const { show } = useToast();
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({ category: '', amount: '', note: '', date: new Date().toISOString().slice(0, 10), hasReceipt: false });
+  const [form, setForm] = useState({ category: '', amount: '', note: '', date: new Date().toISOString().slice(0, 10), receiptFile: null });
   const [submitted, setSubmitted] = useState(false);
 
   const setField = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
@@ -20,7 +20,7 @@ export default function MobileExpensePage() {
     show(`✓ ${form.category} expense ₹${form.amount} submitted!`, 'success');
   };
 
-  const reset = () => { setForm({ category: '', amount: '', note: '', date: new Date().toISOString().slice(0, 10), hasReceipt: false }); setStep(1); setSubmitted(false); };
+  const reset = () => { setForm({ category: '', amount: '', note: '', date: new Date().toISOString().slice(0, 10), receiptFile: null }); setStep(1); setSubmitted(false); };
 
   return (
     <MobileShell>
@@ -92,13 +92,14 @@ export default function MobileExpensePage() {
                 <textarea className="form-control" rows={2} placeholder="Brief description…" value={form.note} onChange={e => setField('note', e.target.value)} />
               </div>
 
-              <div style={{ background: 'var(--card)', border: `2px dashed ${form.hasReceipt ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 12, padding: 20, textAlign: 'center', cursor: 'pointer', marginBottom: 20 }} onClick={() => setField('hasReceipt', true)}>
-                {form.hasReceipt ? (
-                  <><i className="ri-check-line" style={{ fontSize: 28, color: 'var(--accent)' }}></i><div style={{ fontSize: 12, color: 'var(--accent)', marginTop: 4, fontWeight: 600 }}>Receipt attached ✓</div></>
+              <label style={{ display: 'block', background: 'var(--card)', border: `2px dashed ${form.receiptFile ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 12, padding: 20, textAlign: 'center', cursor: 'pointer', marginBottom: 20 }}>
+                <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => setField('receiptFile', e.target.files[0] || null)} />
+                {form.receiptFile ? (
+                  <><i className="ri-check-line" style={{ fontSize: 28, color: 'var(--accent)' }}></i><div style={{ fontSize: 12, color: 'var(--accent)', marginTop: 4, fontWeight: 600 }}>Receipt attached ✓</div><div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{form.receiptFile.name}</div></>
                 ) : (
-                  <><i className="ri-camera-line" style={{ fontSize: 28, color: 'var(--text-muted)' }}></i><div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Tap to capture receipt (OCR auto-fill)</div></>
+                  <><i className="ri-camera-line" style={{ fontSize: 28, color: 'var(--text-muted)' }}></i><div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Tap to attach receipt (optional)</div></>
                 )}
-              </div>
+              </label>
 
               <div style={{ display: 'flex', gap: 10 }}>
                 <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setStep(1)}>Back</button>
@@ -116,7 +117,7 @@ export default function MobileExpensePage() {
                   ['Category', form.category],
                   ['Amount', Fmt.currency(Number(form.amount))],
                   ['Date', form.date],
-                  ['Receipt', form.hasReceipt ? '✓ Attached' : '✕ Not attached'],
+                  ['Receipt', form.receiptFile ? `✓ ${form.receiptFile.name}` : '✕ Not attached'],
                   ['Note', form.note || '—'],
                 ].map(([label, value], i) => (
                   <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px', borderBottom: i < 4 ? '1px solid var(--border)' : 'none' }}>
