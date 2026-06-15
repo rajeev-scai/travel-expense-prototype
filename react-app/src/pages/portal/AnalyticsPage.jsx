@@ -76,7 +76,7 @@ export default function AnalyticsPage() {
             {opts.map(o => <option key={o}>{o}</option>)}
           </select>
         ))}
-        <button className="btn btn-primary btn-sm"><i className="ri-filter-line"></i> Apply Filters</button>
+        <button className="btn btn-primary btn-sm" onClick={() => show('Filters applied', 'success')}><i className="ri-filter-line"></i> Apply Filters</button>
         <button className="btn btn-outline btn-sm" style={{ marginLeft: 'auto' }} onClick={() => show('Report exported!', 'success')}><i className="ri-download-2-line"></i> Export CSV</button>
       </div>
 

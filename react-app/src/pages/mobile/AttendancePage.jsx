@@ -4,113 +4,169 @@ import 'leaflet/dist/leaflet.css';
 import MobileShell from '../../components/layout/MobileShell.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
 
-const PATH = [
-  [19.076, 72.8777], [19.082, 72.880], [19.090, 72.885],
-  [19.098, 72.890], [19.107, 72.895], [19.115, 72.898],
-];
+const HOME = [19.1136, 72.8697];
 
 export default function AttendancePage() {
-  const mapRef = useRef(null);
+  const mapRef  = useRef(null);
   const mapInst = useRef(null);
   const { show } = useToast();
-  const [checkedIn, setCheckedIn] = useState(true);
-  const [checkInTime] = useState('9:02 AM');
+
+  const [checkedIn, setCheckedIn]     = useState(false);
+  const [checkInTime]                 = useState('9:02 AM');
+  const [vehicle, setVehicle]         = useState('2w');
+  const [odoCaptured, setOdoCaptured] = useState(false);
+  const [purpose, setPurpose]         = useState('');
 
   useEffect(() => {
     if (mapInst.current || !mapRef.current) return;
-
-
-    const map = L.map(mapRef.current, { zoomControl: false });
+    const map = L.map(mapRef.current, { zoomControl: false, dragging: false, scrollWheelZoom: false });
     mapInst.current = map;
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '© CARTO', maxZoom: 19,
-    }).addTo(map);
-
-    L.polyline(PATH, { color: '#0f172a', weight: 14, opacity: 0.15 }).addTo(map);
-    L.polyline(PATH, { color: '#ffffff',  weight: 9,  opacity: 0.8 }).addTo(map);
-    L.polyline(PATH, { color: '#00d4aa',  weight: 5,  opacity: 1.0 }).addTo(map);
-
-    const homeIcon = L.divIcon({ className: '', iconSize: [32, 42], iconAnchor: [16, 42], html: `<div style="display:flex;flex-direction:column;align-items:center;"><div style="width:32px;height:32px;border-radius:50%;background:#8b5cf6;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:800;">H</div><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:10px solid #8b5cf6;"></div></div>` });
-    const curIcon  = L.divIcon({ className: '', iconSize: [32, 42], iconAnchor: [16, 42], html: `<div style="display:flex;flex-direction:column;align-items:center;"><div style="width:32px;height:32px;border-radius:50%;background:#00d4aa;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;color:#0a1628;font-weight:800;">●</div><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:10px solid #00d4aa;"></div></div>` });
-
-    L.marker(PATH[0], { icon: homeIcon }).addTo(map);
-    L.marker(PATH[PATH.length - 1], { icon: curIcon }).addTo(map);
-
-    map.fitBounds(L.latLngBounds(PATH), { padding: [30, 30] });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map);
+    map.setView(HOME, 15);
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="position:relative;">
+        <div style="width:60px;height:60px;background:rgba(0,212,170,0.15);border:2px solid rgba(0,212,170,0.4);position:absolute;top:-30px;left:-30px;border-radius:50%;"></div>
+        <div style="width:18px;height:18px;background:#00d4aa;border:3px solid #fff;border-radius:50%;box-shadow:0 0 12px rgba(0,212,170,0.8);position:absolute;top:-9px;left:-9px;"></div>
+      </div>`,
+      iconSize: [0, 0],
+    });
+    L.marker(HOME, { icon }).addTo(map);
     return () => { map.remove(); mapInst.current = null; };
   }, []);
 
-  const handleCheckOut = () => {
+  const handleClockIn = () => {
+    setCheckedIn(true);
+    show('✓ Clocked in! GPS journey started.', 'success');
+  };
+
+  const handleClockOut = () => {
     setCheckedIn(false);
-    show('Checked out at 6:38 PM. Great work today!', 'success');
+    show('Journey ended. 48.2 km tracked. TA auto-calculated.', 'success');
   };
 
   return (
     <MobileShell>
-      {/* Header */}
-      <div style={{ padding: '60px 16px 12px', background: 'linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%)' }}>
-        <div style={{ fontSize: 18, fontWeight: 800 }}><i className="ri-map-pin-2-fill" style={{ color: 'var(--accent)', marginRight: 8 }}></i>Attendance</div>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Monday, 16 March 2026</div>
-      </div>
-
-      {/* Status card */}
-      <div style={{ margin: '0 16px 16px', background: 'linear-gradient(135deg, #0f3460, #16213e)', border: '1px solid rgba(0,212,170,0.3)', borderRadius: 16, padding: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <div style={{ width: 10, height: 10, borderRadius: '50%', background: checkedIn ? 'var(--accent)' : '#ef4444', boxShadow: `0 0 8px ${checkedIn ? 'var(--accent)' : '#ef4444'}`, animation: 'pulse 2s infinite' }}></div>
-          <span style={{ fontSize: 12, fontWeight: 600, color: checkedIn ? 'var(--accent)' : '#ef4444' }}>{checkedIn ? 'CLOCKED IN' : 'CLOCKED OUT'}</span>
-        </div>
-        <div style={{ fontSize: 24, fontWeight: 800, color: '#fff' }}>{checkedIn ? checkInTime : '6:38 PM'}</div>
-        <div style={{ fontSize: 11, color: '#8b9dc3', marginTop: 2 }}>
-          <i className="ri-map-pin-line"></i> Andheri East, Mumbai
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 14 }}>
-          {[['18.4 km', 'GPS Tracked', 'var(--accent)'], ['2', 'Activities', '#fff'], ['₹650', 'Claimed', '#fff']].map(([v, l, c]) => (
-            <div key={l} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: c }}>{v}</div>
-              <div style={{ fontSize: 10, color: '#8b9dc3', marginTop: 2 }}>{l}</div>
-            </div>
-          ))}
-        </div>
+      {/* Top Bar */}
+      <div style={{ padding: '60px 16px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ fontSize: 16, fontWeight: 700, flex: 1 }}>Mark Attendance</div>
+        <span className="badge badge-green" style={{ fontSize: 11 }}><i className="ri-gps-fill"></i> GPS Active</span>
       </div>
 
       {/* Map */}
-      <div style={{ margin: '0 16px 16px' }}>
-        <div ref={mapRef} style={{ height: 220, borderRadius: 14, overflow: 'hidden', border: '1px solid var(--border)' }}></div>
+      <div style={{ position: 'relative' }}>
+        <div ref={mapRef} style={{ height: 220, width: '100%' }}></div>
+        <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 1000, background: 'rgba(17,24,39,0.9)', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 10px', fontSize: 11, color: 'var(--accent)' }}>
+          <i className="ri-map-pin-fill"></i> Your Location Detected
+        </div>
       </div>
 
-      {/* Activity log */}
-      <div style={{ margin: '0 16px 16px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
-        <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: 13 }}>Activity Log</div>
-        {[
-          { icon: 'ri-home-line',        color: '#8b5cf6', label: 'Left Home',                  loc: 'Andheri West',    time: '9:02 AM' },
-          { icon: 'ri-map-pin-2-fill',   color: 'var(--accent)', label: 'Client Visit — Check In', loc: 'Dadar Office',  time: '10:30 AM' },
-          { icon: 'ri-map-pin-2-line',   color: 'var(--accent)', label: 'Client Visit — Check Out', loc: 'Dadar Office', time: '11:45 AM' },
-          { icon: 'ri-map-pin-2-fill',   color: '#3b82f6', label: 'Client Visit — Check In',   loc: 'Zomato HQ',       time: '1:15 PM' },
-        ].map((a, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: i < 3 ? '1px solid var(--border)' : 'none' }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: `${a.color}20`, color: a.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}><i className={a.icon}></i></div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, fontWeight: 600 }}>{a.label}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{a.loc}</div>
-            </div>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{a.time}</span>
+      {/* Location card */}
+      <div style={{ margin: '12px 16px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(0,212,170,0.15)', border: '2px solid var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: 'var(--accent)', flexShrink: 0 }}>
+            <i className="ri-map-pin-2-fill"></i>
           </div>
-        ))}
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>Andheri East, Mumbai</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>19.1136° N, 72.8697° E</div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 6, fontSize: 11, color: 'var(--green)' }}>
+              <i className="ri-checkbox-circle-fill"></i> Accuracy: ±8 meters
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Check out button */}
-      <div style={{ padding: '0 16px 24px' }}>
-        {checkedIn ? (
-          <button onClick={handleCheckOut} style={{ display: 'block', width: '100%', background: '#ef4444', color: '#fff', border: 'none', textAlign: 'center', padding: 14, borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-            <i className="ri-map-pin-line"></i> Check Out
-          </button>
-        ) : (
-          <div style={{ textAlign: 'center', padding: 14, background: 'rgba(0,212,170,0.1)', borderRadius: 14, fontSize: 13, color: 'var(--accent)', fontWeight: 600 }}>
-            <i className="ri-check-double-line"></i> Checked out · Day complete
+      {/* Vehicle Selection */}
+      <div style={{ padding: '0 16px', marginBottom: 10 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Select Vehicle</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {/* 2-Wheeler */}
+          <div
+            onClick={() => setVehicle('2w')}
+            style={{
+              flex: 1, padding: '12px 8px', borderRadius: 12, textAlign: 'center', cursor: 'pointer',
+              border: `2px solid ${vehicle === '2w' ? 'var(--accent)' : 'var(--border)'}`,
+              background: vehicle === '2w' ? 'rgba(0,212,170,0.1)' : 'var(--bg)',
+            }}
+          >
+            <i className="ri-motorbike-line" style={{ fontSize: 24, display: 'block', marginBottom: 6, color: vehicle === '2w' ? 'var(--accent)' : 'var(--text-muted)' }}></i>
+            <span style={{ fontSize: 11, fontWeight: 600, color: vehicle === '2w' ? 'var(--accent)' : 'var(--text-muted)' }}>2-Wheeler</span>
+          </div>
+          {/* 4-Wheeler — locked */}
+          <div
+            onClick={() => show('4W not allowed for G3 grade', 'warning')}
+            style={{
+              flex: 1, padding: '12px 8px', borderRadius: 12, textAlign: 'center', cursor: 'not-allowed',
+              border: '2px solid var(--border)', background: 'var(--bg)', opacity: 0.5,
+            }}
+          >
+            <i className="ri-car-line" style={{ fontSize: 24, display: 'block', marginBottom: 6, color: 'var(--text-muted)' }}></i>
+            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>4-Wheeler</span>
+            <div style={{ fontSize: 9, color: 'var(--red)', marginTop: 2 }}>G4+ Only</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Odometer Photo */}
+      <div style={{ margin: '0 16px 12px' }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>📷 Start Odometer Photo</div>
+        <label style={{
+          display: 'block', border: `2px ${odoCaptured ? 'solid var(--accent)' : 'dashed var(--border)'}`,
+          borderRadius: 14, padding: 24, textAlign: 'center', cursor: 'pointer',
+          background: odoCaptured ? 'rgba(0,212,170,0.08)' : 'var(--bg)',
+        }}>
+          <input
+            type="file" accept="image/*" capture="environment"
+            style={{ display: 'none' }}
+            onChange={e => { if (e.target.files && e.target.files[0]) setOdoCaptured(true); }}
+          />
+          <i className={odoCaptured ? 'ri-checkbox-circle-fill' : 'ri-camera-2-line'}
+            style={{ fontSize: 32, display: 'block', marginBottom: 8, color: odoCaptured ? 'var(--accent)' : 'var(--text-muted)' }}>
+          </i>
+          <span style={{ fontSize: 13, color: odoCaptured ? 'var(--accent)' : 'var(--text-muted)' }}>
+            {odoCaptured ? '✓ Photo captured' : 'Tap to capture odometer reading'}
+          </span>
+        </label>
+        {odoCaptured && (
+          <div style={{ marginTop: 8, textAlign: 'center' }}>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Reading detected: </span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent)' }}>48,720 km</span>
           </div>
         )}
       </div>
+
+      {/* Purpose of Visit */}
+      <div style={{ padding: '0 16px', marginBottom: 16 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>Purpose of Visit (Optional)</div>
+        <textarea
+          className="form-control"
+          rows={2}
+          placeholder="e.g. Client meeting, Sales call…"
+          value={purpose}
+          onChange={e => setPurpose(e.target.value)}
+        />
+      </div>
+
+      {/* Clock In / Clock Out */}
+      {!checkedIn ? (
+        <button
+          onClick={handleClockIn}
+          style={{ display: 'block', width: 'calc(100% - 32px)', margin: '0 16px 16px', padding: 16, background: 'var(--accent)', color: '#0a1628', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', textAlign: 'center' }}
+        >
+          <i className="ri-map-pin-2-fill"></i> Clock In &amp; Start Journey
+        </button>
+      ) : (
+        <div style={{ padding: '0 16px 24px' }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8, textAlign: 'center' }}>Already clocked in at {checkInTime}</div>
+          <button
+            onClick={handleClockOut}
+            style={{ display: 'block', width: '100%', padding: 16, background: 'rgba(239,68,68,0.15)', color: 'var(--red)', border: '2px solid var(--red)', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', textAlign: 'center' }}
+          >
+            <i className="ri-logout-box-r-line"></i> Clock Out &amp; End Journey
+          </button>
+        </div>
+      )}
     </MobileShell>
   );
 }

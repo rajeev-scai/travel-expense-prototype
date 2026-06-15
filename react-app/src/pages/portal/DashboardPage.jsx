@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend } from 'chart.js';
@@ -36,15 +36,23 @@ const activities = [
   { icon: 'ri-check-double-line', color: '#00d4aa', msg: <>3 expenses batch auto-approved by rule engine</>,                  time: '3:30 PM' },
 ];
 
-const barData = {
-  labels: ['Travel TA', 'Food/Meals', 'Night Halt', 'Tolls', 'BYOD', 'Others'],
-  datasets: [{
-    label: 'Expenses (₹)',
-    data: [42000, 28000, 18000, 8500, 12000, 11980],
-    backgroundColor: ['rgba(0,212,170,0.7)', 'rgba(59,130,246,0.7)', 'rgba(139,92,246,0.7)', 'rgba(245,158,11,0.7)', 'rgba(239,68,68,0.7)', 'rgba(100,116,139,0.7)'],
-    borderRadius: 6, borderSkipped: false,
-  }],
+const BAR_COLORS = ['rgba(0,212,170,0.7)', 'rgba(59,130,246,0.7)', 'rgba(139,92,246,0.7)', 'rgba(245,158,11,0.7)', 'rgba(239,68,68,0.7)', 'rgba(100,116,139,0.7)'];
+const barDatasets = {
+  thisMonth: [42000, 28000, 18000, 8500, 12000, 11980],
+  lastMonth: [36000, 24000, 14000, 7200, 10500, 9800],
 };
+function makeBarData(period) {
+  return {
+    labels: ['Travel TA', 'Food/Meals', 'Night Halt', 'Tolls', 'BYOD', 'Others'],
+    datasets: [{
+      label: 'Expenses (₹)',
+      data: barDatasets[period],
+      backgroundColor: BAR_COLORS,
+      borderRadius: 6, borderSkipped: false,
+    }],
+  };
+}
+const barData = makeBarData('thisMonth');
 const barOptions = {
   responsive: true,
   plugins: { legend: { display: false } },
@@ -70,6 +78,8 @@ export default function DashboardPage() {
   const { isAdmin } = useAuth();
   const { show } = useToast();
   const navigate = useNavigate();
+  const [barPeriod, setBarPeriod] = useState('thisMonth');
+  const currentBarData = makeBarData(barPeriod);
 
   return (
     <AppShell title="Dashboard">
@@ -123,8 +133,12 @@ export default function DashboardPage() {
               <div className="card-title">Monthly Expense by Category</div>
               <div className="card-subtitle">March 2026</div>
             </div>
+            <select className="form-control" style={{ width: 120, padding: '5px 10px', fontSize: 12 }} value={barPeriod} onChange={e => setBarPeriod(e.target.value)}>
+              <option value="thisMonth">This Month</option>
+              <option value="lastMonth">Last Month</option>
+            </select>
           </div>
-          <Bar data={barData} options={barOptions} height={200} />
+          <Bar data={currentBarData} options={barOptions} height={200} />
         </div>
         <div className="card">
           <div className="card-header">

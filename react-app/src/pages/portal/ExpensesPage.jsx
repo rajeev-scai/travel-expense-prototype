@@ -23,12 +23,16 @@ export default function ExpensesPage() {
   const [collapsed, setCollapsed]     = useState({});
   const [remarksModal, setRemarksModal] = useState(null); // { action, ids, context }
   const [remarksText, setRemarksText] = useState('');
+  const [dateFrom, setDateFrom] = useState('2026-03-01');
+  const [dateTo, setDateTo] = useState('2026-03-17');
 
   // Filter
   const filtered = useMemo(() => data.filter(e => {
     if (filterEmp && e.emp !== filterEmp) return false;
     if (filterCat && e.category !== filterCat) return false;
-    if (filterStatus && e.decision !== filterStatus) return false;
+    if (filterStatus === 'valid') { if (e.pin !== 'valid' || e.decision !== 'pending') return false; }
+    else if (filterStatus === 'violation') { if (e.pin !== 'red') return false; }
+    else if (filterStatus && e.decision !== filterStatus) return false;
     if (searchText) {
       const q = searchText.toLowerCase();
       if (!e.emp.toLowerCase().includes(q) && !e.category.toLowerCase().includes(q) && !e.id.toLowerCase().includes(q)) return false;
@@ -114,8 +118,22 @@ export default function ExpensesPage() {
 
   const selectedPending = [...selected].filter(id => data.find(e => e.id === id)?.decision === 'pending');
 
+  const approvedCount = data.filter(e => e.decision === 'approved').length;
+
   return (
-    <AppShell title="Expense Claims">
+    <AppShell title="Expense Claims" actions={
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        {approvedCount > 0 && (
+          <button className="btn btn-primary btn-sm" onClick={() => show(`Sending ${approvedCount} expenses for payment…`, 'info')}>
+            <i className="ri-send-plane-line"></i> Send for Payment
+            <span style={{ background: 'rgba(255,255,255,0.25)', borderRadius: 10, padding: '1px 7px', fontSize: 11, marginLeft: 6 }}>{approvedCount}</span>
+          </button>
+        )}
+        <button className="btn btn-outline btn-sm" onClick={() => show('Exporting…', 'info')}>
+          <i className="ri-download-2-line"></i> Export CSV
+        </button>
+      </div>
+    }>
       <style>{`
         .exp-table tr:hover td { background: rgba(255,255,255,0.02); }
         .group-header { background: var(--bg2); border-radius: 8px; padding: 10px 14px; display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none; }
@@ -147,6 +165,9 @@ export default function ExpensesPage() {
             <i className="ri-search-line" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: 14 }}></i>
             <input className="form-control" style={{ paddingLeft: 32 }} placeholder="Search employee, category, ID…" value={searchText} onChange={e => setSearchText(e.target.value)} />
           </div>
+          <input type="date" className="form-control" style={{ width: 138, fontSize: 12 }} value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>to</span>
+          <input type="date" className="form-control" style={{ width: 138, fontSize: 12 }} value={dateTo} onChange={e => setDateTo(e.target.value)} />
           <select className="form-control" style={{ flex: '0 0 150px' }} value={filterEmp} onChange={e => setFilterEmp(e.target.value)}>
             <option value="">All Employees</option>
             {empNames.map(n => <option key={n} value={n}>{n}</option>)}
@@ -161,7 +182,12 @@ export default function ExpensesPage() {
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
             <option value="flagged">Flagged</option>
+            <option value="valid">Valid (unreviewed)</option>
+            <option value="violation">Violations</option>
           </select>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+            {filtered.length < data.length ? `${filtered.length} of ${data.length} shown` : `${data.length} shown`}
+          </span>
           {selectedPending.length > 0 && (
             <div style={{ display: 'flex', gap: 8, marginLeft: 'auto', alignItems: 'center' }}>
               <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{selectedPending.length} pending selected</span>

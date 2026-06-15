@@ -1,78 +1,139 @@
 import React, { useState } from 'react';
 import MobileShell from '../../components/layout/MobileShell.jsx';
-import { Fmt } from '../../utils/fmt.js';
+import { useToast } from '../../contexts/ToastContext.jsx';
 
-const history = [
-  { id: 'EXP-007', date: '2026-03-15', category: 'Travel (TA)', amount: 420,  status: 'auto-approved', icon: 'ri-car-line',        color: '#3b82f6' },
-  { id: 'EXP-008', date: '2026-03-15', category: 'Food/Meals',  amount: 280,  status: 'auto-approved', icon: 'ri-restaurant-line', color: '#f97316' },
-  { id: 'EXP-009', date: '2026-03-15', category: 'Toll',        amount: 60,   status: 'pending',       icon: 'ri-road-map-line',   color: '#06b6d4' },
-  { id: 'EXP-010', date: '2026-03-14', category: 'Food/Meals',  amount: 950,  status: 'flagged',       icon: 'ri-restaurant-line', color: '#f97316' },
-  { id: 'EXP-011', date: '2026-03-13', category: 'Fuel',        amount: 900,  status: 'auto-approved', icon: 'ri-gas-station-line', color: '#eab308' },
-  { id: 'EXP-012', date: '2026-03-13', category: 'Travel (TA)', amount: 600,  status: 'auto-approved', icon: 'ri-car-line',         color: '#3b82f6' },
-  { id: 'EXP-013', date: '2026-03-12', category: 'Night Halt',  amount: 1800, status: 'approved',      icon: 'ri-hotel-line',       color: '#8b5cf6' },
+const historyData = [
+  // March 2026
+  { month: 'March 2026', date: 'Mar 16', id: 'EXP-012', type: 'Food/Meals',    icon: 'ri-restaurant-line', iconBg: 'rgba(245,158,11,0.15)',  iconColor: '#f59e0b', amount: 280,  status: 'auto',    note: 'Café Mumbai Express · Auto-Approved' },
+  { month: 'March 2026', date: 'Mar 16', id: 'EXP-011', type: 'Toll',           icon: 'ri-road-line',       iconBg: 'rgba(59,130,246,0.15)',  iconColor: '#3b82f6', amount: 60,   status: 'auto',    note: 'Western Express Hwy · Auto-Approved' },
+  { month: 'March 2026', date: 'Mar 16', id: 'EXP-010', type: 'Travel TA',      icon: 'ri-road-map-line',   iconBg: 'rgba(0,212,170,0.15)',   iconColor: '#00d4aa', amount: 420,  status: 'auto',    note: '48.2 km GPS verified · Auto-Approved' },
+  { month: 'March 2026', date: 'Mar 15', id: 'EXP-009', type: 'Food/Meals',    icon: 'ri-restaurant-line', iconBg: 'rgba(245,158,11,0.15)',  iconColor: '#f59e0b', amount: 420,  status: 'flagged', note: '5.2 km from activity · Needs review' },
+  { month: 'March 2026', date: 'Mar 15', id: 'EXP-008', type: 'Night Halt',    icon: 'ri-hotel-line',      iconBg: 'rgba(139,92,246,0.15)',  iconColor: '#8b5cf6', amount: 1800, status: 'auto',    note: 'Thane · Midnight GPS verified' },
+  { month: 'March 2026', date: 'Mar 14', id: 'EXP-007', type: 'Travel TA',      icon: 'ri-road-map-line',   iconBg: 'rgba(0,212,170,0.15)',   iconColor: '#00d4aa', amount: 600,  status: 'auto',    note: '50 km · Auto-Approved' },
+  { month: 'March 2026', date: 'Mar 13', id: 'EXP-006', type: 'Misc/Others',   icon: 'ri-more-2-line',     iconBg: 'rgba(100,116,139,0.15)', iconColor: '#6b7280', amount: 200,  status: 'pending', note: 'Awaiting manager review' },
+  // February 2026
+  { month: 'February 2026', date: 'Feb 28', id: 'EXP-005', type: 'BYOD Internet', icon: 'ri-wifi-line',       iconBg: 'rgba(59,130,246,0.15)', iconColor: '#3b82f6', amount: 500, status: 'auto',     note: 'Monthly flat allowance' },
+  { month: 'February 2026', date: 'Feb 20', id: 'EXP-004', type: 'Travel TA',     icon: 'ri-road-map-line',   iconBg: 'rgba(0,212,170,0.15)',  iconColor: '#00d4aa', amount: 380, status: 'auto',     note: '32 km · Auto-Approved' },
+  { month: 'February 2026', date: 'Feb 15', id: 'EXP-003', type: 'Food/Meals',   icon: 'ri-restaurant-line', iconBg: 'rgba(245,158,11,0.15)', iconColor: '#f59e0b', amount: 350, status: 'auto',     note: '₹350 meal limit met' },
+  { month: 'February 2026', date: 'Feb 10', id: 'EXP-002', type: 'Food/Meals',   icon: 'ri-restaurant-line', iconBg: 'rgba(245,158,11,0.15)', iconColor: '#f59e0b', amount: 620, status: 'rejected', note: 'Exceeded meal limit · Rejected' },
 ];
 
-const STATUS = {
-  'auto-approved': { cls: 'badge-green',  icon: 'ri-robot-line',  label: 'Auto' },
-  'approved':      { cls: 'badge-green',  icon: 'ri-check-line',  label: 'Approved' },
-  'pending':       { cls: 'badge-amber',  icon: 'ri-time-line',   label: 'Pending' },
-  'flagged':       { cls: 'badge-amber',  icon: 'ri-flag-line',   label: 'Flagged' },
-  'rejected':      { cls: 'badge-red',    icon: 'ri-close-line',  label: 'Rejected' },
+const STATUS_BADGE = {
+  auto:     { cls: 'badge-green', icon: 'ri-robot-line',  label: 'Auto' },
+  pending:  { cls: 'badge-amber', icon: 'ri-time-line',   label: 'Pending' },
+  flagged:  { cls: 'badge-amber', icon: 'ri-flag-line',   label: 'Flagged' },
+  rejected: { cls: 'badge-red',   icon: 'ri-close-line',  label: 'Rejected' },
 };
 
+const STATUS_COLOR = { auto: 'var(--accent)', pending: 'var(--text)', flagged: 'var(--amber)', rejected: 'var(--red)' };
+
+const FILTERS = [
+  ['all', 'All'],
+  ['auto', 'Approved'],
+  ['pending', 'Pending'],
+  ['flagged', 'Flagged'],
+  ['rejected', 'Rejected'],
+];
+
 export default function HistoryPage() {
+  const { show } = useToast();
   const [filter, setFilter] = useState('all');
 
-  const filtered = history.filter(e => filter === 'all' || e.status === filter || (filter === 'approved' && e.status === 'auto-approved'));
+  const marchData  = historyData.filter(e => e.month === 'March 2026');
+  const approvedCount = marchData.filter(e => e.status === 'auto').length;
+  const pendingCount  = marchData.filter(e => e.status === 'pending' || e.status === 'flagged').length;
+  const marchTotal    = marchData.reduce((s, e) => s + e.amount, 0);
 
-  const total    = history.reduce((s, e) => s + e.amount, 0);
-  const approved = history.filter(e => e.status === 'auto-approved' || e.status === 'approved').reduce((s, e) => s + e.amount, 0);
-  const pending  = history.filter(e => e.status === 'pending' || e.status === 'flagged').reduce((s, e) => s + e.amount, 0);
+  const filtered = filter === 'all' ? historyData : historyData.filter(e => e.status === filter);
+
+  // Group by month
+  const grouped = [];
+  let lastMonth = '';
+  filtered.forEach(e => {
+    if (e.month !== lastMonth) { grouped.push({ type: 'header', month: e.month }); lastMonth = e.month; }
+    grouped.push({ type: 'row', ...e });
+  });
 
   return (
     <MobileShell>
-      <div style={{ padding: '60px 16px 12px', background: 'linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%)' }}>
-        <div style={{ fontSize: 18, fontWeight: 800 }}><i className="ri-history-line" style={{ color: 'var(--accent)', marginRight: 8 }}></i>Expense History</div>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>March 2026</div>
+      {/* Top Bar */}
+      <div style={{ padding: '60px 16px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ fontSize: 16, fontWeight: 700, flex: 1 }}>Expense History</div>
+        <button style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text)', cursor: 'pointer', fontSize: 16 }}>
+          <i className="ri-filter-3-line"></i>
+        </button>
       </div>
 
-      {/* Summary */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', margin: '0 16px 16px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
-        {[['Total', Fmt.currency(total), 'var(--text)'], ['Approved', Fmt.currency(approved), 'var(--green)'], ['Pending', Fmt.currency(pending), 'var(--amber)']].map(([l, v, c], i) => (
-          <div key={l} style={{ padding: '14px 10px', textAlign: 'center', borderRight: i < 2 ? '1px solid var(--border)' : 'none' }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: c }}>{v}</div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{l}</div>
-          </div>
-        ))}
+      {/* Summary strip — counts not amounts */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, margin: '0 16px 14px' }}>
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 12, textAlign: 'center' }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--accent)' }}>₹{marchTotal.toLocaleString('en-IN')}</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 3 }}>March Total</div>
+        </div>
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 12, textAlign: 'center' }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--green)' }}>{approvedCount}</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 3 }}>Approved</div>
+        </div>
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 12, textAlign: 'center' }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--amber)' }}>{pendingCount}</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 3 }}>Pending</div>
+        </div>
       </div>
 
-      {/* Filter tabs */}
-      <div style={{ display: 'flex', gap: 6, padding: '0 16px', marginBottom: 14, overflowX: 'auto' }}>
-        {[['all', 'All'], ['approved', 'Approved'], ['pending', 'Pending'], ['flagged', 'Flagged']].map(([key, label]) => (
-          <button key={key} onClick={() => setFilter(key)} style={{ padding: '6px 14px', borderRadius: 20, border: `1px solid ${filter === key ? 'var(--accent)' : 'var(--border)'}`, background: filter === key ? 'rgba(0,212,170,0.1)' : 'var(--card)', color: filter === key ? 'var(--accent)' : 'var(--text-muted)', fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap', cursor: 'pointer' }}>
+      {/* Filter pills */}
+      <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '0 16px 12px', scrollbarWidth: 'none' }}>
+        {FILTERS.map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setFilter(key)}
+            style={{
+              padding: '5px 12px', borderRadius: 20, fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap',
+              border: `1px solid ${filter === key ? 'var(--accent)' : 'var(--border)'}`,
+              background: filter === key ? 'rgba(0,212,170,0.1)' : 'var(--bg)',
+              color: filter === key ? 'var(--accent)' : 'var(--text-muted)',
+              cursor: 'pointer',
+            }}
+          >
             {label}
           </button>
         ))}
       </div>
 
-      {/* Expense list */}
-      <div style={{ margin: '0 16px 24px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
-        {filtered.length === 0 && (
+      {/* History list with month grouping */}
+      <div style={{ marginBottom: 24 }}>
+        {grouped.length === 0 && (
           <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>No expenses found.</div>
         )}
-        {filtered.map((e, i) => {
-          const s = STATUS[e.status] || STATUS.pending;
-          return (
-            <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderBottom: i < filtered.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'pointer' }}>
-              <div style={{ width: 38, height: 38, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0, background: `${e.color}20`, color: e.color }}><i className={e.icon}></i></div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{e.category}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                  {Fmt.dateShort(e.date)} · <span style={{ fontSize: 10 }} className={`badge ${s.cls}`}><i className={s.icon}></i> {s.label}</span>
-                </div>
+        {grouped.map((item, idx) => {
+          if (item.type === 'header') {
+            return (
+              <div key={`hdr-${item.month}`} style={{ padding: '8px 16px', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', background: 'var(--bg2, var(--bg))' }}>
+                {item.month}
               </div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: (e.status === 'auto-approved' || e.status === 'approved') ? 'var(--accent)' : 'var(--text)' }}>
-                {Fmt.currency(e.amount)}
+            );
+          }
+          const s = STATUS_BADGE[item.status] || STATUS_BADGE.pending;
+          const amountColor = STATUS_COLOR[item.status] || 'var(--text)';
+          const note = item.note || '';
+          const noteShort = note.length > 30 ? note.slice(0, 30) + '…' : note;
+          return (
+            <div
+              key={item.id}
+              onClick={() => show(`${item.id}: ${item.type} detail view`, 'info')}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid var(--border)', cursor: 'pointer' }}
+            >
+              <div style={{ width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, background: item.iconBg, color: item.iconColor }}>
+                <i className={item.icon}></i>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{item.type}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{item.date} · {noteShort}</div>
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: amountColor }}>{item.status === 'rejected' ? '-' : ''}₹{item.amount}</div>
+                <div style={{ marginTop: 3 }}>
+                  <span className={`badge ${s.cls}`} style={{ fontSize: 9 }}><i className={s.icon}></i> {s.label}</span>
+                </div>
               </div>
             </div>
           );

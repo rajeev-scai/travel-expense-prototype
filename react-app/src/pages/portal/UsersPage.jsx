@@ -17,12 +17,20 @@ export default function UsersPage() {
   const { show } = useToast();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [filterGrade, setFilterGrade] = useState('');
+  const [filterTeam, setFilterTeam] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
   const [showModal, setShowModal] = useState(false);
 
-  const filtered = employeesExt.filter(e =>
-    e.name.toLowerCase().includes(search.toLowerCase()) ||
-    e.team.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = employeesExt.filter(e => {
+    if (filterGrade && e.grade !== filterGrade) return false;
+    if (filterTeam && e.team !== filterTeam) return false;
+    if (filterStatus === 'active' && e.status !== 'active') return false;
+    if (filterStatus === 'on-leave' && e.status !== 'on-leave') return false;
+    if (filterStatus === 'offboarded' && e.status !== 'offboarded') return false;
+    if (search && !e.name.toLowerCase().includes(search.toLowerCase()) && !e.team.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
 
   return (
     <AppShell title="Users & Grades" actions={
@@ -53,11 +61,20 @@ export default function UsersPage() {
             <i className="ri-search-line" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}></i>
             <input className="form-control" style={{ paddingLeft: 34 }} placeholder="Search employees…" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
-          {[['All Grades','G1','G2','G3','G4','G5'], ['All Teams','Sales','Support','Tech'], ['All Status','Active','On Leave','Offboarded']].map((opts, i) => (
-            <select key={i} className="form-control" style={{ width: 130 }}>
-              {opts.map(o => <option key={o}>{o}</option>)}
-            </select>
-          ))}
+          <select className="form-control" style={{ width: 130 }} value={filterGrade} onChange={e => setFilterGrade(e.target.value)}>
+            <option value="">All Grades</option>
+            {['G1','G2','G3','G4','G5'].map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+          <select className="form-control" style={{ width: 130 }} value={filterTeam} onChange={e => setFilterTeam(e.target.value)}>
+            <option value="">All Teams</option>
+            {['Sales','Support','Tech'].map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+          <select className="form-control" style={{ width: 130 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="on-leave">On Leave</option>
+            <option value="offboarded">Offboarded</option>
+          </select>
         </div>
       </div>
 
@@ -65,7 +82,7 @@ export default function UsersPage() {
       <div className="card">
         <div className="card-header">
           <div className="card-title">Employee Directory</div>
-          <span className="text-muted text-small">47 employees · {filtered.length} shown</span>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>47 employees · {filtered.length} shown</span>
         </div>
         <div className="table-wrap">
           <table>
@@ -149,6 +166,16 @@ export default function UsersPage() {
               <div className="form-group">
                 <label className="form-label">Base City</label>
                 <select className="form-control">{['Mumbai','Delhi','Bangalore','Chennai','Ahmedabad'].map(o => <option key={o}>{o}</option>)}</select>
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Vehicle Eligibility</label>
+              <div style={{ display: 'flex', gap: 16, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 14 }}>
+                {[['2W', '2-Wheeler'], ['4W', '4-Wheeler'], ['Taxi', 'Taxi / Cab']].map(([val, lbl]) => (
+                  <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13 }}>
+                    <input type="checkbox" style={{ accentColor: 'var(--accent)' }} /> {lbl}
+                  </label>
+                ))}
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>

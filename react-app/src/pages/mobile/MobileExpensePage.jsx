@@ -1,144 +1,288 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MobileShell from '../../components/layout/MobileShell.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
-import { Fmt } from '../../utils/fmt.js';
 
-const CATEGORIES = ['Travel (TA)', 'Food/Meals', 'Fuel', 'Night Halt', 'Toll', 'Parking', 'BYOD Internet', 'Miscellaneous'];
-const CAT_ICONS = { 'Travel (TA)': 'ri-car-line', 'Food/Meals': 'ri-restaurant-line', 'Fuel': 'ri-gas-station-line', 'Night Halt': 'ri-hotel-line', 'Toll': 'ri-road-map-line', 'Parking': 'ri-parking-box-line', 'BYOD Internet': 'ri-wifi-line', 'Miscellaneous': 'ri-more-2-line' };
+const CATEGORIES = [
+  { key: 'food',   label: 'Food/Meal',  icon: 'ri-restaurant-line' },
+  { key: 'travel', label: 'Travel TA',  icon: 'ri-road-map-line' },
+  { key: 'toll',   label: 'Toll',       icon: 'ri-road-line' },
+  { key: 'hotel',  label: 'Night Halt', icon: 'ri-hotel-line' },
+  { key: 'misc',   label: 'Misc',       icon: 'ri-more-2-line' },
+];
+
+const MEAL_LIMIT = 350;
 
 export default function MobileExpensePage() {
   const { show } = useToast();
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({ category: '', amount: '', note: '', date: new Date().toISOString().slice(0, 10), receiptFile: null });
+  const [category, setCategory] = useState('food');
+  const [amount, setAmount] = useState('280');
+  const [note, setNote] = useState('');
+  const [photoCaptured, setPhotoCaptured] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const setField = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+  const isMeal = category === 'food';
+  const amountNum = parseFloat(amount) || 0;
+  const limitExceeded = isMeal && amountNum > MEAL_LIMIT;
 
-  const handleSubmit = () => {
-    if (!form.category || !form.amount) { show('Please fill all required fields.', 'warning'); return; }
-    setSubmitted(true);
-    show(`✓ ${form.category} expense ₹${form.amount} submitted!`, 'success');
+  const handlePhoto = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setPhotoCaptured(true);
+    }
   };
 
-  const reset = () => { setForm({ category: '', amount: '', note: '', date: new Date().toISOString().slice(0, 10), receiptFile: null }); setStep(1); setSubmitted(false); };
+  const handleSubmit = () => {
+    setSubmitted(true);
+    show(`✓ Expense submitted! Auto-approved ₹${amount} — Pinned to Zomato HQ.`, 'success');
+  };
 
-  return (
-    <MobileShell>
-      <div style={{ padding: '60px 16px 16px', background: 'linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ fontSize: 18, fontWeight: 800 }}><i className="ri-camera-line" style={{ color: 'var(--accent)', marginRight: 8 }}></i>Add Expense</div>
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
-            {[1, 2, 3].map(s => (
-              <div key={s} style={{ width: 24, height: 4, borderRadius: 2, background: step >= s ? 'var(--accent)' : 'var(--border)' }}></div>
-            ))}
-          </div>
-        </div>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-          {step === 1 ? 'Select category' : step === 2 ? 'Enter details & attach receipt' : 'Review & submit'}
-        </div>
-      </div>
+  const reset = () => { setStep(1); setCategory('food'); setAmount(''); setNote(''); setPhotoCaptured(false); setSubmitted(false); };
 
-      {submitted ? (
+  if (submitted) {
+    return (
+      <MobileShell>
+        <div style={{ padding: '60px 16px 16px' }}>
+          <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Add Expense</div>
+        </div>
         <div style={{ padding: 24, textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--accent)', marginBottom: 8 }}>Expense Submitted!</div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24 }}>
-            {form.category} · {Fmt.currency(Number(form.amount))} · {form.date}<br />
-            <span className="badge badge-amber" style={{ marginTop: 8 }}>Pending Approval</span>
+            Auto-approved ₹{amount} — Pinned to Zomato HQ
           </div>
-          <div style={{ background: 'rgba(0,212,170,0.1)', border: '1px solid rgba(0,212,170,0.3)', borderRadius: 12, padding: 14, marginBottom: 20, fontSize: 12, color: 'var(--accent)' }}>
-            <i className="ri-robot-line" style={{ marginRight: 6 }}></i>Rule engine analysing… Auto-approval expected in ~30 seconds
-          </div>
-          <button onClick={reset} className="btn btn-primary" style={{ width: '100%', padding: 14 }}>
+          <button onClick={reset} style={{ display: 'block', width: '100%', padding: 16, background: 'var(--accent)', color: '#0a1628', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
             <i className="ri-add-line"></i> Add Another Expense
           </button>
         </div>
-      ) : (
-        <>
-          {/* Step 1: Category */}
-          {step === 1 && (
-            <div style={{ padding: '16px 16px 24px' }}>
-              <div style={{ fontWeight: 600, marginBottom: 12, fontSize: 13 }}>Choose Category</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                {CATEGORIES.map(cat => (
-                  <button key={cat} onClick={() => { setField('category', cat); setStep(2); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: form.category === cat ? 'rgba(0,212,170,0.1)' : 'var(--card)', border: `1px solid ${form.category === cat ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 12, cursor: 'pointer', color: 'var(--text)', textAlign: 'left' }}>
-                    <i className={CAT_ICONS[cat] || 'ri-receipt-line'} style={{ fontSize: 18, color: 'var(--accent)' }}></i>
-                    <span style={{ fontSize: 12, fontWeight: 500 }}>{cat}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+      </MobileShell>
+    );
+  }
 
-          {/* Step 2: Details */}
-          {step === 2 && (
-            <div style={{ padding: '16px 16px 24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--accent)', borderRadius: 12 }}>
-                <i className={CAT_ICONS[form.category] || 'ri-receipt-line'} style={{ fontSize: 20, color: 'var(--accent)' }}></i>
-                <span style={{ fontWeight: 600 }}>{form.category}</span>
-                <button onClick={() => setStep(1)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 12 }}>Change</button>
-              </div>
+  return (
+    <MobileShell>
+      {/* Top Bar */}
+      <div style={{ padding: '60px 16px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ fontSize: 16, fontWeight: 700, flex: 1 }}>Add Expense</div>
+        <span className="badge badge-green" style={{ fontSize: 11 }}><i className="ri-map-pin-line"></i> GPS Pinned</span>
+      </div>
 
-              <div className="form-group">
-                <label className="form-label">Amount (₹) *</label>
-                <input className="form-control" type="number" placeholder="0" value={form.amount} onChange={e => setField('amount', e.target.value)} style={{ fontSize: 20, fontWeight: 700 }} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Date</label>
-                <input className="form-control" type="date" value={form.date} onChange={e => setField('date', e.target.value)} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Note (optional)</label>
-                <textarea className="form-control" rows={2} placeholder="Brief description…" value={form.note} onChange={e => setField('note', e.target.value)} />
-              </div>
+      {/* Step indicator */}
+      <div style={{ display: 'flex', gap: 6, padding: '0 16px', marginBottom: 10 }}>
+        {[1, 2, 3].map(s => (
+          <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: step >= s ? 'var(--accent)' : 'var(--border)' }}></div>
+        ))}
+      </div>
 
-              <label style={{ display: 'block', background: 'var(--card)', border: `2px dashed ${form.receiptFile ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 12, padding: 20, textAlign: 'center', cursor: 'pointer', marginBottom: 20 }}>
-                <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => setField('receiptFile', e.target.files[0] || null)} />
-                {form.receiptFile ? (
-                  <><i className="ri-check-line" style={{ fontSize: 28, color: 'var(--accent)' }}></i><div style={{ fontSize: 12, color: 'var(--accent)', marginTop: 4, fontWeight: 600 }}>Receipt attached ✓</div><div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{form.receiptFile.name}</div></>
+      {/* ── STEP 1: Category ── */}
+      {step === 1 && (
+        <div style={{ padding: '0 0 24px' }}>
+          {/* Attendance banner */}
+          <div style={{ margin: '0 16px 12px', padding: '10px 12px', background: 'rgba(0,212,170,0.08)', border: '1px solid rgba(0,212,170,0.3)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <i className="ri-checkbox-circle-fill" style={{ color: 'var(--accent)', fontSize: 16 }}></i>
+            <span style={{ fontSize: 12 }}>Attendance marked · Clocked in at 9:02 AM</span>
+          </div>
+
+          <div style={{ padding: '0 16px', marginBottom: 6 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Expense Category</div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 16px 12px', scrollbarWidth: 'none' }}>
+            {CATEGORIES.map(cat => (
+              <button
+                key={cat.key}
+                onClick={() => { setCategory(cat.key); setStep(2); }}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                  minWidth: 64, padding: '10px 6px', borderRadius: 12, flexShrink: 0,
+                  border: `2px solid ${category === cat.key ? 'var(--accent)' : 'var(--border)'}`,
+                  background: category === cat.key ? 'rgba(0,212,170,0.1)' : 'var(--bg)',
+                  cursor: 'pointer',
+                }}
+              >
+                <i className={cat.icon} style={{ fontSize: 22, color: category === cat.key ? 'var(--accent)' : 'var(--text-muted)' }}></i>
+                <span style={{ fontSize: 10, fontWeight: 600, color: category === cat.key ? 'var(--accent)' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>{cat.label}</span>
+              </button>
+            ))}
+          </div>
+          <div style={{ padding: '0 16px', marginTop: 8 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Select a category to continue →</div>
+          </div>
+        </div>
+      )}
+
+      {/* ── STEP 2: Details ── */}
+      {step === 2 && (
+        <div style={{ padding: '0 0 24px' }}>
+          {/* Attendance banner */}
+          <div style={{ margin: '0 16px 12px', padding: '10px 12px', background: 'rgba(0,212,170,0.08)', border: '1px solid rgba(0,212,170,0.3)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <i className="ri-checkbox-circle-fill" style={{ color: 'var(--accent)', fontSize: 16 }}></i>
+            <span style={{ fontSize: 12 }}>Attendance marked · Clocked in at 9:02 AM</span>
+          </div>
+
+          {/* Selected category chips */}
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 16px 12px', scrollbarWidth: 'none' }}>
+            {CATEGORIES.map(cat => (
+              <button
+                key={cat.key}
+                onClick={() => setCategory(cat.key)}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                  minWidth: 64, padding: '10px 6px', borderRadius: 12, flexShrink: 0,
+                  border: `2px solid ${category === cat.key ? 'var(--accent)' : 'var(--border)'}`,
+                  background: category === cat.key ? 'rgba(0,212,170,0.1)' : 'var(--bg)',
+                  cursor: 'pointer',
+                }}
+              >
+                <i className={cat.icon} style={{ fontSize: 22, color: category === cat.key ? 'var(--accent)' : 'var(--text-muted)' }}></i>
+                <span style={{ fontSize: 10, fontWeight: 600, color: category === cat.key ? 'var(--accent)' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>{cat.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Camera zone (not for travel) */}
+          {category !== 'travel' && (
+            <>
+              <div style={{ padding: '0 16px', marginBottom: 6 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>📷 Bill Photo (Live Camera Only)</div>
+              </div>
+              <label style={{
+                margin: '0 16px 14px', height: 160, borderRadius: 16,
+                background: 'linear-gradient(135deg,#0a1628,#16213e)',
+                border: `2px ${photoCaptured ? 'solid' : 'dashed'} ${photoCaptured ? 'var(--accent)' : 'rgba(0,212,170,0.4)'}`,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+              }}>
+                <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handlePhoto} />
+                {photoCaptured ? (
+                  <>
+                    <i className="ri-checkbox-circle-fill" style={{ fontSize: 40, color: 'var(--accent)', marginBottom: 10 }}></i>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>📸 Photo Captured!</div>
+                  </>
                 ) : (
-                  <><i className="ri-camera-line" style={{ fontSize: 28, color: 'var(--text-muted)' }}></i><div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Tap to attach receipt (optional)</div></>
+                  <>
+                    <i className="ri-camera-2-line" style={{ fontSize: 40, color: 'rgba(0,212,170,0.6)', marginBottom: 10 }}></i>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#8b9dc3' }}>Tap to Capture Bill</div>
+                    <div style={{ fontSize: 11, color: '#4a5568', marginTop: 4 }}>Gallery uploads not allowed · GPS auto-tagged</div>
+                  </>
                 )}
               </label>
-
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setStep(1)}>Back</button>
-                <button className="btn btn-primary" style={{ flex: 2 }} onClick={() => setStep(3)}>Review →</button>
-              </div>
-            </div>
+            </>
           )}
 
-          {/* Step 3: Review */}
-          {step === 3 && (
-            <div style={{ padding: '16px 16px 24px' }}>
-              <div style={{ fontWeight: 600, marginBottom: 14, fontSize: 13 }}>Review & Submit</div>
-              <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-                {[
-                  ['Category', form.category],
-                  ['Amount', Fmt.currency(Number(form.amount))],
-                  ['Date', form.date],
-                  ['Receipt', form.receiptFile ? `✓ ${form.receiptFile.name}` : '✕ Not attached'],
-                  ['Note', form.note || '—'],
-                ].map(([label, value], i) => (
-                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px', borderBottom: i < 4 ? '1px solid var(--border)' : 'none' }}>
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</span>
-                    <span style={{ fontSize: 13, fontWeight: 600 }}>{value}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ background: 'rgba(0,212,170,0.08)', border: '1px solid rgba(0,212,170,0.2)', borderRadius: 12, padding: 12, marginBottom: 16, fontSize: 11, color: 'var(--accent)' }}>
-                <i className="ri-shield-check-line" style={{ marginRight: 4 }}></i>
-                GPS location will be captured and verified against activity pins.
-              </div>
-
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setStep(2)}>Edit</button>
-                <button className="btn btn-primary" style={{ flex: 2 }} onClick={handleSubmit}>Submit Expense</button>
-              </div>
+          {/* Amount input */}
+          <div style={{ margin: '0 16px 14px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Amount</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+              <span style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent)' }}>₹</span>
+              <input
+                type="number"
+                value={amount}
+                placeholder="0"
+                onChange={e => setAmount(e.target.value)}
+                style={{ fontSize: 28, fontWeight: 800, background: 'none', border: 'none', borderBottom: `2px solid ${limitExceeded ? 'var(--red)' : 'var(--border)'}`, color: 'var(--text)', outline: 'none', width: '100%' }}
+              />
             </div>
-          )}
-        </>
+            {isMeal && amountNum > 0 && (
+              <div style={{ marginTop: 8, fontSize: 11, color: limitExceeded ? 'var(--red)' : 'var(--green)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <i className={limitExceeded ? 'ri-alert-line' : 'ri-checkbox-circle-fill'}></i>
+                {limitExceeded
+                  ? 'Exceeds G3 meal limit of ₹350 — will require manual review'
+                  : 'Within G3 meal limit of ₹350'}
+              </div>
+            )}
+          </div>
+
+          {/* Geo Tag */}
+          <div style={{ margin: '0 16px 14px', display: 'flex', alignItems: 'center', gap: 10, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 12 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(59,130,246,0.15)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+              <i className="ri-map-pin-fill"></i>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 600 }}>Auto Geo-Tagged</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Pinned to current GPS location</div>
+            </div>
+            <span className="badge badge-green" style={{ fontSize: 10 }}><i className="ri-check-line"></i> Valid</span>
+          </div>
+
+          {/* Auto-Validation checklist */}
+          <div style={{ margin: '0 16px 14px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Auto-Validation</div>
+            {[
+              { pass: true,          text: 'Attendance marked for today' },
+              { pass: true,          text: 'Expense pin within 500m of activity' },
+              { pass: photoCaptured, text: photoCaptured ? 'Receipt captured via live camera' : 'Receipt capture pending' },
+              { pass: !limitExceeded, text: limitExceeded ? 'Amount exceeds grade meal limit' : 'Amount within grade meal limit' },
+            ].map((c, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, marginBottom: 6, color: c.pass ? 'var(--green)' : 'var(--red)' }}>
+                <i className={c.pass ? 'ri-checkbox-circle-fill' : (c.text.includes('pending') ? 'ri-time-line' : 'ri-close-circle-fill')} style={{ color: c.pass ? 'var(--green)' : (c.text.includes('pending') ? 'var(--text-muted)' : 'var(--red)') }}></i>
+                <span style={{ color: c.pass ? 'var(--text)' : (c.text.includes('pending') ? 'var(--text-muted)' : 'var(--red)') }}>{c.text}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Notes */}
+          <div style={{ padding: '0 16px', marginBottom: 14 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Notes (Optional)</div>
+            <textarea
+              className="form-control"
+              rows={2}
+              placeholder="e.g., Lunch with client Zomato team"
+              value={note}
+              onChange={e => setNote(e.target.value)}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: 10, padding: '0 16px' }}>
+            <button onClick={() => setStep(1)} style={{ flex: 1, padding: 14, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Back</button>
+            <button onClick={() => setStep(3)} style={{ flex: 2, padding: 14, background: 'var(--accent)', border: 'none', borderRadius: 12, color: '#0a1628', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Review →</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── STEP 3: Review & Submit ── */}
+      {step === 3 && (
+        <div style={{ padding: '0 0 24px' }}>
+          <div style={{ padding: '0 16px', marginBottom: 14 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Review & Submit</div>
+          </div>
+
+          <div style={{ margin: '0 16px 14px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+            {[
+              ['Category', CATEGORIES.find(c => c.key === category)?.label || category],
+              ['Amount', `₹${amount}`],
+              ['Receipt', photoCaptured ? '✓ Photo captured' : '✕ Not captured'],
+              ['Location', 'Zomato HQ Area, Andheri E · GPS pinned'],
+              ['Notes', note || '—'],
+            ].map(([label, value], i, arr) => (
+              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</span>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>{value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Validation summary */}
+          <div style={{ margin: '0 16px 14px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Auto-Validation</div>
+            {[
+              { pass: true,          text: 'Attendance marked for today' },
+              { pass: true,          text: 'Expense pin within 500m of activity' },
+              { pass: photoCaptured, text: photoCaptured ? 'Receipt captured via live camera' : 'Receipt capture pending' },
+              { pass: !limitExceeded, text: limitExceeded ? 'Amount exceeds grade meal limit' : 'Amount within grade meal limit' },
+            ].map((c, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, marginBottom: 6 }}>
+                <i className={c.pass ? 'ri-checkbox-circle-fill' : 'ri-close-circle-fill'} style={{ color: c.pass ? 'var(--green)' : 'var(--red)' }}></i>
+                <span style={{ color: c.pass ? 'var(--text)' : 'var(--red)' }}>{c.text}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: 10, padding: '0 16px' }}>
+            <button onClick={() => setStep(2)} style={{ flex: 1, padding: 14, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+            <button onClick={handleSubmit} style={{ flex: 2, padding: 16, background: 'var(--accent)', border: 'none', borderRadius: 14, color: '#0a1628', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+              <i className="ri-send-plane-fill"></i> Submit Expense
+            </button>
+          </div>
+        </div>
       )}
     </MobileShell>
   );
