@@ -39,21 +39,13 @@ export default function ApprovalPage() {
   const [remarksModal, setRemarksModal] = useState(null);
   const [remarksText,  setRemarksText]  = useState('');
 
-  // When employee or date changes, reload journey and reset map
+  // When employee or date changes, reload journey (map lifecycle handled by [jny] effect)
   useEffect(() => {
     const raw = journeys.find(j => j.employee.id === empId && j.dateKey === dateKey)
       || journeys.find(j => j.employee.id === empId)
       || journeys[0];
     setJny(initJourney(raw));
     setSelected(null);
-
-    // Destroy map so it re-inits with new path
-    if (mapInstance.current) {
-      mapInstance.current.remove();
-      mapInstance.current = null;
-      pathLayers.current = [];
-      pinMarkers.current = [];
-    }
   }, [empId, dateKey]);
 
   // Fix date when employee changes (keep same date if available, else first)
@@ -183,32 +175,41 @@ export default function ApprovalPage() {
         .claim-item { display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;transition:background 0.15s;border-bottom:1px solid var(--border);border-left:3px solid transparent; }
         .claim-item:hover { background:var(--bg); }
         .claim-item.active { background:rgba(0,212,170,0.07);border-left-color:var(--accent); }
-        .emp-pill { padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);transition:all 0.15s; }
-        .emp-pill.active { background:var(--accent);color:#0f172a;border-color:var(--accent); }
-        .emp-pill:hover:not(.active) { border-color:var(--accent);color:var(--accent); }
-        .date-pill { padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);transition:all 0.15s; }
-        .date-pill.active { background:rgba(0,212,170,0.12);color:var(--accent);border-color:var(--accent); }
-        .date-pill:hover:not(.active) { border-color:var(--accent);color:var(--accent); }
+        .emp-select { appearance:none;-webkit-appearance:none;padding:7px 32px 7px 12px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text);outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2300d4aa' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;min-width:180px; }
+        .emp-select:focus { border-color:var(--accent); }
+        .date-input { padding:7px 12px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text);outline:none; }
+        .date-input:focus { border-color:var(--accent); }
       `}</style>
 
       {/* Selector bar */}
-      <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:14, flexWrap:'wrap' }}>
+      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:14, flexWrap:'wrap' }}>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
           <span style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.5px' }}>Employee</span>
-          {EMPLOYEES.map(e => (
-            <button key={e.id} className={`emp-pill${empId === e.id ? ' active' : ''}`} onClick={() => handleEmpChange(e.id)}>
-              {e.name.split(' ')[0]} {e.name.split(' ')[1][0]}.
-            </button>
-          ))}
+          <select
+            className="emp-select"
+            value={empId}
+            onChange={e => handleEmpChange(e.target.value)}
+          >
+            {EMPLOYEES.map(e => (
+              <option key={e.id} value={e.id}>{e.name} — {e.city}</option>
+            ))}
+          </select>
         </div>
         <div style={{ width:1, height:24, background:'var(--border)' }} />
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
           <span style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.5px' }}>Date</span>
-          {availDates.map(d => (
-            <button key={d.key} className={`date-pill${dateKey === d.key ? ' active' : ''}`} onClick={() => setDateKey(d.key)}>
-              <i className="ri-calendar-line" style={{ marginRight:4 }}></i>{d.label}
-            </button>
-          ))}
+          <input
+            type="date"
+            className="date-input"
+            value={dateKey}
+            min={availDates[availDates.length - 1]?.key}
+            max={availDates[0]?.key}
+            onChange={e => {
+              const val = e.target.value;
+              const match = availDates.find(d => d.key === val);
+              if (match) setDateKey(val);
+            }}
+          />
         </div>
         <button className="btn btn-primary btn-sm" style={{ marginLeft:'auto' }} onClick={approveAll}>
           <i className="ri-check-double-line"></i> Approve All Valid
