@@ -67,11 +67,8 @@ export const allExpenses = [
 // Journey data for Approval page map
 export const journey = {
   employee: { name: 'Rahul Sharma', id: 'EMP-0042', grade: 'G3', vehicle: '2W', city: 'Mumbai' },
-  date: '15 Mar 2026',
-  startTime: '09:14 AM',
-  endTime: '06:38 PM',
-  totalKm: 47.3,
-  stops: 6,
+  date: '15 Mar 2026', dateKey: '2026-03-15',
+  startTime: '09:14 AM', endTime: '06:38 PM', totalKm: 47.3, stops: 6,
   path: [
     [19.076, 72.8777], [19.082, 72.880], [19.090, 72.885],
     [19.098, 72.890], [19.107, 72.895], [19.115, 72.898],
@@ -93,6 +90,93 @@ export const journey = {
     { id: 7, seq: 7, category: 'Travel (TA)', amount: 280,  coords: [19.155, 72.928], pin: 'red',   decision: 'pending', remarks: '', note: 'No GPS activity nearby (8km away)',          time: '04:30 PM', receipt: false },
   ],
 };
+
+export const journeys = [
+  journey,
+  {
+    employee: { name: 'Rahul Sharma', id: 'EMP-0042', grade: 'G3', vehicle: '2W', city: 'Mumbai' },
+    date: '14 Mar 2026', dateKey: '2026-03-14',
+    startTime: '08:50 AM', endTime: '05:20 PM', totalKm: 38.6, stops: 4,
+    path: [
+      [19.076, 72.8777], [19.082, 72.880], [19.090, 72.885],
+      [19.098, 72.890], [19.107, 72.895], [19.115, 72.898],
+      [19.120, 72.902], [19.128, 72.908],
+    ],
+    attendance: [
+      { label: 'Home', coords: [19.076, 72.8777], time: '08:50 AM', type: 'home' },
+      { label: 'Check-In', coords: [19.107, 72.895], time: '09:45 AM', type: 'checkin' },
+      { label: 'Check-Out', coords: [19.128, 72.908], time: '05:20 PM', type: 'checkout' },
+    ],
+    expenses: [
+      { id: 1, seq: 1, category: 'Travel (TA)', amount: 310,  coords: [19.082, 72.880], pin: 'valid', decision: 'pending', remarks: '', note: '26 km — GPS verified route', time: '09:10 AM', receipt: true  },
+      { id: 2, seq: 2, category: 'Food/Meals',  amount: 290,  coords: [19.098, 72.890], pin: 'valid', decision: 'pending', remarks: '', note: 'Canteen near client site',   time: '01:00 PM', receipt: true  },
+      { id: 3, seq: 3, category: 'Parking',     amount: 150,  coords: [19.107, 72.895], pin: 'red',   decision: 'pending', remarks: '', note: 'No GPS activity nearby',    time: '10:00 AM', receipt: false },
+      { id: 4, seq: 4, category: 'Fuel',        amount: 450,  coords: [19.115, 72.898], pin: 'valid', decision: 'pending', remarks: '', note: 'Petrol pump on return route', time: '04:30 PM', receipt: true  },
+    ],
+  },
+  {
+    employee: { name: 'Anjali Singh', id: 'EMP-0017', grade: 'G4', vehicle: '4W', city: 'Delhi' },
+    date: '15 Mar 2026', dateKey: '2026-03-15',
+    startTime: '08:30 AM', endTime: '07:10 PM', totalKm: 62.4, stops: 5,
+    path: [
+      [28.630, 77.219], [28.638, 77.228], [28.646, 77.237],
+      [28.654, 77.246], [28.662, 77.255], [28.670, 77.264],
+      [28.678, 77.273], [28.686, 77.282], [28.694, 77.291],
+    ],
+    attendance: [
+      { label: 'Home', coords: [28.630, 77.219], time: '08:30 AM', type: 'home' },
+      { label: 'Check-In', coords: [28.662, 77.255], time: '09:40 AM', type: 'checkin' },
+      { label: 'Check-Out', coords: [28.694, 77.291], time: '07:10 PM', type: 'checkout' },
+    ],
+    expenses: [
+      { id: 1, seq: 1, category: 'Travel (TA)', amount: 750,  coords: [28.638, 77.228], pin: 'valid', decision: 'pending', remarks: '', note: '52 km sales run — GPS verified',      time: '09:00 AM', receipt: true  },
+      { id: 2, seq: 2, category: 'Food/Meals',  amount: 480,  coords: [28.654, 77.246], pin: 'valid', decision: 'pending', remarks: '', note: 'Client lunch — within G4 limit',     time: '01:30 PM', receipt: true  },
+      { id: 3, seq: 3, category: 'Night Halt',  amount: 2200, coords: [28.670, 77.264], pin: 'amber', decision: 'pending', remarks: '', note: 'Bill above G4 cap of ₹2000',         time: '09:00 PM', receipt: true  },
+      { id: 4, seq: 4, category: 'Toll',        amount: 240,  coords: [28.678, 77.273], pin: 'valid', decision: 'pending', remarks: '', note: 'Delhi-Noida-Delhi FASTag',            time: '08:45 AM', receipt: false },
+      { id: 5, seq: 5, category: 'Fuel',        amount: 1800, coords: [28.686, 77.282], pin: 'valid', decision: 'pending', remarks: '', note: '60L diesel — 4W company vehicle',    time: '06:00 PM', receipt: true  },
+    ],
+  },
+  {
+    employee: { name: 'Anjali Singh', id: 'EMP-0017', grade: 'G4', vehicle: '4W', city: 'Delhi' },
+    date: '14 Mar 2026', dateKey: '2026-03-14',
+    startTime: '09:00 AM', endTime: '06:00 PM', totalKm: 44.8, stops: 3,
+    path: [
+      [28.630, 77.219], [28.640, 77.230], [28.650, 77.241],
+      [28.660, 77.252], [28.670, 77.263], [28.680, 77.274],
+    ],
+    attendance: [
+      { label: 'Home', coords: [28.630, 77.219], time: '09:00 AM', type: 'home' },
+      { label: 'Check-In', coords: [28.655, 77.246], time: '10:05 AM', type: 'checkin' },
+      { label: 'Check-Out', coords: [28.680, 77.274], time: '06:00 PM', type: 'checkout' },
+    ],
+    expenses: [
+      { id: 1, seq: 1, category: 'Travel (TA)', amount: 540,  coords: [28.640, 77.230], pin: 'valid', decision: 'pending', remarks: '', note: '38 km city run — route verified',     time: '09:30 AM', receipt: true  },
+      { id: 2, seq: 2, category: 'Food/Meals',  amount: 390,  coords: [28.660, 77.252], pin: 'valid', decision: 'pending', remarks: '', note: 'Lunch near client office',            time: '01:15 PM', receipt: true  },
+      { id: 3, seq: 3, category: 'Parking',     amount: 200,  coords: [28.670, 77.263], pin: 'valid', decision: 'pending', remarks: '', note: 'Client premises parking paid',       time: '10:30 AM', receipt: true  },
+    ],
+  },
+  {
+    employee: { name: 'Vikram Patel', id: 'EMP-0031', grade: 'G3', vehicle: '2W', city: 'Ahmedabad' },
+    date: '14 Mar 2026', dateKey: '2026-03-14',
+    startTime: '08:45 AM', endTime: '04:50 PM', totalKm: 29.2, stops: 4,
+    path: [
+      [23.022, 72.571], [23.030, 72.580], [23.038, 72.589],
+      [23.046, 72.598], [23.054, 72.607], [23.062, 72.616],
+      [23.070, 72.625],
+    ],
+    attendance: [
+      { label: 'Home', coords: [23.022, 72.571], time: '08:45 AM', type: 'home' },
+      { label: 'Check-In', coords: [23.046, 72.598], time: '09:50 AM', type: 'checkin' },
+      { label: 'Check-Out', coords: [23.070, 72.625], time: '04:50 PM', type: 'checkout' },
+    ],
+    expenses: [
+      { id: 1, seq: 1, category: 'Travel (TA)', amount: 290,  coords: [23.030, 72.580], pin: 'valid', decision: 'pending', remarks: '', note: '24 km city coverage — GPS match',     time: '09:15 AM', receipt: true  },
+      { id: 2, seq: 2, category: 'Food/Meals',  amount: 1200, coords: [23.038, 72.589], pin: 'red',   decision: 'pending', remarks: '', note: 'No nearby activity (8km away)',       time: '02:00 PM', receipt: true  },
+      { id: 3, seq: 3, category: 'Fuel',        amount: 350,  coords: [23.054, 72.607], pin: 'valid', decision: 'pending', remarks: '', note: 'Pump on route — odometer matches',   time: '04:00 PM', receipt: true  },
+      { id: 4, seq: 4, category: 'DA',          amount: 400,  coords: [23.062, 72.616], pin: 'valid', decision: 'pending', remarks: '', note: 'Full day field — G3 tier-1 rate',    time: '08:45 AM', receipt: false },
+    ],
+  },
+];
 
 export const CAT_META = {
   'Travel (TA)':    { icon: 'ri-car-line',           color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
