@@ -8,6 +8,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script>
+    // Restore path from GitHub Pages SPA redirect via 404.html
+    (function() {
+      var r = sessionStorage.getItem('spa_redirect');
+      if (r) { sessionStorage.removeItem('spa_redirect'); window.history.replaceState(null, null, '/' + r); }
+    })();
+  </script>
 </head>
 <body>
   <div id="root"></div>
